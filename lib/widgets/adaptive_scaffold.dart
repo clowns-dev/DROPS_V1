@@ -45,74 +45,87 @@ class AdaptiveScaffold extends StatefulWidget {
 class _AdaptiveScaffoldState extends State<AdaptiveScaffold> {
   @override
   Widget build(BuildContext context) {
+    const backgroundColor = Color.fromARGB(236, 238, 240, 255);
+
     if (_isLargeScreen(context)) {
-      return Row(
-        children: [
-          Drawer(
-            shape: const RoundedRectangleBorder(
-              borderRadius: BorderRadius.zero,
-            ),
-            backgroundColor: const Color(0xFFACB3CC),
-            child: Column(
-              children: [
-                DrawerHeader(
-                  child: Center(
-                    child: widget.title,
-                  ),
-                ),
-                for (var d in widget.destinations)
-                  ListTile(
-                    leading: Icon(
-                      d.icon,
-                      color: widget.destinations.indexOf(d) == widget.currentIndex ? Colors.black : Colors.black54,
-                    ),
-                    title: Text(
-                      d.title,
-                      style: TextStyle(
-                        color: widget.destinations.indexOf(d) == widget.currentIndex ? Colors.black : Colors.black45,
-                      ),
-                    ),
-                    selected:
-                        widget.destinations.indexOf(d) == widget.currentIndex,
-                        selectedTileColor: const Color.fromARGB(255, 198, 199, 201),
-                        hoverColor: const Color.fromARGB(255, 198, 199, 201),
-                    onTap: () => _destinationTapped(d),
-                  ),
-              ],
-            ),
-          ),
-          VerticalDivider(
-            width: 1,
-            thickness: 1,
-            color: Colors.grey[300],
-          ),
-          Expanded(
-            child: Scaffold(
-              appBar: AppBar(
-                actions: widget.actions,
+      return Scaffold(
+        extendBodyBehindAppBar: true,
+        backgroundColor: backgroundColor,
+        body: Row(
+          children: [
+            Drawer(
+              shape: const RoundedRectangleBorder(
+                borderRadius: BorderRadius.zero,
               ),
-              body: widget.body,
-              
+              backgroundColor: const Color(0xFFACB3CC), // Color del Drawer
+              child: Column(
+                children: [
+                  DrawerHeader(
+                    child: Center(
+                      child: widget.title,
+                    ),
+                  ),
+                  for (var d in widget.destinations)
+                    ListTile(
+                      leading: Icon(
+                        d.icon,
+                        color: widget.destinations.indexOf(d) == widget.currentIndex ? Colors.black : Colors.black54,
+                      ),
+                      title: Text(
+                        d.title,
+                        style: TextStyle(
+                          color: widget.destinations.indexOf(d) == widget.currentIndex ? Colors.black : Colors.black45,
+                        ),
+                      ),
+                      selected: widget.destinations.indexOf(d) == widget.currentIndex,
+                      selectedTileColor: const Color.fromARGB(255, 198, 199, 201),
+                      hoverColor: const Color.fromARGB(255, 198, 199, 201),
+                      onTap: () => _destinationTapped(d),
+                    ),
+                ],
+              ),
             ),
-          ),
-        ],
+            VerticalDivider(
+              width: 1,
+              thickness: 1,
+              color: Colors.grey[300],
+            ),
+            Expanded(
+              child: Container(
+                color: backgroundColor, // Fondo para el contenido principal
+                child: Scaffold(
+                  appBar: AppBar(
+                    actions: widget.actions,
+                    backgroundColor: Colors.transparent,
+                    elevation: 0,
+                  ),
+                  backgroundColor: Colors.transparent,
+                  body: widget.body,
+                ),
+              ),
+            ),
+          ],
+        ),
       );
     }
 
     if (_isMediumScreen(context)) {
       return Scaffold(
+        extendBodyBehindAppBar: true,
+        backgroundColor: backgroundColor,
         appBar: AppBar(
           shape: const RoundedRectangleBorder(
             borderRadius: BorderRadius.zero,
           ),
-          
           title: widget.title,
           actions: widget.actions,
+          backgroundColor: Colors.transparent,
+          elevation: 0,
         ),
         body: Row(
           children: [
             NavigationRail(
-              backgroundColor: const Color(0xFFACB3CC),
+              backgroundColor: const Color(0xFFACB3CC), // Color del Navigation Rail (similar al Drawer)
               leading: widget.floatingActionButton,
               destinations: [
                 ...widget.destinations.map(
@@ -131,18 +144,29 @@ class _AdaptiveScaffoldState extends State<AdaptiveScaffold> {
               color: Colors.grey[300],
             ),
             Expanded(
-              child: widget.body!,
+              child: Container(
+                color: backgroundColor, // Fondo para el contenido principal
+                child: widget.body!,
+              ),
             ),
           ],
         ),
       );
     }
 
+    // Para pantallas pequeñas
     return Scaffold(
-      body: widget.body,
+      extendBodyBehindAppBar: true,
+      backgroundColor: backgroundColor,
       appBar: AppBar(
         title: widget.title,
         actions: widget.actions,
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+      ),
+      body: Container(
+        color: backgroundColor, // Fondo para el contenido principal
+        child: widget.body,
       ),
       bottomNavigationBar: BottomNavigationBar(
         items: [

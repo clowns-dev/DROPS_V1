@@ -1,9 +1,17 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:ps3_drops_v1/views/home_view.dart';
-
+import 'package:ps3_drops_v1/view_models/patient_view_model.dart'; // Importa tu ViewModel
 
 void main() {
-  runApp(const MyApp());
+  runApp(
+    MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (_) => PatientViewModel()), // Añade el PatientViewModel
+      ],
+      child: const MyApp(),
+    ),
+  );
 }
 
 class MyApp extends StatelessWidget {
@@ -11,12 +19,10 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Flutter Dashboard',
-      theme: ThemeData(
-        primarySwatch: Colors.blue,
-      ),
-      home: const HomePage(),
+    return const MaterialApp(
+      title: 'PS3 Drops',
+      debugShowCheckedModeBanner: false,
+      home: HomePage(), // Llama a la HomePage que se utilizará para navegar
     );
   }
 }

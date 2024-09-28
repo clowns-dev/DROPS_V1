@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:ps3_drops_v1/views/patient/patient_index.dart';
 import 'package:ps3_drops_v1/views/users/user_index.dart';
 
 import '../widgets/adaptive_scaffold.dart';
@@ -13,7 +14,6 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   int _pageIndex = 0;
-
   @override
   Widget build(BuildContext context) {
     return AdaptiveScaffold(
@@ -37,16 +37,6 @@ class _HomePageState extends State<HomePage> {
           ),
         ],
       ),
-      actions: [
-        Padding(
-          padding: const EdgeInsets.all(8.0),
-          child: TextButton(
-            style: TextButton.styleFrom(foregroundColor: Colors.white),
-            onPressed: () => {},
-            child: const Text('Salir'),
-          ),
-        ),
-      ],
       currentIndex: _pageIndex,
       destinations: const [
         AdaptiveScaffoldDestination(title: 'Inicio', icon: Icons.home),
@@ -98,6 +88,7 @@ class _HomePageState extends State<HomePage> {
   }
   */
   static Widget _pageAtIndex(int index){
+    
     if(index == 0){
       return const Text("Pagina 1");
     }
@@ -116,7 +107,7 @@ class _HomePageState extends State<HomePage> {
     }
 
     if(index == 4){
-      return const Text('pagina 5');
+      return const PatientIndex();
     }
 
     if(index == 5){

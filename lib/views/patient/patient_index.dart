@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:ps3_drops_v1/models/patient.dart';
 import 'package:ps3_drops_v1/view_models/patient_view_model.dart';
 import 'package:ps3_drops_v1/views/patient/patient_data.dart';
 import 'package:ps3_drops_v1/widgets/title_container.dart';
@@ -8,6 +9,8 @@ import 'package:ps3_drops_v1/widgets/history_title_container.dart';
 import 'package:ps3_drops_v1/widgets/search_field.dart';
 import 'package:ps3_drops_v1/widgets/dropdown_filter.dart';
 import 'package:ps3_drops_v1/widgets/add_title_button.dart';
+import 'package:ps3_drops_v1/widgets/success_dialog.dart';
+import 'package:ps3_drops_v1/widgets/delete_confirmation_dialog.dart';
 
 class PatientIndex extends StatefulWidget {
   const PatientIndex({super.key});
@@ -20,11 +23,13 @@ class _PatientIndexState extends State<PatientIndex> {
   String _selectedFilter = 'Nombre';
   final List<String> _filterOptions = ['Nombre', 'CI', 'Fecha de Nacimiento'];
   bool _showForm = false; // Variable booleana para alternar entre tabla y formulario
+  Patient? _editingPatient; // Paciente en edición (si es null, entonces estamos creando)
 
   // Alterna entre mostrar la tabla o el formulario
-  void _toggleView() {
+  void _toggleView([Patient? patient]) {
     setState(() {
       _showForm = !_showForm;
+      _editingPatient = patient; // Si hay un paciente, estamos en modo edición
     });
   }
 
@@ -49,11 +54,11 @@ class _PatientIndexState extends State<PatientIndex> {
                       color: Colors.black,
                       size: 24.0,
                     ),
-                    onPressed: _toggleView,
+                    onPressed: () => _toggleView(),
                   );
                 } else {
                   return OutlinedButton(
-                    onPressed: _toggleView,
+                    onPressed: () => _toggleView(),
                     style: OutlinedButton.styleFrom(
                       backgroundColor: Colors.white.withOpacity(0.2),
                       side: BorderSide(color: Colors.grey.withOpacity(0.6), width: 1.5),
@@ -115,7 +120,7 @@ class _PatientIndexState extends State<PatientIndex> {
                         },
                       ),
                       const SizedBox(width: 16.0),
-                      SearchField(fullWidth: false),
+                      const SearchField(fullWidth: false),
                     ],
                   ),
                 ],
@@ -146,156 +151,212 @@ class _PatientIndexState extends State<PatientIndex> {
     );
   }
 
-  // Widget para el formulario de añadir usuario
-Widget _buildForm() {
-  return Center(
-    child: Container(
-      width: 400, // Ajusta el ancho del formulario para que sea más simétrico y compacto
-      padding: const EdgeInsets.all(16.0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Center(
-            child: HistoryTitleContainer(titleTable: 'Añadir Usuario'),
-          ),
-          const SizedBox(height: 24.0),
-          
-          // Campo para CI
-          const Text(
-            'CI:',
-            style: TextStyle(
-              fontSize: 16.0,
-              fontWeight: FontWeight.w600,
-              color: Colors.black87,
-            ),
-          ),
-          const SizedBox(height: 8.0),
-          TextField(
-            decoration: InputDecoration(
-              hintText: 'Ingrese el CI',
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12.0),
+  Widget _buildForm() {
+    return Center(
+      child: Container(
+        width: 400, // Ajusta el ancho del formulario para que sea más simétrico y compacto
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Center(
+              child: HistoryTitleContainer(
+                titleTable: _editingPatient == null ? 'Añadir Usuario' : 'Editar Usuario',
               ),
             ),
-          ),
-          const SizedBox(height: 24.0),
+            const SizedBox(height: 24.0),
 
-          // Campo para Nombre
-          const Text(
-            'Nombre:',
-            style: TextStyle(
-              fontSize: 16.0,
-              fontWeight: FontWeight.w600,
-              color: Colors.black87,
-            ),
-          ),
-          const SizedBox(height: 8.0),
-          TextField(
-            decoration: InputDecoration(
-              hintText: 'Ingrese el nombre',
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12.0),
+            // Campo para CI
+            const Text(
+              'CI:',
+              style: TextStyle(
+                fontSize: 16.0,
+                fontWeight: FontWeight.w600,
+                color: Colors.black87,
               ),
             ),
-          ),
-          const SizedBox(height: 24.0),
-
-          // Campo para Apellido Paterno
-          const Text(
-            'Apellido Paterno:',
-            style: TextStyle(
-              fontSize: 16.0,
-              fontWeight: FontWeight.w600,
-              color: Colors.black87,
-            ),
-          ),
-          const SizedBox(height: 8.0),
-          TextField(
-            decoration: InputDecoration(
-              hintText: 'Ingrese el apellido paterno',
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12.0),
+            const SizedBox(height: 8.0),
+            TextField(
+              controller: TextEditingController(
+                text: _editingPatient?.ci ?? '',
               ),
-            ),
-          ),
-          const SizedBox(height: 24.0),
-
-          // Campo para Apellido Materno
-          const Text(
-            'Apellido Materno:',
-            style: TextStyle(
-              fontSize: 16.0,
-              fontWeight: FontWeight.w600,
-              color: Colors.black87,
-            ),
-          ),
-          const SizedBox(height: 8.0),
-          TextField(
-            decoration: InputDecoration(
-              hintText: 'Ingrese el apellido materno',
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12.0),
-              ),
-            ),
-          ),
-          const SizedBox(height: 24.0),
-
-          // Campo para Fecha de Nacimiento
-          const Text(
-            'Fecha de nacimiento:',
-            style: TextStyle(
-              fontSize: 16.0,
-              fontWeight: FontWeight.w600,
-              color: Colors.black87,
-            ),
-          ),
-          const SizedBox(height: 8.0),
-          TextField(
-            decoration: InputDecoration(
-              hintText: 'dd/mm/aaaa',
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12.0),
-              ),
-            ),
-          ),
-          const SizedBox(height: 32.0),
-
-          // Botón para guardar
-          Center(
-            child: ElevatedButton(
-              onPressed: () {
-                // Lógica para añadir un paciente
-                _toggleView(); // Volver a la vista de la tabla tras añadir el paciente
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.purple.shade300, // Color del botón
-                padding: const EdgeInsets.symmetric(
-                  vertical: 16.0,
-                  horizontal: 32.0,
-                ),
-                shape: RoundedRectangleBorder(
+              decoration: InputDecoration(
+                hintText: 'Ingrese el CI',
+                border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12.0),
                 ),
               ),
-              child: const Text(
-                'INSERTAR',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontWeight: FontWeight.bold,
+            ),
+            const SizedBox(height: 24.0),
+
+            // Campo para Nombre
+            const Text(
+              'Nombre:',
+              style: TextStyle(
+                fontSize: 16.0,
+                fontWeight: FontWeight.w600,
+                color: Colors.black87,
+              ),
+            ),
+            const SizedBox(height: 8.0),
+            TextField(
+              controller: TextEditingController(
+                text: _editingPatient?.name ?? '',
+              ),
+              decoration: InputDecoration(
+                hintText: 'Ingrese el nombre',
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12.0),
                 ),
               ),
             ),
-          ),
-        ],
+            const SizedBox(height: 24.0),
+
+            // Campo para Apellido Paterno
+            const Text(
+              'Apellido Paterno:',
+              style: TextStyle(
+                fontSize: 16.0,
+                fontWeight: FontWeight.w600,
+                color: Colors.black87,
+              ),
+            ),
+            const SizedBox(height: 8.0),
+            TextField(
+              controller: TextEditingController(
+                text: _editingPatient?.lastName ?? '',
+              ),
+              decoration: InputDecoration(
+                hintText: 'Ingrese el apellido paterno',
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12.0),
+                ),
+              ),
+            ),
+            const SizedBox(height: 24.0),
+
+            // Campo para Apellido Materno
+            const Text(
+              'Apellido Materno:',
+              style: TextStyle(
+                fontSize: 16.0,
+                fontWeight: FontWeight.w600,
+                color: Colors.black87,
+              ),
+            ),
+            const SizedBox(height: 8.0),
+            TextField(
+              controller: TextEditingController(
+                text: _editingPatient?.secondLastName ?? '',
+              ),
+              decoration: InputDecoration(
+                hintText: 'Ingrese el apellido materno',
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12.0),
+                ),
+              ),
+            ),
+            const SizedBox(height: 24.0),
+
+            // Campo para Fecha de Nacimiento
+            const Text(
+              'Fecha de nacimiento:',
+              style: TextStyle(
+                fontSize: 16.0,
+                fontWeight: FontWeight.w600,
+                color: Colors.black87,
+              ),
+            ),
+            const SizedBox(height: 8.0),
+            TextField(
+              controller: TextEditingController(
+                text: _editingPatient?.birthDate ?? '',
+              ),
+              decoration: InputDecoration(
+                hintText: 'dd/mm/aaaa',
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12.0),
+                ),
+              ),
+            ),
+            const SizedBox(height: 32.0),
+
+            // Botón para guardar
+            Center(
+              child: ElevatedButton(
+                onPressed: () {
+                  if (_editingPatient != null) {
+                    if (kDebugMode) {
+                      print('Editando paciente con ID: ${_editingPatient?.idPatient}');
+                    }
+                  } else {
+                    if (kDebugMode) {
+                      print('Creando nuevo paciente');
+                    }
+                  }
+
+                  // Mostrar el modal de éxito después de guardar o editar
+                  _showSuccessDialog(context, _editingPatient != null);
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.purple.shade300,
+                  padding: const EdgeInsets.symmetric(
+                    vertical: 16.0,
+                    horizontal: 32.0,
+                  ),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12.0),
+                  ),
+                ),
+                child: Text(
+                  _editingPatient == null ? 'INSERTAR' : 'GUARDAR',
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
-    ),
-  );
-}
+    );
+  }
 
+  void _showSuccessDialog(BuildContext context, bool isEditing) {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return SuccessDialog(
+          title: isEditing ? 'Edición exitosa' : 'Registro Exitoso',
+          message: isEditing
+              ? '¡Se modificó el registro correctamente!'
+              : '¡Se creó el registro correctamente!',
+          onBackPressed: () {
+            Navigator.of(context).pop(); // Cerrar el modal
+            _toggleView(); // Volver a la vista de la tabla
+          },
+        );
+      },
+    );
+  }
 
+  void _showDeleteConfirmationDialog(BuildContext context, int patientId) {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return DeleteConfirmationDialog(
+          onConfirmDelete: () {
+            Provider.of<PatientViewModel>(context, listen: false).deletePatient(patientId);
+            if (kDebugMode) {
+              print('Eliminando paciente con ID: $patientId');
+            }
+          },
+        );
+      },
+    );
+  }
 
-
-  // Widget para la tabla de pacientes
   Widget _buildTable() {
     return Consumer<PatientViewModel>(
       builder: (context, patientViewModel, child) {
@@ -304,14 +365,15 @@ Widget _buildForm() {
           child: PatientDataTable(
             patients: patientViewModel.listPatients,
             onEdit: (id) {
-              if (kDebugMode) {
-                print('Editando paciente con ID: $id');
+              // Buscar el paciente en la lista para editarlo
+              Patient? patient = patientViewModel.listPatients.firstWhere((p) => p.idPatient == id, orElse: () => Patient(name: '', lastName: '', secondLastName: '.', birthDate: '', ci: ''));
+              // ignore: unnecessary_null_comparison
+              if (patient != null) {
+                _toggleView(patient);
               }
             },
             onDelete: (id) {
-              if (kDebugMode) {
-                print('Eliminando paciente con ID: $id');
-              }
+              _showDeleteConfirmationDialog(context, id);
             },
           ),
         );

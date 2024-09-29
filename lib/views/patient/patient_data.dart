@@ -46,9 +46,9 @@ class _PatientDataTableState extends State<PatientDataTable> {
             headerGridLinesVisibility: GridLinesVisibility.none,
             columns: <GridColumn>[
               buildGridColumn('CI', 'CI'),
+              buildGridColumn('Nombre', 'Nombre'),
               buildGridColumn('Apellido Paterno', 'Apellido Paterno'),
               buildGridColumn('Apellido Materno', 'Apellido Materno'),
-              buildGridColumn('Nombre', 'Nombre'),
               buildGridColumn('Fecha de Nacimiento', 'Fecha de Nacimiento'),
               GridColumn(
                 columnName: 'Acciones',
@@ -89,18 +89,18 @@ class PatientDataSource extends DataGridSource {
       return DataGridRow(cells: [
         DataGridCell<int>(columnName: 'ID', value: patient.idPatient),
         DataGridCell<String>(columnName: 'CI', value: patient.ci),
+        DataGridCell<String>(columnName: 'Nombre', value: patient.name),
         DataGridCell<String>(columnName: 'Apellido Paterno', value: patient.lastName),
         DataGridCell<String>(columnName: 'Apellido Materno', value: patient.secondLastName),
-        DataGridCell<String>(columnName: 'Nombre', value: patient.name),
         DataGridCell<String>(columnName: 'Fecha de Nacimiento', value: patient.birthDate),
         DataGridCell<Widget>(
           columnName: 'Acciones',
           value: Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              DeleteButton(onPressed: () => onDelete(patient.idPatient!)),
-              const SizedBox(width: 8),
               EditButton(onPressed: () => onEdit(patient.idPatient!)),
+              const SizedBox(width: 8),
+              DeleteButton(onPressed: () => onDelete(patient.idPatient!)),
             ],
           ),
         ),

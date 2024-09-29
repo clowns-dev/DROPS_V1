@@ -29,4 +29,6 @@ class PatientViewModel extends ChangeNotifier{
   }
 }
 
+  void deletePatient(int patientId) {}
+
 }

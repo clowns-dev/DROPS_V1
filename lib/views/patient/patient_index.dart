@@ -20,16 +20,36 @@ class PatientIndex extends StatefulWidget {
 }
 
 class _PatientIndexState extends State<PatientIndex> {
-  String _selectedFilter = 'Nombre';
-  final List<String> _filterOptions = ['Nombre', 'CI', 'Fecha de Nacimiento'];
-  bool _showForm = false; // Variable booleana para alternar entre tabla y formulario
-  Patient? _editingPatient; // Paciente en edición (si es null, entonces estamos creando)
+  final String _selectedFilter = 'Nombre';
+  final List<String> _filterOptions = ['Nombre', 'CI', 'Apellido'];
+  bool _showForm = false; 
+  Patient? _editingPatient; 
+  //String _searchQuery = '';
+  final TextEditingController _searchController = TextEditingController();
 
-  // Alterna entre mostrar la tabla o el formulario
+  @override
+  void initState() {
+    super.initState();
+    _searchController.addListener(_onSearchChanged);
+  }
+
+  @override
+  void dispose() {
+    _searchController.removeListener(_onSearchChanged);
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  void _onSearchChanged() {
+    final patientViewModel = context.read<PatientViewModel>();
+    patientViewModel.filterEmployees(_searchController.text);
+  }
+
+
   void _toggleView([Patient? patient]) {
     setState(() {
       _showForm = !_showForm;
-      _editingPatient = patient; // Si hay un paciente, estamos en modo edición
+      _editingPatient = patient; 
     });
   }
 
@@ -97,7 +117,6 @@ class _PatientIndexState extends State<PatientIndex> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Fila con el título, filtro y buscador (en una sola línea)
             if (!_showForm)
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -114,13 +133,15 @@ class _PatientIndexState extends State<PatientIndex> {
                         value: _selectedFilter,
                         items: _filterOptions,
                         onChanged: (newValue) {
-                          setState(() {
-                            _selectedFilter = newValue ?? _selectedFilter;
-                          });
+                          
                         },
                       ),
                       const SizedBox(width: 16.0),
-                      const SearchField(fullWidth: false),
+                      SearchField(
+                        controller: _searchController,
+                        fullWidth: false,
+                        onChanged: (value) => _onSearchChanged(),
+                      ),
                     ],
                   ),
                 ],
@@ -151,10 +172,16 @@ class _PatientIndexState extends State<PatientIndex> {
     );
   }
 
+  
+
+
+
+
+
   Widget _buildForm() {
     return Center(
       child: Container(
-        width: 400, // Ajusta el ancho del formulario para que sea más simétrico y compacto
+        width: 400, 
         padding: const EdgeInsets.all(16.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -360,13 +387,27 @@ class _PatientIndexState extends State<PatientIndex> {
   Widget _buildTable() {
     return Consumer<PatientViewModel>(
       builder: (context, patientViewModel, child) {
-        return Padding(
-          padding: const EdgeInsets.all(8.0),
-          child: PatientDataTable(
-            patients: patientViewModel.listPatients,
+        if (patientViewModel.isLoading) {
+          return const Center(child: CircularProgressIndicator());
+        } else if (patientViewModel.filteredPatients.isEmpty) {
+          return Center(
+            child: Text(
+              'Sin coincidencias',
+              style: TextStyle(
+                fontSize: 16.0,
+                fontWeight: FontWeight.bold,
+                color: Colors.grey.shade600,
+              ),
+            ),
+          );
+        } else {
+          return PatientDataTable(
+            patients: patientViewModel.filteredPatients,
             onEdit: (id) {
-              // Buscar el paciente en la lista para editarlo
-              Patient? patient = patientViewModel.listPatients.firstWhere((p) => p.idPatient == id, orElse: () => Patient(name: '', lastName: '', secondLastName: '.', birthDate: '', ci: ''));
+              Patient? patient = patientViewModel.listPatients.firstWhere(
+                (p) => p.idPatient == id,
+                orElse: () => Patient(name: '', lastName: '', secondLastName: '', birthDate: '', ci: ''),
+              );
               // ignore: unnecessary_null_comparison
               if (patient != null) {
                 _toggleView(patient);
@@ -375,8 +416,8 @@ class _PatientIndexState extends State<PatientIndex> {
             onDelete: (id) {
               _showDeleteConfirmationDialog(context, id);
             },
-          ),
-        );
+          );
+        }
       },
     );
   }

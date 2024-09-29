@@ -2,14 +2,23 @@ import 'package:flutter/material.dart';
 
 class SearchField extends StatelessWidget {
   final bool fullWidth;
+  final TextEditingController controller;
+  final ValueChanged<String>? onChanged;
 
-  const SearchField({required this.fullWidth, super.key});
+  const SearchField({
+    required this.fullWidth,
+    required this.controller,
+    this.onChanged,
+    super.key,
+  });
 
   @override
   Widget build(BuildContext context) {
     return SizedBox(
       width: fullWidth ? double.infinity : 200.0,
       child: TextField(
+        controller: controller,
+        onChanged: onChanged,
         decoration: InputDecoration(
           hintText: 'Buscar',
           hintStyle: TextStyle(

@@ -1,840 +1,528 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:ps3_drops_v1/models/person.dart';
-import 'package:syncfusion_flutter_datagrid/datagrid.dart';
-import 'package:syncfusion_flutter_core/theme.dart';
+import 'package:provider/provider.dart';
+import 'package:ps3_drops_v1/models/employee.dart';
+import 'package:ps3_drops_v1/view_models/employee_view_model.dart';
+import 'package:ps3_drops_v1/views/users/user_data.dart';
+import 'package:ps3_drops_v1/widgets/text_label.dart';
+import 'package:ps3_drops_v1/widgets/title_container.dart';
+import 'package:ps3_drops_v1/widgets/history_title_container.dart';
+import 'package:ps3_drops_v1/widgets/search_field.dart';
+import 'package:ps3_drops_v1/widgets/dropdown_filter.dart';
+import 'package:ps3_drops_v1/widgets/add_title_button.dart';
+import 'package:ps3_drops_v1/widgets/success_dialog.dart';
+import 'package:ps3_drops_v1/widgets/delete_confirmation_dialog.dart';
 
-class UserDataSource extends DataGridSource {
-  UserDataSource({required List<Person> users, required this.onEdit, required this.context}) {
-    _originalUsers = users;
-    _paginatedUsers = users.toList();
-    buildDataGridRows(onEdit);
-  }
-
-  BuildContext context;
-
-  List<Person> _originalUsers = [];
-  List<Person> _paginatedUsers = [];
-  List<DataGridRow> _users = [];
-
-  final Function onEdit; 
+class UserIndex extends StatefulWidget {
+  const UserIndex({super.key});
 
   @override
-  List<DataGridRow> get rows => _users;
-  
-
-  void updateSearch(String searchQuery) {
-  if (searchQuery.isEmpty) {
-    _paginatedUsers = _originalUsers; // Restablecer lista original si no hay búsqueda
-  } else {
-    _paginatedUsers = _originalUsers.where((person) {
-      // Filtra por el campo seleccionado
-      var selectedFilter;
-      switch (selectedFilter) {
-        case 'CI':
-          return person.ci.toLowerCase().contains(searchQuery.toLowerCase());
-        case 'Nombre':
-          return person.name.toLowerCase().contains(searchQuery.toLowerCase());
-        case 'Fecha de Nacimiento':
-          return person.birthDate.toLowerCase().contains(searchQuery.toLowerCase());
-        default:
-          return false;
-      }
-    }).toList();
-  }
-  buildDataGridRows(onEdit); // Reconstruir la tabla con los resultados filtrados
-  notifyListeners(); // Notificar cambios
-}
-  void buildDataGridRows(Function onEdit) {
-    _users = _paginatedUsers.map<DataGridRow>((person) {
-      return DataGridRow(cells: [
-        DataGridCell<String>(columnName: 'Nombre', value: person.name),
-        DataGridCell<String>(columnName: 'Apellido Paterno', value: person.lastName),
-        DataGridCell<String>(columnName: 'Apellido Materno', value: person.secondLastName),
-        DataGridCell<String>(columnName: 'Fecha de Nacimiento', value: person.birthDate),
-        DataGridCell<String>(columnName: 'CI', value: person.ci),
-        DataGridCell<Widget>(
-          columnName: 'Acciones',
-          value: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-            children: [
-              Flexible(
-                child: ElevatedButton(
-                  onPressed: () {
-                    onEdit();
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.blue,
-                  ),
-                  child: const Icon(
-                    Icons.edit,
-                    color: Colors.white,
-                  ),
-                ),
-              ),
-              Flexible(
-                child: ElevatedButton(
-                  onPressed: (){
-                    _showDeleteConfirmationDialog(context);
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.red,
-                  ),
-                child: const Icon(
-                  Icons.delete,
-                  color: Colors.white,
-                ),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ]);
-    }).toList();
-  }
-
-  @override
-  DataGridRowAdapter buildRow(DataGridRow row) {
-    return DataGridRowAdapter(
-      cells: row.getCells().map<Widget>((dataGridCell) {
-        return Container(
-          alignment: Alignment.center,
-          padding: const EdgeInsets.all(8.0),
-          child: dataGridCell.value is Widget
-              ? dataGridCell.value
-              : Text(dataGridCell.value.toString()),
-        );
-      }).toList(),
-    );
-  }
-  
-  void _showDeleteConfirmationDialog(BuildContext context) {
-    showDialog(
-  context: context,
-  builder: (BuildContext context) {
-    return AlertDialog(
-      contentPadding: const EdgeInsets.all(0), // Remove default padding
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(15),
-      ),
-      content: SizedBox(
-        width: 336,
-        height: 284,
-        child: Stack(
-          children: [
-            Positioned(
-              left: 0,
-              top: 0,
-              child: Container(
-                width: 336,
-                height: 284,
-                decoration: ShapeDecoration(
-                  color: const Color(0xFFE1F2E1),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(15),
-                  ),
-                ),
-              ),
-            ),
-            Positioned(
-              left: 51.25,
-              top: 10.0,
-              child: Column(
-                children: [
-                  Image.asset(
-                    'assets/interroga.png',
-                    width: 116,
-                    height: 124,
-                  ),
-                  const SizedBox(
-                    width: 218.31,
-                    height: 30,
-                    child: Text(
-                      '¿Eliminar?',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        color: Colors.black,
-                        fontSize: 26,
-                        fontFamily: 'Roboto',
-                        fontWeight: FontWeight.w700,
-                        height: 1.2,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            const Positioned(
-              left: 33,
-              top: 180,
-              child: SizedBox(
-                width: 270,
-                height: 50,
-                child: Text(
-                  '¿Está seguro de que desea eliminar este registro?',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    color: Colors.black,
-                    fontSize: 16,
-                    fontFamily: 'Inter',
-                    fontWeight: FontWeight.w400,
-                    height: 1.5,
-                  ),
-                  maxLines: 2,
-                  overflow: TextOverflow.visible,
-                ),
-              ),
-            ),
-            Positioned(
-              left: 93,
-              top: 237,
-              child: GestureDetector(
-                onTap: () {
-                  Navigator.of(context).pop();
-                  // Aquí puedes agregar la acción de eliminar
-                  //Provider.of<BalanceViewModel>(context, listen: false).deleteBalance(idBalance);
-                },
-                child: Container(
-                  width: 43,
-                  height: 31,
-                  decoration: ShapeDecoration(
-                    color: const Color(0xFFFF9494),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                  ),
-                  child: const Center(
-                    child: Text(
-                      'Sí',
-                      style: TextStyle(
-                        color: Colors.black,
-                        fontSize: 24,
-                        fontFamily: 'Poppins',
-                        fontWeight: FontWeight.w500,
-                        height: 1,
-                        letterSpacing: -0.24,
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-            ),
-            Positioned(
-              left: 197,
-              top: 237,
-              child: GestureDetector(
-                onTap: () {
-                  Navigator.of(context).pop();
-                },
-                child: Container(
-                  width: 43,
-                  height: 31,
-                  decoration: ShapeDecoration(
-                    color: const Color(0xFF48E86B),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                  ),
-                  child: const Center(
-                    child: Text(
-                      'No',
-                      style: TextStyle(
-                        color: Colors.black,
-                        fontSize: 24,
-                        fontFamily: 'Poppins',
-                        fontWeight: FontWeight.w500,
-                        height: 1,
-                        letterSpacing: -0.24,
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  },
-);
-
-  }
+  State<UserIndex> createState() => _UserIndex();
 }
 
-
-class UsersPage extends StatefulWidget {
-  const UsersPage({super.key});
-
-  @override
-  UsersPageState createState() => UsersPageState();
-}
-
-List<Person> getUserData() {
-  return [
-    Person(name:'Alejandra',lastName: 'Centellas',secondLastName: 'Centellas', birthDate: '23-18-1992', ci: '7545454'),
-    Person(name:'Alejandra',lastName: 'Centellas',secondLastName: 'Centellas', birthDate: '23-18-1992', ci: '7545454'),
-    Person(name:'Alejandra',lastName: 'Centellas',secondLastName: 'Centellas', birthDate: '23-18-1992', ci: '7545454'),
-    Person(name:'Alejandra',lastName: 'Centellas',secondLastName: 'Centellas', birthDate: '23-18-1992', ci: '7545454'),
-    Person(name:'Alejandra',lastName: 'Centellas',secondLastName: 'Centellas', birthDate: '23-18-1992', ci: '7545454'),
-    Person(name:'Alejandra',lastName: 'Centellas',secondLastName: 'Centellas', birthDate: '23-18-1992', ci: '7545454'),
-    Person(name:'Alejandra',lastName: 'Centellas',secondLastName: 'Centellas', birthDate: '23-18-1992', ci: '7545454'),
-    Person(name:'Alejandra',lastName: 'Centellas',secondLastName: 'Centellas', birthDate: '23-18-1992', ci: '7545454'),
-    Person(name:'Alejandra',lastName: 'Centellas',secondLastName: 'Centellas', birthDate: '23-18-1992', ci: '7545454'),
-    Person(name:'Alejandra',lastName: 'Centellas',secondLastName: 'Centellas', birthDate: '23-18-1992', ci: '7545454'),
-  ];
-}
-
-
-class UsersPageState extends State<UsersPage> {
-  late UserDataSource _userDataSource;
-  late List<Person> _users;
+class _UserIndex extends State<UserIndex> {
+  final String _selectedFilter = 'Nombre';
+  final String _selectedFilterRol = 'Usuario';
+  final List<String> _filterOptions = ['Nombre', 'CI', 'Apellido'];
+  final List<String> _filterOptionsRol = ['Usuario', 'Enfermero', 'Administrador'];
+  bool _showForm = false; 
+  Employee? _editingEmployee; 
+  //String _searchQuery = '';
   final TextEditingController _searchController = TextEditingController();
-  String _selectedFilter = 'Nombre'; // Inicializa con un valor válido
-  String _selectedUsuario = 'Usuario'; 
-
-  int _rowsPerPage = 5;
-
-  bool _isAddingUser = false; // Para alternar entre tabla y formulario de añadir
-  bool _isEditingUser = false; // Para alternar entre tabla y formulario de edición
+  bool _showNurseFields = false;
 
   @override
   void initState() {
-    _users = getUserData();
-    // Pasar la función de edición a la fuente de datos
-    _userDataSource = UserDataSource(users: _users, onEdit: _toggleEditingUser, context: context);
     super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      context.read<EmployeeViewModel>().fetchEmployees();
+    });
+    _searchController.addListener(_onSearchChanged);
   }
 
-  // Función para alternar entre la tabla y el formulario de añadir
-  void _toggleAddingUser() {
+  @override
+  void dispose() {
+    _searchController.removeListener(_onSearchChanged);
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  void _onSearchChanged() {
+    final employeeViewModel = context.read<EmployeeViewModel>();
+    employeeViewModel.filterEmployees(_searchController.text);
+  }
+
+
+  void _toggleView({bool resetForm = false}) {
     setState(() {
-      _isAddingUser = !_isAddingUser;
+      _showForm = !_showForm;
+
+      if (resetForm) {
+        _editingEmployee = null;
+        _showNurseFields = false;
+      } else {
+        _showNurseFields = _editingEmployee?.rolName == 'Enfermera';
+      }
     });
   }
 
-  // Función para alternar entre la tabla y el formulario de edición
-  void _toggleEditingUser() {
-    setState(() {
-      _isEditingUser = !_isEditingUser;
-    });
-  }
+  @override
+  Widget build(BuildContext context) {
+    final screenSize = MediaQuery.of(context).size;
 
-  // Mostrar el cuadro de diálogo de confirmación de eliminación
-  
-
-@override
-Widget build(BuildContext context) {
-  return DefaultTabController(
-    length: 1, // Solo una pestaña
-    child: Scaffold(
+    return Scaffold(
       appBar: AppBar(
         title: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            const Text('Gestión de Usuarios'),
-            ElevatedButton(
-              onPressed: _isAddingUser ? _toggleAddingUser : _toggleAddingUser,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color.fromARGB(169, 157, 177, 158), // Color del botón
-              ),
-              child: _isAddingUser ? const Text('Volver') : const Text('Añadir Usuario'),
+            const TitleContainer(
+              title: 'Gestión de Usuarios',
+            ),
+            LayoutBuilder(
+              builder: (context, constraints) {
+                if (constraints.maxWidth < 500) {
+                  return IconButton(
+                    icon: Icon(
+                      _showForm ? Icons.arrow_back : Icons.add,
+                      color: Colors.black,
+                      size: 24.0,
+                    ),
+                    onPressed: () => _toggleView(),
+                  );
+                } else {
+                  return OutlinedButton(
+                    onPressed: () => _toggleView(),
+                    style: OutlinedButton.styleFrom(
+                      backgroundColor: Colors.white.withOpacity(0.2),
+                      side: BorderSide(color: Colors.grey.withOpacity(0.6), width: 1.5),
+                      padding: const EdgeInsets.symmetric(vertical: 12.0, horizontal: 16.0),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8.0),
+                      ),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          _showForm ? Icons.arrow_back : Icons.add,
+                          color: Colors.grey[700],
+                          size: 20.0,
+                        ),
+                        const SizedBox(width: 8.0),
+                        AddTitleButton(
+                          titleButton: _showForm ? 'Volver' : 'Añadir Usuario',
+                        ),
+                      ],
+                    ),
+                  );
+                }
+              },
             ),
           ],
         ),
-        bottom: PreferredSize(
-          preferredSize: const Size.fromHeight(60.0), // Ajustar altura
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16.0),
-            child: Row(
-              children: [
-                // TabBar (con una pestaña)
-                const Expanded(
-                  child: TabBar(
-                    tabs: [
-                      Tab(text: 'Historial de Usuarios'),
+        backgroundColor: const Color.fromARGB(236, 238, 240, 255),
+      ),
+      body: Container(
+        width: screenSize.width,
+        height: screenSize.height,
+        color: const Color.fromARGB(236, 238, 240, 255),
+        padding: const EdgeInsets.all(18.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            if (!_showForm)
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  const HistoryTitleContainer(
+                    titleTable: 'Historial de Usuarios',
+                  ),
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      DropdownFilter(
+                        fullWidth: false,
+                        value: _selectedFilterRol,
+                        items: _filterOptionsRol,
+                        onChanged: (newValueRole) {
+                          
+                        },
+                      ),
+                      const SizedBox(width: 16.0),
+                      DropdownFilter(
+                        fullWidth: false,
+                        value: _selectedFilter,
+                        items: _filterOptions,
+                        onChanged: (newValue) {
+                          
+                        },
+                      ),
+                      const SizedBox(width: 16.0),
+                      SearchField(
+                        controller: _searchController,
+                        fullWidth: false,
+                        onChanged: (value) => _onSearchChanged(),
+                      ),
                     ],
-                    
-                  ),
-                ),
-                const SizedBox(width: 10),
-                
-                _buildSearchFilterDropdown(), 
-                const SizedBox(width: 10),
-                _buildFilterDropdown(), 
-                const SizedBox(width: 10),
-                Expanded(
-                  flex: 2,
-                  child: _buildSearchField(), // Campo de búsqueda
-                ),
-                
-              ],
-            ),
-          ),
-        ),
-      ),
-      body: TabBarView(
-  children: [
-    Column(
-      children: [
-        Expanded(
-          child: _isAddingUser 
-              ? _buildAddUserForm()  // Mostrar formulario de creación si se está agregando un usuario
-              : _isEditingUser 
-                  ? _buildEditUserForm() // Mostrar formulario de edición si se está editando un usuario
-                  : _buildUserTable(),   // Mostrar la tabla de usuarios si no se está editando ni agregando
-        ),
-        SfDataPager(
-          delegate: _userDataSource,
-          availableRowsPerPage: const <int>[5, 10, 15],
-          pageCount: (_users.length / _rowsPerPage).ceil().toDouble(),
-          onRowsPerPageChanged: (int? rowsPerPage) {
-            setState(() {
-              _rowsPerPage = rowsPerPage!;
-            });
-          },
-        ),
-      ],
-    ),
-  ],
-),
-
-    ),
-  );
-}
-
-
-
-
-Widget _buildSearchField() {
-  return TextField(
-    controller: _searchController,
-    onChanged: (value) {
-      setState(() {
-        _userDataSource.updateSearch(value); // Actualizar búsqueda cuando cambia el texto
-      });
-    },
-    decoration: InputDecoration(
-      hintText: 'Buscar usuario',
-      prefixIcon: const Icon(Icons.search),
-      border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(8.0),
-        borderSide: const BorderSide(color: Colors.grey),
-      ),
-      contentPadding: const EdgeInsets.symmetric(vertical: 10.0, horizontal: 16.0),
-    ),
-  );
-}
-
-Widget _buildFilterDropdown() {
-  return DecoratedBox(
-    decoration: BoxDecoration(
-      border: Border.all(color: Colors.black, width: 2), 
-      borderRadius: BorderRadius.circular(8), 
-    ),
-    child: Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 12),
-      child: DropdownButton<String>(
-        value: _selectedUsuario,
-        items: <String>['Usuario', 'Administrador', 'Enfermera', 'Biomédico']
-            .map((String value) {
-          return DropdownMenuItem<String>(
-            value: value,
-            child: Text(value),
-          );
-        }).toList(),
-        onChanged: (newValue) {
-          setState(() {
-            _selectedUsuario = newValue!;
-            _userDataSource.updateSearch(_searchController.text);
-          });
-        },
-        underline:const SizedBox(),
-      ),
-    ),
-  );
-}
-
-
-Widget _buildSearchFilterDropdown() {
-  return DecoratedBox(
-    decoration: BoxDecoration(
-      border: Border.all(color: Colors.black, width: 2),
-      borderRadius: BorderRadius.circular(8),
-    ),
-    child: Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 12),
-      child: DropdownButton<String>(
-        value: _selectedFilter, 
-        items: <String>['Nombre', 'CI', 'Fecha de Nacimiento'].map((String value) {
-          return DropdownMenuItem<String>(
-            value: value,
-            child: Text(value),
-          );
-        }).toList(),
-        onChanged: (newValue) {
-          setState(() {
-            _selectedFilter = newValue!; 
-          });
-        },
-        underline:const SizedBox(),
-      ),
-    ),
-  );
-}
-  // Formulario de añadir usuario
-  Widget _buildAddUserForm() {
-    final TextEditingController ciController = TextEditingController();
-    final TextEditingController nameController = TextEditingController();
-    final TextEditingController dobController = TextEditingController();
-    final TextEditingController typeController = TextEditingController();
-    final TextEditingController modifierController = TextEditingController();
-
-    return Padding(
-      padding: const EdgeInsets.all(20.0),
-      child: Column(
-        children: [
-          TextField(
-            controller: ciController,
-            decoration: const InputDecoration(labelText: 'CI'),
-          ),
-          TextField(
-            controller: nameController,
-            decoration: const InputDecoration(labelText: 'Nombre'),
-          ),
-          TextField(
-            controller: dobController,
-            decoration: const InputDecoration(labelText: 'Fecha de Nacimiento'),
-          ),
-          TextField(
-            controller: typeController,
-            decoration: const InputDecoration(labelText: 'Tipo de Usuario'),
-          ),
-          TextField(
-            controller: modifierController,
-            decoration: const InputDecoration(labelText: 'Usuario Modificador'),
-          ),
-          const SizedBox(height: 20),
-          ElevatedButton(
-            onPressed: () {
-              _showSuccessDialogCreate(context, () {
-                Navigator.of(context).pop();
-              });
-              _toggleAddingUser(); // Vuelve a la tabla de usuarios
-            },
-            child: const Text('Registrar Usuario'),
-          ),
-        ],
-      ),
-    );
-  }
-
-  // Formulario de edición de usuario
-  Widget _buildEditUserForm() {
-    final TextEditingController ciController = TextEditingController();
-    final TextEditingController nameController = TextEditingController();
-    final TextEditingController dobController = TextEditingController();
-    final TextEditingController typeController = TextEditingController();
-    final TextEditingController modifierController = TextEditingController();
-
-    return Padding(
-      padding: const EdgeInsets.all(20.0),
-      child: Column(
-        children: [
-          TextField(
-            controller: ciController,
-            decoration: const InputDecoration(labelText: 'CI'),
-          ),
-          TextField(
-            controller: nameController,
-            decoration: const InputDecoration(labelText: 'Nombre'),
-          ),
-          TextField(
-            controller: dobController,
-            decoration: const InputDecoration(labelText: 'Fecha de Nacimiento'),
-          ),
-          TextField(
-            controller: typeController,
-            decoration: const InputDecoration(labelText: 'Tipo de Usuario'),
-          ),
-          TextField(
-            controller: modifierController,
-            decoration: const InputDecoration(labelText: 'Usuario Modificador'),
-          ),
-          const SizedBox(height: 20),
-          ElevatedButton(
-            onPressed: () {
-              _showSuccessDialogEdit(context, () {
-                Navigator.of(context).pop();
-              });
-
-
-              _toggleEditingUser(); // Vuelve a la tabla de usuarios
-            },
-            child: const Text('Guardar Edicion'),
-          ),
-        ],
-      ),
-    );
-  }
-
-  // Vista de la tabla de usuarios
-  Widget _buildUserTable() {
-    return Padding(
-      padding: const EdgeInsets.all(20),
-      child: Column(
-        children: [
-          const SizedBox(height: 10),
-          Expanded(
-            child: SfDataGridTheme(
-              data: const SfDataGridThemeData(
-                headerColor: Color.fromARGB(255, 246, 247, 248),
-              ),
-              child: SfDataGrid(
-                columnWidthMode: ColumnWidthMode.fill,
-                source: _userDataSource,
-                columns: <GridColumn>[
-                  GridColumn(
-                    columnName: 'Nombre',
-                    label: Container(
-                      padding: const EdgeInsets.all(8.0),
-                      alignment: Alignment.center,
-                      child: const Text(
-                        'Nombre',
-                        style: TextStyle(fontWeight: FontWeight.bold),
-                      ),
-                    ),
-                  ),
-                  GridColumn(
-                    columnName: 'Apellido Paterno',
-                    label: Container(
-                      padding: const EdgeInsets.all(8.0),
-                      alignment: Alignment.center,
-                      child: const Text(
-                        'Apellido Paterno',
-                        style: TextStyle(fontWeight: FontWeight.bold),
-                      ),
-                    ),
-                  ),
-                  GridColumn(
-                    columnName: 'Apellido Materno',
-                    label: Container(
-                      padding: const EdgeInsets.all(8.0),
-                      alignment: Alignment.center,
-                      child: const Text(
-                        'Apellido Materno',
-                        style: TextStyle(fontWeight: FontWeight.bold),
-                      ),
-                    ),
-                  ),
-                  GridColumn(
-                    columnName: 'Fecha de Nacimiento',
-                    label: Container(
-                      padding: const EdgeInsets.all(8.0),
-                      alignment: Alignment.center,
-                      child: const Text(
-                        'Fecha de Nacimiento',
-                        style: TextStyle(fontWeight: FontWeight.bold),
-                      ),
-                    ),
-                  ),
-                  GridColumn(
-                    columnName: 'CI',
-                    label: Container(
-                      padding: const EdgeInsets.all(8.0),
-                      alignment: Alignment.center,
-                      child: const Text(
-                        'CI',
-                        style: TextStyle(fontWeight: FontWeight.bold),
-                      ),
-                    ),
-                  ),
-                  GridColumn(
-                    columnName: 'Acciones',
-                    label: Container(
-                      padding: const EdgeInsets.all(8.0),
-                      alignment: Alignment.center,
-                      child: const Text(
-                        'Acciones',
-                        style: TextStyle(fontWeight: FontWeight.bold),
-                      ),
-                    ),
                   ),
                 ],
               ),
+            const SizedBox(height: 16.0),
+            Expanded(
+              child: Container(
+                width: double.infinity,
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(12.0),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.grey.withOpacity(0.2),
+                      spreadRadius: 5,
+                      blurRadius: 7,
+                      offset: const Offset(0, 3),
+                    ),
+                  ],
+                ),
+                padding: const EdgeInsets.all(18.0), // Añadir padding al contenedor
+                child: _showForm ? _buildForm() : _buildTable(),
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
-}
+
+  Widget _buildForm() {
+    return Center(
+      child: Container(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Center(
+              child: HistoryTitleContainer(
+                titleTable: _editingEmployee == null ? 'Añadir Usuario' : 'Editar Usuario',
+              ),
+            ),
+            const SizedBox(height: 24.0),
+
+            // Distribución de los campos en dos columnas
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Primera columna de campos
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const TextLabel(content: 'CI:'),
+                      const SizedBox(height: 8.0),
+                      TextField(
+                        controller: TextEditingController(
+                          text: _editingEmployee?.ci ?? '',
+                        ),
+                        decoration: InputDecoration(
+                          hintText: 'Ingrese el C.I.',
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12.0),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 24.0),
+                      const TextLabel(content: 'Nombre:'),
+                      const SizedBox(height: 8.0),
+                      TextField(
+                        controller: TextEditingController(
+                          text: _editingEmployee?.name ?? '',
+                        ),
+                        decoration: InputDecoration(
+                          hintText: 'Ingrese el nombre',
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12.0),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 24.0),
+                      const TextLabel(content: 'Apellido Paterno:'),
+                      const SizedBox(height: 8.0),
+                      TextField(
+                        controller: TextEditingController(
+                          text: _editingEmployee?.lastName ?? '',
+                        ),
+                        decoration: InputDecoration(
+                          hintText: 'Ingrese el apellido paterno',
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12.0),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 24.0),
+                      const TextLabel(content: 'Apellido Materno:'),
+                      const SizedBox(height: 8.0),
+                      TextField(
+                        controller: TextEditingController(
+                          text: _editingEmployee?.secondLastName ?? '',
+                        ),
+                        decoration: InputDecoration(
+                          hintText: 'Ingrese el apellido materno',
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12.0),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 24.0),
+                      const TextLabel(content: 'Fecha de Nacimiento:'),
+                      const SizedBox(height: 8.0),
+                      TextField(
+                        controller: TextEditingController(
+                          text: _editingEmployee?.birthDate ?? '',
+                        ),
+                        decoration: InputDecoration(
+                          hintText: 'dd/mm/aaaa',
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12.0),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 40.0),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const TextLabel(content: 'Celular:'),
+                      const SizedBox(height: 8.0),
+                      TextField(
+                        controller: TextEditingController(
+                          text: _editingEmployee?.phoneNumber ?? '',
+                        ),
+                        decoration: InputDecoration(
+                          hintText: 'Ingrese el número de celular',
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12.0),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 24.0),
+                      const TextLabel(content: 'Direccion:'),
+                      const SizedBox(height: 8.0),
+                      TextField(
+                        controller: TextEditingController(
+                          text: _editingEmployee?.address ?? '',
+                        ),
+                        maxLines: 6,
+                        minLines: 5,
+                        decoration: InputDecoration(
+                          hintText: 'Ingrese la dirección del domicilio',
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12.0),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 24.0),
+                      const TextLabel(content: 'Correo Electronico:'),
+                      const SizedBox(height: 8.0),
+                      TextField(
+                        controller: TextEditingController(
+                          text: _editingEmployee?.email ?? '',
+                        ),
+                        decoration: InputDecoration(
+                          hintText: 'Ingrese el Correo Electronico',
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12.0),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 24.0),
+                      const TextLabel(content: 'Rol Usuario'),
+                      const SizedBox(height: 8.0),
+                      DropdownButtonFormField<String>(
+                        value: _editingEmployee?.rolName,
+                        decoration: InputDecoration(
+                          hintText: 'Ingrese el rol de Usuario',
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12.0),
+                          ),
+                        ),
+                        items: <String>['Enfermera', 'Doctor', 'Admin']
+                            .map<DropdownMenuItem<String>>((String value) {
+                          return DropdownMenuItem<String>(
+                            value: value,
+                            child: Text(value),
+                          );
+                        }).toList(),
+                        onChanged: (String? newValue) {
+                          setState(() {
+                            _editingEmployee?.rolName = newValue;
+                            _showNurseFields = newValue == 'Enfermera';
+                          });
+                        },
+                      ),
+                      const SizedBox(height: 24.0),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 40.0),
+                // Tercera columna para campos adicionales de "Enfermera"
+                if (_showNurseFields)
+                  Expanded(
+                    child: Column(
+                      children: [
+                        const TextLabel(content: 'Rol Enfermero'),
+                        const SizedBox(height: 8.0),
+                        TextField(
+                          controller: TextEditingController(
+                            text: _editingEmployee?.email ?? '',
+                          ),
+                          decoration: InputDecoration(
+                            hintText: 'Ingrese el Rol del Enfermero',
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12.0),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 24.0),
+                        const TextLabel(content: 'En Turno'),
+                        const SizedBox(height: 8.0),
+                        SwitchListTile(
+                          value: _editingEmployee?.userID != null,
+                          onChanged: (bool value) {
+                            setState(() {
+                              // Aquí podrías definir una lógica para actualizar el campo "en turno"
+                            });
+                          },
+                          title: const Text('En turno'),
+                        ),
+                      ],
+                    ),
+                  ),
+              ],
+            ),
+            const SizedBox(height: 32.0),
+
+            // Botón para guardar
+            Center(
+              child: ElevatedButton(
+                onPressed: () {
+                  if (_editingEmployee != null) {
+                    if (kDebugMode) {
+                      print('Editando paciente con ID: ${_editingEmployee?.idPatient}');
+                    }
+                  } else {
+                    if (kDebugMode) {
+                      print('Creando nuevo paciente');
+                    }
+                  }
+                  _showSuccessDialog(context, _editingEmployee != null);
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.purple.shade300,
+                  padding: const EdgeInsets.symmetric(
+                    vertical: 16.0,
+                    horizontal: 32.0,
+                  ),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12.0),
+                  ),
+                ),
+                child: Text(
+                  _editingEmployee == null ? 'INSERTAR' : 'GUARDAR',
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 
 
-void _showSuccessDialogCreate(BuildContext context, VoidCallback onBackPressed) {
-  showDialog(
-    context: context,
-    builder: (BuildContext context) {
-      return Dialog(
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(15),
-        ),
-        child: Container(
-          constraints: const BoxConstraints(
-            maxWidth: 354,
-            maxHeight: 315,
-          ),
-          padding: const EdgeInsets.symmetric(horizontal: 71, vertical: 20),
-          decoration: BoxDecoration(
-            color: const Color(0xFFE2F2E1),
-            borderRadius: BorderRadius.circular(15),
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Container(
-                width: 121,
-                height: 121,
-                decoration: const BoxDecoration(
-                  shape: BoxShape.circle,
-                ),
-                child: ClipOval(
-                  child: Image.asset(
-                    'assets/aceptar.png', // Asegúrate de tener esta imagen
-                    fit: BoxFit.cover,
-                  ),
-                ),
+
+  void _showSuccessDialog(BuildContext context, bool isEditing) {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return SuccessDialog(
+          title: isEditing ? 'Edición exitosa' : 'Registro Exitoso',
+          message: isEditing
+              ? '¡Se modificó el registro correctamente!'
+              : '¡Se creó el registro correctamente!',
+          onBackPressed: () {
+            Navigator.of(context).pop(); // Cerrar el modal
+            _toggleView(); // Volver a la vista de la tabla
+          },
+        );
+      },
+    );
+  }
+
+  void _showDeleteConfirmationDialog(BuildContext context, int patientId) {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return DeleteConfirmationDialog(
+          onConfirmDelete: () {
+            Provider.of<EmployeeViewModel>(context, listen: false).deletePatient(patientId);
+            if (kDebugMode) {
+              print('Eliminando paciente con ID: $patientId');
+            }
+          },
+        );
+      },
+    );
+  }
+
+  Widget _buildTable() {
+    return Consumer<EmployeeViewModel>(
+      builder: (context, employeeViewModel, child) {
+        if (employeeViewModel.isLoading) {
+          return const Center(child: CircularProgressIndicator());
+        } else if (employeeViewModel.filteredEmployees.isEmpty) {
+          return Center(
+            child: Text(
+              'Sin coincidencias',
+              style: TextStyle(
+                fontSize: 16.0,
+                fontWeight: FontWeight.bold,
+                color: Colors.grey.shade600,
               ),
-              const SizedBox(height: 9),
-              const Text(
-                'Registro exitoso',
-                style: TextStyle(
-                  fontSize: 26,
-                  fontWeight: FontWeight.bold,
-                  fontFamily: 'Roboto',
-                ),
-              ),
-              const SizedBox(height: 17),
-              const Text(
-                '¡Se creo el registro correctamente!',
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontSize: 15,
-                  fontFamily: 'Carrois Gothic SC',
-                ),
-              ),
-              const SizedBox(height: 21),
-              Align(
-                alignment: Alignment.centerRight,
-                child: ElevatedButton(
-                  onPressed: onBackPressed,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF48E86B),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(7),
-                    ),
-                    minimumSize: const Size(70, 24),
-                  ),
-                  child: const Text(
-                    'Volver',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                      fontFamily: 'Inter',
-                      color: Colors.white,
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-      );
-    },
-  );
+            ),
+          );
+        } else {
+          return EmployeeDataTable(
+            employees: employeeViewModel.filteredEmployees,
+            onEdit: (id) {
+              Employee? employee = employeeViewModel.listEmployees.firstWhere(
+                (e) => e.idEmployee == id,
+                orElse: () => Employee(name: '', lastName: '', secondLastName: '', birthDate: '', ci: '', address: '', phoneNumber: '', email: ''), // Retornar null en caso de que no se encuentre el empleado.
+              );
+
+              // ignore: unnecessary_null_comparison
+              if (employee != null) {
+                // Actualizar el empleado en edición y mostrar los campos adicionales según el rol
+                setState(() {
+                  _editingEmployee = employee;
+                  _showNurseFields = employee.rolName == 'Enfermera';
+                  _showForm = true; // Mostrar el formulario.
+                });
+              }
+            },
+            onDelete: (id) {
+              _showDeleteConfirmationDialog(context, id);
+            },
+          );
+        }
+      },
+    );
+  }
+
 }
 
-void _showSuccessDialogEdit(BuildContext context, VoidCallback onBackPressed) {
-  showDialog(
-    context: context,
-    builder: (BuildContext context) {
-      return Dialog(
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(15),
-        ),
-        child: Container(
-          constraints: const BoxConstraints(
-            maxWidth: 354,
-            maxHeight: 315,
-          ),
-          padding: const EdgeInsets.symmetric(horizontal: 71, vertical: 20),
-          decoration: BoxDecoration(
-            color: const Color(0xFFE2F2E1),
-            borderRadius: BorderRadius.circular(15),
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Container(
-                width: 121,
-                height: 121,
-                decoration: const BoxDecoration(
-                  shape: BoxShape.circle,
-                ),
-                child: ClipOval(
-                  child: Image.asset(
-                    'assets/aceptar.png', // Asegúrate de tener esta imagen
-                    fit: BoxFit.cover,
-                  ),
-                ),
-              ),
-              const SizedBox(height: 9),
-              const Text(
-                'Edicion exitosa',
-                style: TextStyle(
-                  fontSize: 26,
-                  fontWeight: FontWeight.bold,
-                  fontFamily: 'Roboto',
-                ),
-              ),
-              const SizedBox(height: 17),
-              const Text(
-                '¡Se modifico el registro correctamente!',
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontSize: 15,
-                  fontFamily: 'Carrois Gothic SC',
-                ),
-              ),
-              const SizedBox(height: 21),
-              Align(
-                alignment: Alignment.centerRight,
-                child: ElevatedButton(
-                  onPressed: onBackPressed,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF48E86B),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(7),
-                    ),
-                    minimumSize: const Size(70, 24),
-                  ),
-                  child: const Text(
-                    'Volver',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                      fontFamily: 'Inter',
-                      color: Colors.white,
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-      );
-    },
-  );
-}
-
-void main() {
-  runApp(const MaterialApp(home: UsersPage()));
-}

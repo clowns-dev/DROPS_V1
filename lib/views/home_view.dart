@@ -103,7 +103,7 @@ class _HomePageState extends State<HomePage> {
 
     if(index == 3){
     
-      return const UsersPage();
+      return const UserIndex();
     }
 
     if(index == 4){

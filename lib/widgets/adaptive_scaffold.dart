@@ -45,69 +45,123 @@ class AdaptiveScaffold extends StatefulWidget {
 class _AdaptiveScaffoldState extends State<AdaptiveScaffold> {
   @override
   Widget build(BuildContext context) {
+    const backgroundColor = Color.fromARGB(236, 238, 240, 255);
+
     if (_isLargeScreen(context)) {
-      return Row(
-        children: [
-          Drawer(
-            shape: const RoundedRectangleBorder(
-              borderRadius: BorderRadius.zero,
-            ),
-            backgroundColor: const Color(0xFFACB3CC),
-            child: Column(
-              children: [
-                DrawerHeader(
-                  child: Center(
-                    child: widget.title,
-                  ),
-                ),
-                for (var d in widget.destinations)
-                  ListTile(
-                    leading: Icon(
-                      d.icon,
-                      color: widget.destinations.indexOf(d) == widget.currentIndex ? Colors.black : Colors.black54,
+      return Scaffold(
+        extendBodyBehindAppBar: true,
+        backgroundColor: backgroundColor,
+        body: Row(
+          children: [
+            Drawer(
+              shape: const RoundedRectangleBorder(
+                borderRadius: BorderRadius.zero,
+              ),
+              backgroundColor: const Color(0xFFACB3CC), 
+              child: Column(
+                children: [
+                  DrawerHeader(
+                    child: Center(
+                      child: widget.title,
                     ),
-                    title: Text(
-                      d.title,
-                      style: TextStyle(
-                        color: widget.destinations.indexOf(d) == widget.currentIndex ? Colors.black : Colors.black45,
+                  ),
+                  Expanded(
+                    child: ListView(
+                      padding: EdgeInsets.zero,
+                      children: [
+                        for (var i = 0; i < widget.destinations.length; i++)
+                          if (widget.destinations[i].title != 'Salir')
+                            InkWell(
+                              onTap: () => _destinationTapped(widget.destinations[i]),
+                              onHover: (hovering) {
+                                setState(() {
+                                  // Actualiza el estado si se requiere
+                                });
+                              },
+                              child: Container(
+                                color: widget.currentIndex == i
+                                    ? const Color.fromARGB(255, 168, 126, 207)
+                                    : const Color.fromARGB(255, 198, 199, 201),
+                                padding: const EdgeInsets.symmetric(vertical: 20.0, horizontal: 16.0),
+                                child: Row(
+                                  children: [
+                                    Icon(
+                                      widget.destinations[i].icon,
+                                      color: widget.currentIndex == i ? Colors.white : Colors.black87,
+                                    ),
+                                    const SizedBox(width: 16.0),
+                                    Text(
+                                      widget.destinations[i].title,
+                                      style: TextStyle(
+                                        color: widget.currentIndex == i ? Colors.white : Colors.black87,
+                                        fontSize: 19,
+                                        fontWeight: FontWeight.w400,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                      ],
+                    ),
+                  ),
+                  // Botón de "Salir" al final
+                  Container(
+                    padding: const EdgeInsets.symmetric(vertical: 10),
+                    width: double.infinity,
+                    color: const Color(0xFFFF9494), 
+                    child: TextButton(
+                      onPressed: () {
+                        widget.onNavigationIndexChange?.call(widget.destinations.length - 1);
+                      },
+                      child: const Text(
+                        'Salir',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                     ),
-                    selected:
-                        widget.destinations.indexOf(d) == widget.currentIndex,
-                        selectedTileColor: const Color.fromARGB(255, 198, 199, 201),
-                        hoverColor: const Color.fromARGB(255, 198, 199, 201),
-                    onTap: () => _destinationTapped(d),
                   ),
-              ],
-            ),
-          ),
-          VerticalDivider(
-            width: 1,
-            thickness: 1,
-            color: Colors.grey[300],
-          ),
-          Expanded(
-            child: Scaffold(
-              appBar: AppBar(
-                actions: widget.actions,
+                ],
               ),
-              body: widget.body,
-              
             ),
-          ),
-        ],
+            VerticalDivider(
+              width: 1,
+              thickness: 1,
+              color: Colors.grey[300],
+            ),
+            Expanded(
+              child: Container(
+                color: backgroundColor, // Fondo para el contenido principal
+                child: Scaffold(
+                  appBar: AppBar(
+                    actions: widget.actions,
+                    backgroundColor: Colors.transparent,
+                    elevation: 0,
+                  ),
+                  backgroundColor: Colors.transparent,
+                  body: widget.body,
+                ),
+              ),
+            ),
+          ],
+        ),
       );
     }
 
     if (_isMediumScreen(context)) {
       return Scaffold(
+        extendBodyBehindAppBar: true,
+        backgroundColor: backgroundColor,
         appBar: AppBar(
           shape: const RoundedRectangleBorder(
             borderRadius: BorderRadius.zero,
           ),
-          
           title: widget.title,
           actions: widget.actions,
+          backgroundColor: Colors.transparent,
+          elevation: 0,
         ),
         body: Row(
           children: [
@@ -131,18 +185,29 @@ class _AdaptiveScaffoldState extends State<AdaptiveScaffold> {
               color: Colors.grey[300],
             ),
             Expanded(
-              child: widget.body!,
+              child: Container(
+                color: backgroundColor, 
+                child: widget.body!,
+              ),
             ),
           ],
         ),
       );
     }
 
+    // Para pantallas pequeñas
     return Scaffold(
-      body: widget.body,
+      extendBodyBehindAppBar: true,
+      backgroundColor: backgroundColor,
       appBar: AppBar(
         title: widget.title,
         actions: widget.actions,
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+      ),
+      body: Container(
+        color: backgroundColor, 
+        child: widget.body,
       ),
       bottomNavigationBar: BottomNavigationBar(
         items: [

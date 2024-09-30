@@ -1,6 +1,6 @@
-class Person {
+class Patient {
   ///Propiedades
-  final int? idPerson;
+  final int? idPatient;
   final String name;
   final String lastName;
   final String secondLastName;
@@ -10,8 +10,8 @@ class Person {
   final int? userID;
 
   ///Constructor
-  Person({
-    this.idPerson,
+  Patient({
+    this.idPatient,
     required this.name,
     required this.lastName,
     required this.secondLastName,
@@ -22,9 +22,9 @@ class Person {
   });
   
   ///Mapeo a Json
-  factory Person.fromJson(Map<String, dynamic> json){
-    return Person(
-      idPerson: json['idPerson'],
+  factory Patient.fromJson(Map<String, dynamic> json){
+    return Patient(
+      idPatient: json['idPatient'],
       name: json['name'],
       lastName: json['lastName'],
       secondLastName: json['secondLastName'],

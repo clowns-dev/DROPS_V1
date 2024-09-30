@@ -1,0 +1,272 @@
+[
+  {
+    "idPatient": 1,
+    "name": "Juan",
+    "lastName": "Perez",
+    "secondLastName": "Gonzales",
+    "birthDate": "1990-05-15",
+    "ci": "12345678",
+    "userID": 101
+  },
+  {
+    "idPatient": 2,
+    "name": "Ana",
+    "lastName": "Ramirez",
+    "secondLastName": "Lopez",
+    "birthDate": "1992-07-20",
+    "ci": "87654321",
+    "userID": 102
+  },
+  {
+    "idPatient": 3,
+    "name": "Carlos",
+    "lastName": "Martinez",
+    "secondLastName": "Gomez",
+    "birthDate": "1985-11-30",
+    "ci": "11122333",
+    "userID": 103
+  },
+  {
+    "idPatient": 4,
+    "name": "Mariana",
+    "lastName": "Vargas",
+    "secondLastName": "Rios",
+    "birthDate": "1988-09-10",
+    "ci": "22233444",
+    "userID": 104
+  },
+  {
+    "idPatient": 5,
+    "name": "Pedro",
+    "lastName": "Jimenez",
+    "secondLastName": "Quispe",
+    "birthDate": "1993-01-25",
+    "ci": "33344555",
+    "userID": 105
+  },
+  {
+    "idPatient": 6,
+    "name": "Luisa",
+    "lastName": "Santos",
+    "secondLastName": "Mendoza",
+    "birthDate": "1991-06-12",
+    "ci": "44455666",
+    "userID": 106
+  },
+  {
+    "idPatient": 7,
+    "name": "Diego",
+    "lastName": "Gutierrez",
+    "secondLastName": "Paredes",
+    "birthDate": "1987-08-05",
+    "ci": "55566777",
+    "userID": 107
+  },
+  {
+    "idPatient": 8,
+    "name": "Carmen",
+    "lastName": "Lopez",
+    "secondLastName": "Salinas",
+    "birthDate": "1994-04-18",
+    "ci": "66677888",
+    "userID": 108
+  },
+  {
+    "idPatient": 9,
+    "name": "Luis",
+    "lastName": "Herrera",
+    "secondLastName": "Rodriguez",
+    "birthDate": "1986-12-23",
+    "ci": "77788999",
+    "userID": 109
+  },
+  {
+    "idPatient": 10,
+    "name": "Marta",
+    "lastName": "Ruiz",
+    "secondLastName": "Vega",
+    "birthDate": "1995-03-29",
+    "ci": "88899000",
+    "userID": 110
+  },
+  {
+    "idPatient": 11,
+    "name": "Esteban",
+    "lastName": "Castro",
+    "secondLastName": "Nunez",
+    "birthDate": "1990-10-17",
+    "ci": "99900111",
+    "userID": 111
+  },
+  {
+    "idPatient": 12,
+    "name": "Elena",
+    "lastName": "Ortega",
+    "secondLastName": "Marquez",
+    "birthDate": "1993-05-13",
+    "ci": "11223344",
+    "userID": 112
+  },
+  {
+    "idPatient": 13,
+    "name": "Jorge",
+    "lastName": "Flores",
+    "secondLastName": "Espinoza",
+    "birthDate": "1989-09-09",
+    "ci": "22334455",
+    "userID": 113
+  },
+  {
+    "idPatient": 14,
+    "name": "Paola",
+    "lastName": "Garcia",
+    "secondLastName": "Ramirez",
+    "birthDate": "1991-11-22",
+    "ci": "33445566",
+    "userID": 114
+  },
+  {
+    "idPatient": 15,
+    "name": "Ricardo",
+    "lastName": "Salazar",
+    "secondLastName": "Torres",
+    "birthDate": "1987-02-07",
+    "ci": "44556677",
+    "userID": 115
+  },
+  {
+    "idPatient": 16,
+    "name": "Valeria",
+    "lastName": "Diaz",
+    "secondLastName": "Cortez",
+    "birthDate": "1994-08-01",
+    "ci": "55667788",
+    "userID": 116
+  },
+  {
+    "idPatient": 17,
+    "name": "Fernando",
+    "lastName": "Morales",
+    "secondLastName": "Campos",
+    "birthDate": "1988-04-30",
+    "ci": "66778899",
+    "userID": 117
+  },
+  {
+    "idPatient": 18,
+    "name": "Diana",
+    "lastName": "Rojas",
+    "secondLastName": "Silva",
+    "birthDate": "1992-12-05",
+    "ci": "77889900",
+    "userID": 118
+  },
+  {
+    "idPatient": 19,
+    "name": "Alberto",
+    "lastName": "Fernandez",
+    "secondLastName": "Vargas",
+    "birthDate": "1986-06-17",
+    "ci": "88990011",
+    "userID": 119
+  },
+  {
+    "idPatient": 20,
+    "name": "Natalia",
+    "lastName": "Suarez",
+    "secondLastName": "Paz",
+    "birthDate": "1990-01-11",
+    "ci": "99001122",
+    "userID": 120
+  },
+  {
+    "idPatient": 21,
+    "name": "Andres",
+    "lastName": "Bautista",
+    "secondLastName": "Aguilar",
+    "birthDate": "1989-03-12",
+    "ci": "10101010",
+    "userID": 121
+  },
+  {
+    "idPatient": 22,
+    "name": "Monica",
+    "lastName": "Romero",
+    "secondLastName": "Medina",
+    "birthDate": "1993-07-24",
+    "ci": "11111111",
+    "userID": 122
+  },
+  {
+    "idPatient": 23,
+    "name": "Roberto",
+    "lastName": "Pinto",
+    "secondLastName": "Navarro",
+    "birthDate": "1985-11-02",
+    "ci": "22222222",
+    "userID": 123
+  },
+  {
+    "idPatient": 24,
+    "name": "Gloria",
+    "lastName": "Luna",
+    "secondLastName": "Salazar",
+    "birthDate": "1994-02-16",
+    "ci": "33333333",
+    "userID": 124
+  },
+  {
+    "idPatient": 25,
+    "name": "Sebastian",
+    "lastName": "Palacios",
+    "secondLastName": "Ramos",
+    "birthDate": "1991-05-03",
+    "ci": "44444444",
+    "userID": 125
+  },
+  {
+    "idPatient": 26,
+    "name": "Laura",
+    "lastName": "Blanco",
+    "secondLastName": "Lara",
+    "birthDate": "1995-09-21",
+    "ci": "55555555",
+    "userID": 126
+  },
+  {
+    "idPatient": 27,
+    "name": "Felipe",
+    "lastName": "Maldonado",
+    "secondLastName": "Gutierrez",
+    "birthDate": "1988-10-15",
+    "ci": "66666666",
+    "userID": 127
+  },
+  {
+    "idPatient": 28,
+    "name": "Veronica",
+    "lastName": "Campos",
+    "secondLastName": "Ortiz",
+    "birthDate": "1992-11-19",
+    "ci": "77777777",
+    "userID": 128
+  },
+  {
+    "idPatient": 29,
+    "name": "Cristian",
+    "lastName": "Gomez",
+    "secondLastName": "Ruiz",
+    "birthDate": "1987-03-07",
+    "ci": "88888888",
+    "userID": 129
+  },
+  {
+    "idPatient": 30,
+    "name": "Isabel",
+    "lastName": "Nunez",
+    "secondLastName": "Lozano",
+    "birthDate": "1990-07-29",
+    "ci": "99999999",
+    "userID": 130
+  }
+]

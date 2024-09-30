@@ -1,0 +1,12 @@
+[
+    {"idTherapy": 1, "suggestedTime": 30, "extraTime": 10, "stretcherNumber": 5, "startDate": "2024-09-01T08:00:00", "volume": 500.0, "finishDate": "2024-09-01T09:40:00", "idPatient": 101, "idNurse": 201},
+    {"idTherapy": 2, "suggestedTime": 45, "extraTime": 15, "stretcherNumber": 3, "startDate": "2024-09-02T10:30:00", "volume": 700.0, "finishDate": "2024-09-02T12:30:00", "idPatient": 102, "idNurse": 202},
+    {"idTherapy": 3, "suggestedTime": 60, "extraTime": 20, "stretcherNumber": 2, "startDate": "2024-09-03T09:00:00", "volume": 800.0, "finishDate": "2024-09-03T11:40:00", "idPatient": 103, "idNurse": 203},
+    {"idTherapy": 4, "suggestedTime": 35, "extraTime": 10, "stretcherNumber": 1, "startDate": "2024-09-04T11:00:00", "volume": 600.0, "finishDate": "2024-09-04T12:45:00", "idPatient": 104, "idNurse": 204},
+    {"idTherapy": 5, "suggestedTime": 50, "extraTime": 15, "stretcherNumber": 4, "startDate": "2024-09-05T08:30:00", "volume": 750.0, "finishDate": "2024-09-05T10:35:00", "idPatient": 105, "idNurse": 205},
+    {"idTherapy": 6, "suggestedTime": 40, "extraTime": 10, "stretcherNumber": 6, "startDate": "2024-09-06T07:30:00", "volume": 650.0, "finishDate": "2024-09-06T09:30:00", "idPatient": 106, "idNurse": 206},
+    {"idTherapy": 7, "suggestedTime": 55, "extraTime": 20, "stretcherNumber": 2, "startDate": "2024-09-07T10:00:00", "volume": 900.0, "finishDate": "2024-09-07T12:15:00", "idPatient": 107, "idNurse": 207},
+    {"idTherapy": 8, "suggestedTime": 65, "extraTime": 25, "stretcherNumber": 7, "startDate": "2024-09-08T08:45:00", "volume": 1000.0, "finishDate": "2024-09-08T11:30:00", "idPatient": 108, "idNurse": 208},
+    {"idTherapy": 9, "suggestedTime": 30, "extraTime": 5, "stretcherNumber": 3, "startDate": "2024-09-09T09:20:00", "volume": 450.0, "finishDate": "2024-09-09T10:55:00", "idPatient": 109, "idNurse": 209},
+    {"idTherapy": 10, "suggestedTime": 70, "extraTime": 30, "stretcherNumber": 8, "startDate": "2024-09-10T07:15:00", "volume": 1100.0, "finishDate": "2024-09-10T11:00:00", "idPatient": 110, "idNurse": 210}
+]

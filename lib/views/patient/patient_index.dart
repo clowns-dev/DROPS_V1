@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import 'package:ps3_drops_v1/models/patient.dart';
 import 'package:ps3_drops_v1/view_models/patient_view_model.dart';
 import 'package:ps3_drops_v1/views/patient/patient_data.dart';
+import 'package:ps3_drops_v1/widgets/text_label.dart';
 import 'package:ps3_drops_v1/widgets/title_container.dart';
 import 'package:ps3_drops_v1/widgets/history_title_container.dart';
 import 'package:ps3_drops_v1/widgets/search_field.dart';
@@ -194,14 +195,7 @@ class _PatientIndexState extends State<PatientIndex> {
             const SizedBox(height: 24.0),
 
             // Campo para CI
-            const Text(
-              'CI:',
-              style: TextStyle(
-                fontSize: 16.0,
-                fontWeight: FontWeight.w600,
-                color: Colors.black87,
-              ),
-            ),
+            const TextLabel(content: 'CI:'),
             const SizedBox(height: 8.0),
             TextField(
               controller: TextEditingController(
@@ -217,14 +211,7 @@ class _PatientIndexState extends State<PatientIndex> {
             const SizedBox(height: 24.0),
 
             // Campo para Nombre
-            const Text(
-              'Nombre:',
-              style: TextStyle(
-                fontSize: 16.0,
-                fontWeight: FontWeight.w600,
-                color: Colors.black87,
-              ),
-            ),
+            const TextLabel(content: 'Nombre:'),
             const SizedBox(height: 8.0),
             TextField(
               controller: TextEditingController(
@@ -240,14 +227,7 @@ class _PatientIndexState extends State<PatientIndex> {
             const SizedBox(height: 24.0),
 
             // Campo para Apellido Paterno
-            const Text(
-              'Apellido Paterno:',
-              style: TextStyle(
-                fontSize: 16.0,
-                fontWeight: FontWeight.w600,
-                color: Colors.black87,
-              ),
-            ),
+            const TextLabel(content: 'Apellido Paterno:'),
             const SizedBox(height: 8.0),
             TextField(
               controller: TextEditingController(
@@ -263,14 +243,7 @@ class _PatientIndexState extends State<PatientIndex> {
             const SizedBox(height: 24.0),
 
             // Campo para Apellido Materno
-            const Text(
-              'Apellido Materno:',
-              style: TextStyle(
-                fontSize: 16.0,
-                fontWeight: FontWeight.w600,
-                color: Colors.black87,
-              ),
-            ),
+            const TextLabel(content: 'Apellido Materno:'),
             const SizedBox(height: 8.0),
             TextField(
               controller: TextEditingController(
@@ -286,14 +259,7 @@ class _PatientIndexState extends State<PatientIndex> {
             const SizedBox(height: 24.0),
 
             // Campo para Fecha de Nacimiento
-            const Text(
-              'Fecha de nacimiento:',
-              style: TextStyle(
-                fontSize: 16.0,
-                fontWeight: FontWeight.w600,
-                color: Colors.black87,
-              ),
-            ),
+            const TextLabel(content: 'Fecha de Nacimiento:'),
             const SizedBox(height: 8.0),
             TextField(
               controller: TextEditingController(

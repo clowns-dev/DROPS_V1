@@ -1,0 +1,82 @@
+[
+    {
+        "idBalance": 1, 
+        "balanceCode": "BAL12345", 
+        "actuallyFactor": 1.23, 
+        "registerDate": "2024-09-01T12:00:00", 
+        "lastUpdate": "2024-09-10T14:00:00",
+        "status": 0
+    },
+    {
+        "idBalance": 2, 
+        "balanceCode": "BAL67890", 
+        "actuallyFactor": 0.97, 
+        "registerDate": "2024-09-05T09:30:00", 
+        "lastUpdate": "2024-09-11T16:45:00",
+        "status": 0
+    },
+    {
+        "idBalance": 3, 
+        "balanceCode": "BAL54321", 
+        "actuallyFactor": 1.15, 
+        "registerDate": "2024-09-07T08:00:00", 
+        "lastUpdate": "2024-09-15T13:20:00",
+        "status": 1
+    },
+    {
+        "idBalance": 4, 
+        "balanceCode": "BAL11223", 
+        "actuallyFactor": 1.05, 
+        "registerDate": "2024-08-28T10:00:00", 
+        "lastUpdate": "2024-09-12T12:30:00",
+        "status": 1
+    },
+    {
+        "idBalance": 5, 
+        "balanceCode": "BAL44556", 
+        "actuallyFactor": 1.30, 
+        "registerDate": "2024-09-09T11:30:00", 
+        "lastUpdate": "2024-09-15T10:15:00",
+        "status": 0
+    },
+    {
+        "idBalance": 6, 
+        "balanceCode": "BAL77889", 
+        "actuallyFactor": 1.18, 
+        "registerDate": "2024-09-12T14:20:00", 
+        "lastUpdate": "2024-09-17T09:45:00",
+        "status": 0
+    },
+    {
+        "idBalance": 7, 
+        "balanceCode": "BAL99100", 
+        "actuallyFactor": 0.88, 
+        "registerDate": "2024-09-14T13:00:00", 
+        "lastUpdate": "2024-09-18T15:00:00",
+        "status": 1
+    },
+    {
+        "idBalance": 8, 
+        "balanceCode": "BAL11122", 
+        "actuallyFactor": 1.44, 
+        "registerDate": "2024-09-01T09:00:00", 
+        "lastUpdate": "2024-09-08T14:30:00",
+        "status": 1
+    },
+    {
+        "idBalance": 9, 
+        "balanceCode": "BAL33445", 
+        "actuallyFactor": 1.20, 
+        "registerDate": "2024-09-03T08:00:00", 
+        "lastUpdate": "2024-09-07T12:45:00",
+        "status": 0
+    },
+    {
+        "idBalance": 10, 
+        "balanceCode": "BAL66778", 
+        "actuallyFactor": 0.95, 
+        "registerDate": "2024-09-06T10:30:00", 
+        "lastUpdate": "2024-09-14T11:15:00",
+        "status": 1
+    }
+]

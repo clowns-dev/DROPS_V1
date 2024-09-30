@@ -106,9 +106,9 @@ class EmployeeDataSource extends DataGridSource {
           value: Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              EditButton(onPressed: () => onEdit(employee.idPatient!)),
+              EditButton(onPressed: () => onEdit(employee.idEmployee!)),
               const SizedBox(width: 8),
-              DeleteButton(onPressed: () => onDelete(employee.idPatient!)),
+              DeleteButton(onPressed: () => onDelete(employee.idEmployee!)),
             ],
           ),
         ),

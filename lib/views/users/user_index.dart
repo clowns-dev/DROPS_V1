@@ -464,15 +464,15 @@ class _UserIndex extends State<UserIndex> {
     );
   }
 
-  void _showDeleteConfirmationDialog(BuildContext context, int patientId) {
+  void _showDeleteConfirmationDialog(BuildContext context, int? idEmployee) {
     showDialog(
       context: context,
       builder: (context) {
         return DeleteConfirmationDialog(
           onConfirmDelete: () {
-            Provider.of<EmployeeViewModel>(context, listen: false).deletePatient(patientId);
+            Provider.of<EmployeeViewModel>(context, listen: false).deleteEmployee(idEmployee);
             if (kDebugMode) {
-              print('Eliminando paciente con ID: $patientId');
+              print('Eliminando empleado con ID: $idEmployee');
             }
           },
         );

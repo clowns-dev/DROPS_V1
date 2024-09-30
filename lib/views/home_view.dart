@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:ps3_drops_v1/views/balance/balance_index.dart';
 import 'package:ps3_drops_v1/views/patient/patient_index.dart';
 import 'package:ps3_drops_v1/views/users/user_index.dart';
+import 'package:ps3_drops_v1/widgets/title_nabvar_menu.dart';
 
 import '../widgets/adaptive_scaffold.dart';
 
@@ -27,14 +29,7 @@ class _HomePageState extends State<HomePage> {
 
           SizedBox(width: 4,),
 
-          Text(
-            'Drops',
-            style: TextStyle(
-              fontFamily: 'Notable',
-              fontSize: 28,
-              fontWeight: FontWeight.w400,
-            ),
-          ),
+          TitleNabvarMenu(text: 'DROPS')
         ],
       ),
       currentIndex: _pageIndex,
@@ -94,7 +89,7 @@ class _HomePageState extends State<HomePage> {
     }
 
     if(index == 1){
-      return const Text('pagina 2');
+      return const BalanceIndex();
     }
 
     if(index == 2){

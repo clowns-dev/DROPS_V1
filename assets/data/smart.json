@@ -1,0 +1,12 @@
+[
+    {"idSmart": 1, "codeRFID": "RFID0012345678", "registerDate": "2024-09-01T11:00:00", "lastUpdate": "2024-09-05T11:30:00", "status": 1},
+    {"idSmart": 2, "codeRFID": "RFID0098765432", "registerDate": "2024-09-03T10:15:00", "lastUpdate": "2024-09-07T15:45:00", "status": 0},
+    {"idSmart": 3, "codeRFID": "RFID0056781234", "registerDate": "2024-09-02T14:45:00", "lastUpdate": "2024-09-10T10:00:00", "status": 1},
+    {"idSmart": 4, "codeRFID": "RFID0045678901", "registerDate": "2024-09-04T13:20:00", "lastUpdate": "2024-09-08T09:15:00", "status": 1},
+    {"idSmart": 5, "codeRFID": "RFID0034567890", "registerDate": "2024-09-06T16:30:00", "lastUpdate": "2024-09-09T14:50:00", "status": 0},
+    {"idSmart": 6, "codeRFID": "RFID0023456789", "registerDate": "2024-09-08T08:00:00", "lastUpdate": "2024-09-12T13:40:00", "status": 1},
+    {"idSmart": 7, "codeRFID": "RFID0012345677", "registerDate": "2024-09-09T14:10:00", "lastUpdate": "2024-09-13T16:20:00", "status": 0},
+    {"idSmart": 8, "codeRFID": "RFID0067890123", "registerDate": "2024-09-10T09:25:00", "lastUpdate": "2024-09-15T15:30:00", "status": 1},
+    {"idSmart": 9, "codeRFID": "RFID0087654321", "registerDate": "2024-09-12T11:50:00", "lastUpdate": "2024-09-16T12:15:00", "status": 1},
+    {"idSmart": 10, "codeRFID": "RFID0098765439", "registerDate": "2024-09-13T10:45:00", "lastUpdate": "2024-09-19T14:00:00", "status": 0}
+]

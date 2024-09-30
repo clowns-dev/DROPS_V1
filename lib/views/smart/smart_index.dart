@@ -1,11 +1,8 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:ps3_drops_v1/models/balance.dart';
 import 'package:ps3_drops_v1/models/smart.dart';
-import 'package:ps3_drops_v1/view_models/balance_view_model.dart';
 import 'package:ps3_drops_v1/view_models/smart_view_model.dart';
-import 'package:ps3_drops_v1/views/balance/balance_data.dart';
 import 'package:ps3_drops_v1/views/smart/smart_data.dart';
 import 'package:ps3_drops_v1/widgets/text_label.dart';
 import 'package:ps3_drops_v1/widgets/title_container.dart';

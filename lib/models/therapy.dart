@@ -1,5 +1,3 @@
-import 'dart:js_interop';
-
 class Therapy {
   final int? idTherapy;
   final int? suggestedTime;

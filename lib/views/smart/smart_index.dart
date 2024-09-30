@@ -2,8 +2,11 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:ps3_drops_v1/models/balance.dart';
+import 'package:ps3_drops_v1/models/smart.dart';
 import 'package:ps3_drops_v1/view_models/balance_view_model.dart';
+import 'package:ps3_drops_v1/view_models/smart_view_model.dart';
 import 'package:ps3_drops_v1/views/balance/balance_data.dart';
+import 'package:ps3_drops_v1/views/smart/smart_data.dart';
 import 'package:ps3_drops_v1/widgets/text_label.dart';
 import 'package:ps3_drops_v1/widgets/title_container.dart';
 import 'package:ps3_drops_v1/widgets/history_title_container.dart';
@@ -13,17 +16,17 @@ import 'package:ps3_drops_v1/widgets/add_title_button.dart';
 import 'package:ps3_drops_v1/widgets/success_dialog.dart';
 import 'package:ps3_drops_v1/widgets/delete_confirmation_dialog.dart';
 
-class BalanceIndex extends StatefulWidget {
-  const BalanceIndex({super.key});
+class SmartIndex extends StatefulWidget {
+  const SmartIndex({super.key});
 
   @override
-  State<BalanceIndex> createState() => _BalanceIndexState();
+  State<SmartIndex> createState() => _SmartIndexState();
 }
 
-class _BalanceIndexState extends State<BalanceIndex> {
+class _SmartIndexState extends State<SmartIndex> {
   final String _selectedFilter = 'Buscar por:';
-  final List<String> _filterOptions = ['Buscar por:', 'Codigo', 'Disponible', 'Ocupadas'];
-  Balance? _editingBalance;
+  final List<String> _filterOptions = ['Buscar por:', 'Codigo'];
+  Smart? _editingSmart;
   final TextEditingController _searchController = TextEditingController();
 
   @override
@@ -40,13 +43,13 @@ class _BalanceIndexState extends State<BalanceIndex> {
   }
 
   void _onSearchChanged() {
-    final balanceViewModel = context.read<BalanceViewModel>();
-    balanceViewModel.filterBalances(_searchController.text);
+    final smartViewModel = context.read<SmartViewModel>();
+    smartViewModel.filterBalances(_searchController.text);
   }
 
-  void _showFormModal(BuildContext context, [Balance? balance]) {
+  void _showFormModal(BuildContext context, [Smart? smart]) {
     setState(() {
-      _editingBalance = balance;
+      _editingSmart = smart;
     });
     showDialog(
       context: context,
@@ -78,7 +81,7 @@ class _BalanceIndexState extends State<BalanceIndex> {
                       bottomLeft: Radius.circular(16.0),
                     ),
                     child: Image.asset(
-                      '../assets/img/nurse.png',
+                      '../assets/img/nurse2.png',
                       fit: BoxFit.cover,
                       height: 400,
                     ),
@@ -93,18 +96,18 @@ class _BalanceIndexState extends State<BalanceIndex> {
                       children: [
                         Center(
                           child: HistoryTitleContainer(
-                            titleTable: _editingBalance == null ? 'Añadir Balanza' : 'Editar Balanza',
+                            titleTable: _editingSmart == null ? 'Añadir Manilla' : 'Editar Manilla',
                           ),
                         ),
                         const SizedBox(height: 24.0),
-                        const TextLabel(content: 'Código:'),
+                        const TextLabel(content: 'Código RFID:'),
                         const SizedBox(height: 8.0),
                         TextField(
                           controller: TextEditingController(
-                            text: _editingBalance?.balanceCode ?? '',
+                            text: _editingSmart?.codeRFID ?? '',
                           ),
                           decoration: InputDecoration(
-                            hintText: 'Ingrese el código',
+                            hintText: 'Ingrese el código RFID',
                             border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(12.0),
                             ),
@@ -120,16 +123,16 @@ class _BalanceIndexState extends State<BalanceIndex> {
                                 children: [
                                   ElevatedButton(
                                     onPressed: () {
-                                      if (_editingBalance != null) {
+                                      if (_editingSmart != null) {
                                         if (kDebugMode) {
-                                          print('Editando balanza con ID: ${_editingBalance?.idBalance}');
+                                          print('Editando balanza con ID: ${_editingSmart?.idSmart}');
                                         }
                                       } else {
                                         if (kDebugMode) {
                                           print('Creando nueva balanza');
                                         }
                                       }
-                                      _showSuccessDialog(context, _editingBalance != null, dialogContext);
+                                      _showSuccessDialog(context, _editingSmart != null, dialogContext);
                                     },
                                     style: ElevatedButton.styleFrom(
                                       backgroundColor: Colors.purple.shade300,
@@ -142,7 +145,7 @@ class _BalanceIndexState extends State<BalanceIndex> {
                                       ),
                                     ),
                                     child: Text(
-                                      _editingBalance == null ? 'INSERTAR' : 'GUARDAR',
+                                      _editingSmart == null ? 'INSERTAR' : 'GUARDAR',
                                       style: const TextStyle(
                                         color: Colors.white,
                                         fontWeight: FontWeight.bold,
@@ -218,7 +221,7 @@ class _BalanceIndexState extends State<BalanceIndex> {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             const TitleContainer(
-              title: 'Gestión de Balanzas',
+              title: 'Gestión de Manillas',
             ),
             OutlinedButton(
               onPressed: () => _showFormModal(context),
@@ -240,7 +243,7 @@ class _BalanceIndexState extends State<BalanceIndex> {
                   ),
                   const SizedBox(width: 8.0),
                   const AddTitleButton(
-                    titleButton: 'Añadir Balanza',
+                    titleButton: 'Añadir Manilla',
                   ),
                 ],
               ),
@@ -262,7 +265,7 @@ class _BalanceIndexState extends State<BalanceIndex> {
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
                 const HistoryTitleContainer(
-                  titleTable: 'Historial de Balanzas',
+                  titleTable: 'Historial de Manillas',
                 ),
                 Row(
                   mainAxisSize: MainAxisSize.min,
@@ -310,11 +313,11 @@ class _BalanceIndexState extends State<BalanceIndex> {
   }
 
   Widget _buildTable() {
-    return Consumer<BalanceViewModel>(
-      builder: (context, balanceViewModel, child) {
-        if (balanceViewModel.isLoading) {
+    return Consumer<SmartViewModel>(
+      builder: (context, smartViewModel, child) {
+        if (smartViewModel.isLoading) {
           return const Center(child: CircularProgressIndicator());
-        } else if (balanceViewModel.filteredBalances.isEmpty) {
+        } else if (smartViewModel.filteredSmarts.isEmpty) {
           return Center(
             child: Text(
               'Sin coincidencias',
@@ -326,16 +329,16 @@ class _BalanceIndexState extends State<BalanceIndex> {
             ),
           );
         } else {
-          return BalanceDataTable(
-            balances: balanceViewModel.filteredBalances,
+          return SmartDataTable(
+            smarts: smartViewModel.filteredSmarts,
             onEdit: (id) {
-              Balance? balance = balanceViewModel.listBalances.firstWhere(
-                (b) => b.idBalance == id,
-                orElse: () => Balance(),
+              Smart? smart = smartViewModel.filteredSmarts.firstWhere(
+                (s) => s.idSmart == id,
+                orElse: () => Smart(),
               );
               // ignore: unnecessary_null_comparison
-              if (balance != null) {
-                _showFormModal(context, balance);
+              if (smart != null) {
+                _showFormModal(context, smart);
               }
             },
             onDelete: (id) {
@@ -347,15 +350,16 @@ class _BalanceIndexState extends State<BalanceIndex> {
     );
   }
 
-  void _showDeleteConfirmationDialog(BuildContext context, int balanceId) {
+  void _showDeleteConfirmationDialog(BuildContext context, int smartId) {
     showDialog(
       context: context,
       builder: (context) {
         return DeleteConfirmationDialog(
           onConfirmDelete: () {
-            Provider.of<BalanceViewModel>(context, listen: true).deleteBalance(balanceId);
+            Provider.of<SmartViewModel>(context, listen: true).deleteSmart(smartId);
             if (kDebugMode) {
-              print('Eliminando balanza con ID: $balanceId');
+              print('Eliminando Manilla con ID: $smartId');
+              
             }
             Navigator.of(context).pop(); // Cerrar el diálogo de confirmación
           },

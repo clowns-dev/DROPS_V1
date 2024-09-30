@@ -22,4 +22,15 @@ class ApiServiceBalance {
       throw Exception('Error al cargar los datos de balanzas: $e');
     }
   }
+
+  Future<List<Map<String, dynamic>>> loadBalanceData() async {
+    String jsonString = await rootBundle.loadString('../assets/data/balance.json');
+    final List<dynamic> jsonData = json.decode(jsonString);
+    return List<Map<String, dynamic>>.from(jsonData);
+  }
+
+  Future<int> getTotalBalanceRecords() async {
+    List<Map<String, dynamic>> data = await loadBalanceData();
+    return data.length;
+  }
 }

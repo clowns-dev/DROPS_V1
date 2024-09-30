@@ -24,4 +24,15 @@ class ApiServiceEmployee {
       throw Exception('Error al cargar los datos empleados: $e');
     }
   }
+
+  Future<List<Map<String, dynamic>>> loadEmployeeData() async {
+    String jsonString = await rootBundle.loadString('../assets/data/employee.json');
+    final List<dynamic> jsonData = json.decode(jsonString);
+    return List<Map<String, dynamic>>.from(jsonData);
+  }
+
+  Future<int> getTotalEmployeeRecords() async {
+    List<Map<String, dynamic>> data = await loadEmployeeData();
+    return data.length;
+  }
 }

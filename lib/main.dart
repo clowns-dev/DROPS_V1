@@ -5,8 +5,7 @@ import 'package:ps3_drops_v1/view_models/employee_view_model.dart';
 import 'package:ps3_drops_v1/view_models/smart_view_model.dart';
 import 'package:ps3_drops_v1/view_models/therapy_view_model.dart';
 import 'package:ps3_drops_v1/views/home_view.dart';
-import 'package:ps3_drops_v1/view_models/patient_view_model.dart'; // Importa tu ViewModel
-
+import 'package:ps3_drops_v1/view_models/patient_view_model.dart';
 void main() {
   runApp(
     MultiProvider(
@@ -30,7 +29,7 @@ class MyApp extends StatelessWidget {
     return const MaterialApp(
       title: 'PS3 Drops',
       debugShowCheckedModeBanner: false,
-      home: HomePage(), // Llama a la HomePage que se utilizará para navegar
+      home: HomePage(),
     );
   }
 }

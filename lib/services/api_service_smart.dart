@@ -20,4 +20,15 @@ class ApiServiceSmart {
       throw Exception('Error al cargar los datos: $e');
     }
   }
+
+  Future<List<Map<String, dynamic>>> loadSmartData() async {
+    String jsonString = await rootBundle.loadString('../assets/data/smart.json');
+    final List<dynamic> jsonData = json.decode(jsonString);
+    return List<Map<String, dynamic>>.from(jsonData);
+  }
+
+  Future<int> getTotalSmartRecords() async {
+    List<Map<String, dynamic>> data = await loadSmartData();
+    return data.length;
+  }
 }

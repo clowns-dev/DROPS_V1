@@ -72,6 +72,7 @@ flutter:
     - assets/data/smart.json
     - assets/img/aceptar.png
     - assets/img/nurse.png
+    - assets/img/nurse2.png
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images

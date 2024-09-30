@@ -12,9 +12,7 @@ class BalanceViewModel extends ChangeNotifier {
 
   BalanceViewModel() {
     fetchBalances();
-    
   }
-
 
   Future<void> fetchBalances() async {
     isLoading = true;

@@ -12,7 +12,6 @@ class SmartViewModel extends ChangeNotifier {
 
   SmartViewModel() {
     fetchSmarts();
-    
   }
 
 
@@ -43,13 +42,13 @@ class SmartViewModel extends ChangeNotifier {
       filteredSmarts = List.from(listSmarts);
     } else {
       filteredSmarts = listSmarts.where((smart) {
-        return smart.codeRFID.toLowerCase().contains(query.toLowerCase());
+        return smart.codeRFID!.toLowerCase().contains(query.toLowerCase());
       }).toList();
     }
     notifyListeners();
   }
 
-  void deletePatient(int smartId) {
+  void deleteSmart(int smartId) {
     listSmarts.removeWhere((smart) => smart.idSmart == smartId);
     filterBalances(''); 
     notifyListeners();

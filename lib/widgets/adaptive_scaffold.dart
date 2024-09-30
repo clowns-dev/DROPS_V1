@@ -70,7 +70,7 @@ class _AdaptiveScaffoldState extends State<AdaptiveScaffold> {
                       padding: EdgeInsets.zero,
                       children: [
                         for (var i = 0; i < widget.destinations.length; i++)
-                          if (widget.destinations[i].title != 'Salir') // Excluir el botón "Salir" aquí
+                          if (widget.destinations[i].title != 'Salir')
                             InkWell(
                               onTap: () => _destinationTapped(widget.destinations[i]),
                               onHover: (hovering) {
@@ -80,21 +80,21 @@ class _AdaptiveScaffoldState extends State<AdaptiveScaffold> {
                               },
                               child: Container(
                                 color: widget.currentIndex == i
-                                    ? const Color.fromARGB(255, 198, 199, 201)
-                                    : Colors.transparent,
+                                    ? const Color.fromARGB(255, 168, 126, 207)
+                                    : const Color.fromARGB(255, 198, 199, 201),
                                 padding: const EdgeInsets.symmetric(vertical: 20.0, horizontal: 16.0),
                                 child: Row(
                                   children: [
                                     Icon(
                                       widget.destinations[i].icon,
-                                      color: widget.currentIndex == i ? Colors.black : Colors.black54,
+                                      color: widget.currentIndex == i ? Colors.white : Colors.black87,
                                     ),
                                     const SizedBox(width: 16.0),
                                     Text(
                                       widget.destinations[i].title,
                                       style: TextStyle(
-                                        color: widget.currentIndex == i ? Colors.black : Colors.black54,
-                                        fontSize: 16,
+                                        color: widget.currentIndex == i ? Colors.white : Colors.black87,
+                                        fontSize: 19,
                                         fontWeight: FontWeight.w400,
                                       ),
                                     ),

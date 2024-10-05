@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:ps3_drops_v1/views/balance/balance_index.dart';
 import 'package:ps3_drops_v1/views/patient/patient_index.dart';
 import 'package:ps3_drops_v1/views/smart/smart_index.dart';
+import 'package:ps3_drops_v1/views/therapy/therapy_index.dart';
 import 'package:ps3_drops_v1/views/users/user_index.dart';
 import 'package:ps3_drops_v1/widgets/title_nabvar_menu.dart';
 
@@ -107,7 +108,7 @@ class _HomePageState extends State<HomePage> {
     }
 
     if(index == 5){
-      return const Text('pagina 6');
+      return const TherapyIndex();
     }
 
     if(index == 6){

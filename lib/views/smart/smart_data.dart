@@ -8,7 +8,7 @@ import 'package:ps3_drops_v1/widgets/delete_button.dart';
 import 'package:ps3_drops_v1/widgets/grid_column_builder.dart';
 
 class SmartDataTable extends StatefulWidget {
-  final List<Smart> smarts;
+  final List<Therapy> smarts;
   final void Function(int id) onEdit;
   final void Function(int id) onDelete;
 
@@ -82,7 +82,7 @@ class _SmartDataTableState extends State<SmartDataTable> {
 
 class SmartDataSource extends DataGridSource {
   SmartDataSource({
-    required List<Smart> smarts,
+    required List<Therapy> smarts,
     required this.onEdit,
     required this.onDelete,
   }) {
@@ -124,42 +124,42 @@ class SmartDataSource extends DataGridSource {
 
   @override
   DataGridRowAdapter buildRow(DataGridRow row) {
-  return DataGridRowAdapter(
-    cells: row.getCells().where((dataGridCell) {
-      return dataGridCell.columnName != 'ID';
-    }).map<Widget>((dataGridCell) {
-      bool isActionColumn = dataGridCell.columnName == 'Acciones';
-      bool isEstadoColumn = dataGridCell.columnName == 'Estado';
+    return DataGridRowAdapter(
+      cells: row.getCells().where((dataGridCell) {
+        return dataGridCell.columnName != 'ID';
+      }).map<Widget>((dataGridCell) {
+        bool isActionColumn = dataGridCell.columnName == 'Acciones';
+        bool isEstadoColumn = dataGridCell.columnName == 'Estado';
 
-      return Container(
-        alignment: Alignment.center,
-        padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 4.0),
-        child: isActionColumn
-            ? dataGridCell.value
-            : isEstadoColumn
-                ? CheckboxToTable(isChecked: dataGridCell.value as bool)
-                : Container(
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFFFE4E1),
-                      borderRadius: BorderRadius.circular(8.0),
-                    ),
-                    padding: const EdgeInsets.symmetric(vertical: 6.0, horizontal: 8.0),
-                    child: Text(
-                      dataGridCell.value.toString(),
-                      style: const TextStyle(
-                        fontWeight: FontWeight.w400,
-                        color: Colors.black,
+        return Container(
+          alignment: Alignment.center,
+          padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 4.0),
+          child: isActionColumn
+              ? dataGridCell.value
+              : isEstadoColumn
+                  ? CheckboxToTable(isChecked: dataGridCell.value as bool) // Checkbox solo de visualización
+                  : Container(
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFFFE4E1),
+                        borderRadius: BorderRadius.circular(8.0),
+                      ),
+                      padding: const EdgeInsets.symmetric(vertical: 6.0, horizontal: 8.0),
+                      child: Text(
+                        dataGridCell.value.toString(),
+                        style: const TextStyle(
+                          fontWeight: FontWeight.w400,
+                          color: Colors.black,
+                        ),
                       ),
                     ),
-                  ),
-      );
-    }).toList(),
-  );
-}
-
+        );
+      }).toList(),
+    );
+  }
 
   void updateRowsPerPage(int rowsPerPage) {
     notifyListeners();
   }
 }
+
 

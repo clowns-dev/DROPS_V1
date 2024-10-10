@@ -47,6 +47,31 @@ class TherapyViewModel extends ChangeNotifier {
     }
   }
 
+  Future<void> createNewTherapy(String stretcherNumber, int userId) async {
+    try {
+      if (selectedPatientId != null && selectedNurseId != null && selectedBalanceId != null) {
+        await apiServiceTherapy.createTherapy(
+          selectedPatientId!,
+          selectedNurseId!,
+          selectedBalanceId!,
+          stretcherNumber,
+          userId,
+        );
+        if (kDebugMode) {
+          print("Terapia creada exitosamente.");
+        }
+      } else {
+        if (kDebugMode) {
+          print("Error: Faltan datos de selección.");
+        }
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        print("Error: No se pudo crear la terapia. Detalles: $e");
+      }
+    }
+  }
+
   Future<void> fetchTherapyPatients() async {
     isLoading = true;
     notifyListeners();
@@ -102,23 +127,28 @@ class TherapyViewModel extends ChangeNotifier {
   }
 
   Future<void> fetchInfoTherapy(int therapyId) async {
-  isLoading = true;
-  selectedTherapyId = therapyId;
-  notifyListeners();
-  try {
-    infoTherapy = await apiServiceTherapy.fetchInfoTherapy(selectedTherapyId!);
-    if (kDebugMode) {
-      print('Información de Terapia Cargada: ${infoTherapy?.idTherapy}');
-    }
-  } catch (e) {
-    if (kDebugMode) {
-      print("Error: Fallo al obtener la información de la Terapia: $e");
-    }
-  } finally {
-    isLoading = false;
+    isLoading = true;
+    selectedTherapyId = therapyId;
     notifyListeners();
+    try {
+      if (kDebugMode) {
+        print('Cargando información para terapia ID: $selectedTherapyId');
+      }
+
+      infoTherapy = await apiServiceTherapy.fetchInfoTherapy(selectedTherapyId!);
+
+      if (kDebugMode) {
+        print('Información de Terapia Cargada: ${infoTherapy?.idTherapy}');
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        print("Error: Fallo al obtener la información de la Terapia: $e");
+      }
+    } finally {
+      isLoading = false;
+      notifyListeners();
+    }
   }
-}
 
 
   void updateSelectedPatientId(int id) {

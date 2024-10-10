@@ -114,6 +114,8 @@ class InfoTherapy{
   final String? stretcherNumber;
   final DateTime? startDate;
   final DateTime? finishDate;
+  final DateTime? startDateAssing;
+  final DateTime? finishDateAssing;
   final int? idealTime;
   final int? totalTime;
   final double? volumen;
@@ -128,6 +130,8 @@ class InfoTherapy{
     this.stretcherNumber,
     this.startDate,
     this.finishDate,
+    this.startDateAssing,
+    this.finishDateAssing,
     this.idealTime,
     this.totalTime,
     this.volumen,
@@ -144,6 +148,8 @@ class InfoTherapy{
       stretcherNumber: json['stretcherNumber']?.toString(),
       startDate: json['startDate'] != null ? DateTime.tryParse(json['startDate']) : null,
       finishDate: json['finishDate'] != null ? DateTime.tryParse(json['finishDate']) : null,
+      startDateAssing: json['startDateAssing'] != null ? DateTime.tryParse(json['startDateAssing']) : null,
+      finishDateAssing: json['finishDateAssing'] != null ? DateTime.tryParse(json['finishDateAssing']) : null,
       idealTime: json['idealTime'] != null ? int.tryParse(json['idealTime'].toString()) : null,
       totalTime: json['totalTime'] != null ? int.tryParse(json['totalTime'].toString()) : null,
       volumen: json['volumen'] != null ? double.tryParse(json['volumen'].toString()) : null,

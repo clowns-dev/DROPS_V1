@@ -25,6 +25,7 @@ class _TherapyIndexState extends State<TherapyIndex> {
   final String _selectedFilter = 'Buscar por:';
   final List<String> _filterOptions = ['Buscar por:', 'Codigo'];
   final TextEditingController _searchController = TextEditingController();
+  final TextEditingController _stretcherNumberController = TextEditingController();
   bool _showForm = false;
   InfoTherapy? _selectedInfoTherapy;
   bool _isViewingTherapy = false;
@@ -63,15 +64,12 @@ class _TherapyIndexState extends State<TherapyIndex> {
   void _onViewTherapy(int id) async {
     final therapyViewModel = context.read<TherapyViewModel>();
     await therapyViewModel.fetchInfoTherapy(id);
+
     setState(() {
-      _selectedInfoTherapy = therapyViewModel.infoTherapy;
-      _toggleView(isViewing: true); // Llama a toggleView para pasar al estado de vista/lectura
+      _selectedInfoTherapy = therapyViewModel.infoTherapy; 
+      _toggleView(isViewing: true);  
     });
   }
-
-
-
-
 
   @override
   Widget build(BuildContext context) {
@@ -267,9 +265,9 @@ class _TherapyIndexState extends State<TherapyIndex> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      _buildTableRow('Tiempo ideal [hrs]', infoTherapy.idealTime.toString()),
-                      _buildTableRow('Tiempo total [hrs]', infoTherapy.totalTime.toString()),
-                      _buildTableRow('Volumen [ml]', infoTherapy.volumen.toString()),
+                      _buildTableRow('Tiempo ideal [hrs]', infoTherapy.idealTime?.toString() ?? 'Sin Informacion Disponible'),
+                      _buildTableRow('Tiempo total [hrs]', infoTherapy.totalTime?.toString() ?? 'Sin Informacion Disponible'),
+                      _buildTableRow('Volumen [ml]', infoTherapy.volumen?.toString() ?? 'Sin Informacion Disponible'),
                       _buildTableRow('Número de Burbujas', infoTherapy.numberBubbles.toString()),
                       _buildTableRow('Número de Bloqueos', infoTherapy.numberBlocks.toString()),
                       _buildTableRow('Numero de Ambos(Bloqueo y Burbuja))', infoTherapy.numberBoth.toString()),
@@ -284,8 +282,10 @@ class _TherapyIndexState extends State<TherapyIndex> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      _buildTableRow('Fecha Inicio asignación', infoTherapy.startDate.toString()),
-                      _buildTableRow('Fecha Fin asignación', infoTherapy.finishDate.toString()),
+                      _buildTableRow('Fecha Inicio Asignación', infoTherapy.startDateAssing?.toString() ?? 'Sin fecha de Inicio'),
+                      _buildTableRow('Fecha Fin Asignación', infoTherapy.finishDateAssing?.toString() ?? 'Sin fecha de Fin'),
+                      _buildTableRow('Fecha Inicio Terapia', infoTherapy.startDate?.toString() ?? 'Sin fecha de Inicio'),
+                      _buildTableRow('Fecha Fin Terapia', infoTherapy.finishDate?.toString() ?? 'Sin fecha de Fin'),
                     ],
                   ),
                 ),
@@ -363,7 +363,7 @@ class _TherapyIndexState extends State<TherapyIndex> {
   Widget _buildForm(BuildContext context) {
     return Center(
       child: Container(
-        width: double.infinity, // El contenedor principal utiliza todo el ancho disponible.
+        width: double.infinity, 
         padding: const EdgeInsets.all(16.0),
         child: Column(
           children: [
@@ -383,7 +383,23 @@ class _TherapyIndexState extends State<TherapyIndex> {
                       const SizedBox(width: 24.0),
                       ElevatedButton(
                         onPressed: () {
-                          _showSuccessDialog(context);
+                          final therapyViewModel = context.read<TherapyViewModel>();
+
+                          final stretcherNumber = _stretcherNumberController.text;
+                          final patientId = therapyViewModel.selectedPatientId;
+                          final nurseId = therapyViewModel.selectedNurseId;
+                          final balanceId = therapyViewModel.selectedBalanceId;
+
+                          if (patientId != null && nurseId != null && balanceId != null && stretcherNumber.isNotEmpty) {
+                            // Llamar al método de creación de terapia
+                            therapyViewModel.createNewTherapy(stretcherNumber, 1);
+                            _showSuccessDialog(context); // Mostrar el diálogo de éxito
+                          } else {
+                            // Manejar el error, por ejemplo, mostrar un mensaje de validación
+                            if (kDebugMode) {
+                              print("Por favor, complete todos los campos.");
+                            }
+                          }
                         },
                         style: ElevatedButton.styleFrom(
                           backgroundColor: Colors.purple.shade300,
@@ -446,6 +462,7 @@ class _TherapyIndexState extends State<TherapyIndex> {
         ),
         const SizedBox(height: 8.0),
         TextField(
+          controller: _stretcherNumberController, 
           decoration: InputDecoration(
             hintText: 'Ingrese el número de la Camilla',
             border: OutlineInputBorder(
@@ -476,9 +493,9 @@ class _TherapyIndexState extends State<TherapyIndex> {
         } else {
           return TherapyPatientsDataTable(
             therapyPatients: therapyViewModel.listPatients,
-            selectedId: therapyViewModel.selectedPatientId, 
+            selectedId: therapyViewModel.selectedPatientId,
             onAssign: (int id) {
-              therapyViewModel.updateSelectedPatientId(id); 
+              therapyViewModel.updateSelectedPatientId(id);
             },
           );
         }
@@ -505,9 +522,9 @@ class _TherapyIndexState extends State<TherapyIndex> {
         } else {
           return TherapyNursesDataTable(
             therapyNurses: therapyViewModel.listNurses,
-            selectedId: therapyViewModel.selectedPatientId, 
+            selectedId: therapyViewModel.selectedNurseId, 
             onAssign: (int id) {
-              therapyViewModel.updateSelectedPatientId(id); 
+              therapyViewModel.updateSelectedNurseId(id); 
             },
           );
         }
@@ -534,9 +551,9 @@ class _TherapyIndexState extends State<TherapyIndex> {
         } else {
           return TherapyBalancesDataTable(
             therapyBalances: therapyViewModel.listBalances,
-            selectedId: therapyViewModel.selectedPatientId, 
+            selectedId: therapyViewModel.selectedBalanceId, 
             onAssign: (int id) {
-              therapyViewModel.updateSelectedPatientId(id); 
+              therapyViewModel.updateSelectedBalanceId(id); 
             },
           );
         }

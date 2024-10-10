@@ -93,24 +93,53 @@ class ApiServiceTherapy {
   }
 
   Future<InfoTherapy> fetchInfoTherapy(int therapyId) async {
-  try {
-    final response = await http.get(Uri.parse('$baseUrl/therapy/info/$therapyId'));
+    try {
+      final response = await http.get(Uri.parse('$baseUrl/therapy/info/$therapyId'));
 
-    if (response.statusCode == 200) {
-      dynamic jsonResponse = json.decode(response.body);
-      if (kDebugMode) {
-        print('Contenido JSON: $jsonResponse');
+      if (response.statusCode == 200) {
+        dynamic jsonResponse = json.decode(response.body);
+        if (kDebugMode) {
+          print('Contenido JSON: $jsonResponse');
+        }
+        return InfoTherapy.fromJson(jsonResponse);
+      } else {
+        throw Exception('Error: Fallo al cargar los datos. Código de Estado: ${response.statusCode}');
       }
-      return InfoTherapy.fromJson(jsonResponse);
-    } else {
-      throw Exception('Error: Fallo al cargar los datos. Código de Estado: ${response.statusCode}');
+    } catch (e) {
+      if (kDebugMode) {
+        print("Error: Fallo al recuperar la información.");
+      }
+      throw Exception("Error: Fallo al recuperar la Información de la Terapia: $e");
     }
-  } catch (e) {
-    if (kDebugMode) {
-      print("Error: Fallo al recuperar la información.");
-    }
-    throw Exception("Error: Fallo al recuperar la Información de la Terapia: $e");
   }
-}
 
+  Future<Therapy> createTherapy(int patientId, int nurseId, int balanceId, String stretcherNumber, int userId) async {
+    try {
+      final body = jsonEncode({
+        'stretcher_number': stretcherNumber,
+        'id_balance': balanceId,
+        'id_patient': patientId,
+        'id_nurse': nurseId,
+        'id_user': userId,
+      });
+
+      final response = await http.post(
+        Uri.parse('$baseUrl/therapy/create'),
+        headers: {'Content-Type': 'application/json'},
+        body: body,
+      );
+
+      if (response.statusCode == 201) {
+        final jsonResponse = jsonDecode(response.body);
+        return Therapy.fromJson(jsonResponse);
+      } else {
+        throw Exception("Error al crear la terapia: ${response.body}");
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        print("Error: Fallo al crear la Terapia. Detalles: $e");
+      }
+      throw Exception("Error: Fallo al crear la Terapia.");
+    }
+  }
 }

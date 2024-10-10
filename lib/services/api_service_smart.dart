@@ -4,14 +4,14 @@ import 'package:flutter/services.dart' show rootBundle;
 import 'package:ps3_drops_v1/models/smart.dart';
 
 class ApiServiceSmart {
-  Future<List<Smart>> fetchSmarts() async{
+  Future<List<Therapy>> fetchSmarts() async{
     try{
       String jsonContent = await rootBundle.loadString('../assets/data/smart.json');
       if(kDebugMode){
         print('Contenido JSON: $jsonContent');
       }
       List<dynamic> jsonResponse = json.decode(jsonContent);
-      return jsonResponse.map((data) => Smart.fromJson(data)).toList();
+      return jsonResponse.map((data) => Therapy.fromJson(data)).toList();
 
     } catch (e){
       if(kDebugMode){

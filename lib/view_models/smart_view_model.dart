@@ -4,8 +4,8 @@ import 'package:ps3_drops_v1/services/api_service_smart.dart';
 
 class SmartViewModel extends ChangeNotifier {
   ApiServiceSmart apiServiceSmart = ApiServiceSmart();
-  List<Smart> listSmarts = [];
-  List<Smart> filteredSmarts = [];
+  List<Therapy> listSmarts = [];
+  List<Therapy> filteredSmarts = [];
   bool isLoading = false;
   bool hasMatches = true;
 

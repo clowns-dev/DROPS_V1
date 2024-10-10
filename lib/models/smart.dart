@@ -1,11 +1,11 @@
-class Smart {
+class Therapy {
   final int? idSmart;
   final String? codeRFID;
   final DateTime? registerDate;
   final DateTime? lastUpdate;
   final int? status;
 
-  Smart({
+  Therapy({
     this.idSmart,
     this.codeRFID,
     this.registerDate,
@@ -13,8 +13,8 @@ class Smart {
     this.status
   });
 
-  factory Smart.fromJson(Map<String, dynamic> json){
-    return Smart(
+  factory Therapy.fromJson(Map<String, dynamic> json){
+    return Therapy(
       idSmart: json['idSmart'],
       codeRFID: json['codeRFID'],
       registerDate: json['registerDate'] != null ? DateTime.parse(json['registerDate']) : null,

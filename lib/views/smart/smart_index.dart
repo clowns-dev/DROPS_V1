@@ -23,7 +23,7 @@ class SmartIndex extends StatefulWidget {
 class _SmartIndexState extends State<SmartIndex> {
   final String _selectedFilter = 'Buscar por:';
   final List<String> _filterOptions = ['Buscar por:', 'Codigo'];
-  Smart? _editingSmart;
+  Therapy? _editingSmart;
   final TextEditingController _searchController = TextEditingController();
 
   @override
@@ -44,7 +44,7 @@ class _SmartIndexState extends State<SmartIndex> {
     smartViewModel.filterBalances(_searchController.text);
   }
 
-  void _showFormModal(BuildContext context, [Smart? smart]) {
+  void _showFormModal(BuildContext context, [Therapy? smart]) {
     setState(() {
       _editingSmart = smart;
     });
@@ -329,9 +329,9 @@ class _SmartIndexState extends State<SmartIndex> {
           return SmartDataTable(
             smarts: smartViewModel.filteredSmarts,
             onEdit: (id) {
-              Smart? smart = smartViewModel.filteredSmarts.firstWhere(
+              Therapy? smart = smartViewModel.filteredSmarts.firstWhere(
                 (s) => s.idSmart == id,
-                orElse: () => Smart(),
+                orElse: () => Therapy(),
               );
               // ignore: unnecessary_null_comparison
               if (smart != null) {

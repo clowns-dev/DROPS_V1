@@ -25,28 +25,31 @@ class _BalanceIndexState extends State<BalanceIndex> {
   final List<String> _filterOptions = ['Buscar por:', 'Codigo', 'Disponible', 'Ocupadas'];
   Balance? _editingBalance;
   final TextEditingController _searchController = TextEditingController();
-
+  final TextEditingController _balaceCodeController = TextEditingController();
+  int? _idBalance;
   @override
   void initState() {
     super.initState();
-    _searchController.addListener(_onSearchChanged);
   }
 
   @override
   void dispose() {
-    _searchController.removeListener(_onSearchChanged);
+    
     _searchController.dispose();
     super.dispose();
   }
 
-  void _onSearchChanged() {
-    final balanceViewModel = context.read<BalanceViewModel>();
-    balanceViewModel.filterBalances(_searchController.text);
-  }
+ 
 
   void _showFormModal(BuildContext context, [Balance? balance]) {
     setState(() {
       _editingBalance = balance;
+      if (_editingBalance != null) {
+        _balaceCodeController.text = _editingBalance!.balanceCode ?? '';
+        _idBalance = _editingBalance!.idBalance ?? 0;
+      } else {
+        _balaceCodeController.clear();
+      }
     });
     showDialog(
       context: context,
@@ -100,9 +103,7 @@ class _BalanceIndexState extends State<BalanceIndex> {
                         const TextLabel(content: 'Código:'),
                         const SizedBox(height: 8.0),
                         TextField(
-                          controller: TextEditingController(
-                            text: _editingBalance?.balanceCode ?? '',
-                          ),
+                          controller: _balaceCodeController,
                           decoration: InputDecoration(
                             hintText: 'Ingrese el código',
                             border: OutlineInputBorder(
@@ -120,14 +121,17 @@ class _BalanceIndexState extends State<BalanceIndex> {
                                 children: [
                                   ElevatedButton(
                                     onPressed: () {
+                                      final balanceViewModel = context.read<BalanceViewModel>();
+                                      final balanceCode = _balaceCodeController.text;
+                                      final idBalance = _idBalance;
                                       if (_editingBalance != null) {
-                                        if (kDebugMode) {
-                                          print('Editando balanza con ID: ${_editingBalance?.idBalance}');
-                                        }
+                                        balanceViewModel.editBalance(idBalance, balanceCode, 1).then((_) {
+                                          balanceViewModel.fetchBalances();
+                                        });
                                       } else {
-                                        if (kDebugMode) {
-                                          print('Creando nueva balanza');
-                                        }
+                                        balanceViewModel.createNewBalance(balanceCode, 1).then((_) {
+                                          balanceViewModel.fetchBalances();
+                                        });
                                       }
                                       _showSuccessDialog(context, _editingBalance != null, dialogContext);
                                     },
@@ -277,7 +281,7 @@ class _BalanceIndexState extends State<BalanceIndex> {
                     SearchField(
                       controller: _searchController,
                       fullWidth: false,
-                      onChanged: (value) => _onSearchChanged(),
+                      
                     ),
                   ],
                 ),
@@ -328,17 +332,17 @@ class _BalanceIndexState extends State<BalanceIndex> {
         } else {
           return BalanceDataTable(
             balances: balanceViewModel.filteredBalances,
-            onEdit: (id) {
-              Balance? balance = balanceViewModel.listBalances.firstWhere(
-                (b) => b.idBalance == id,
-                orElse: () => Balance(),
-              );
-              // ignore: unnecessary_null_comparison
+            onEdit: (id) async {
+              Balance? balance = await balanceViewModel.fetchBalanceById(id);
               if (balance != null) {
+                setState(() {
+                  _editingBalance = balance;
+                });
+                // ignore: use_build_context_synchronously
                 _showFormModal(context, balance);
               }
             },
-            onDelete: (id) {
+            onDelete: (id)  async {
               _showDeleteConfirmationDialog(context, id);
             },
           );
@@ -347,17 +351,20 @@ class _BalanceIndexState extends State<BalanceIndex> {
     );
   }
 
-  void _showDeleteConfirmationDialog(BuildContext context, int balanceId) {
+  void _showDeleteConfirmationDialog(BuildContext context, int? balanceId) {
     showDialog(
       context: context,
       builder: (context) {
         return DeleteConfirmationDialog(
           onConfirmDelete: () {
-            Provider.of<BalanceViewModel>(context, listen: true).deleteBalance(balanceId);
-            if (kDebugMode) {
-              print('Eliminando balanza con ID: $balanceId');
+            final balanceViewModel = context.read<BalanceViewModel>();
+
+            if(balanceId != null){
+              balanceViewModel.removeBalance(balanceId, 1).then((_){
+                balanceViewModel.fetchBalances();
+              });
             }
-            Navigator.of(context).pop(); // Cerrar el diálogo de confirmación
+
           },
         );
       },

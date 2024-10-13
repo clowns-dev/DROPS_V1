@@ -12,7 +12,7 @@ class EditButton extends StatelessWidget {
   Widget build(BuildContext context) {
     return ElevatedButton(
       style: ElevatedButton.styleFrom(
-        backgroundColor: Colors.blueAccent,
+        backgroundColor:const Color.fromARGB(255, 168, 126, 207),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(10),
         ),

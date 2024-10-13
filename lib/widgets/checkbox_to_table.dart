@@ -15,7 +15,7 @@ class CheckboxToTable extends StatelessWidget {
     return GestureDetector(
       onTap: onChanged,
       child: Container(
-        width: 20.0, // Tamaño más pequeño
+        width: 20.0, 
         height: 20.0,
         decoration: BoxDecoration(
           color: isChecked ? Colors.teal : Colors.transparent,
@@ -23,7 +23,7 @@ class CheckboxToTable extends StatelessWidget {
             color: isChecked ? Colors.teal : Colors.grey.shade400,
             width: 1.5, // Grosor más fino
           ),
-          borderRadius: BorderRadius.circular(4.0), // Menos redondeado para parecer más a un checkbox
+          borderRadius: BorderRadius.circular(4.0),
         ),
         child: isChecked
             ? const Icon(

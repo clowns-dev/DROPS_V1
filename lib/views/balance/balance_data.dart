@@ -24,12 +24,12 @@ class BalanceDataTable extends StatefulWidget {
 }
 
 class _BalanceDataTableState extends State<BalanceDataTable> {
-  late BalanceDataSource _patientDataSource;
-
+  late BalanceDataSource _balanceDataSource;
+  int rowsPerPage = 5;
   @override
   void initState() {
     super.initState();
-    _patientDataSource = BalanceDataSource(
+    _balanceDataSource = BalanceDataSource(
       balances: widget.balances,
       onEdit: widget.onEdit,
       onDelete: widget.onDelete,
@@ -42,10 +42,12 @@ class _BalanceDataTableState extends State<BalanceDataTable> {
       children: [
         Expanded(
           child: SfDataGrid(
-            source: _patientDataSource,
+            source: _balanceDataSource,
             columnWidthMode: ColumnWidthMode.fill,
             gridLinesVisibility: GridLinesVisibility.none,
             headerGridLinesVisibility: GridLinesVisibility.none,
+            rowsPerPage: _balanceDataSource.rowsPerPage,
+            rowHeight: 50,
             columns: <GridColumn>[
               buildGridColumn('Codigo', 'Codigo'),
               buildGridColumn('Factor de\nCalibracion', 'Factor de\nCalibracion'),
@@ -67,12 +69,17 @@ class _BalanceDataTableState extends State<BalanceDataTable> {
           ),
         ),
         SfDataPager(
-          delegate: _patientDataSource,
-          availableRowsPerPage: const <int>[5, 10, 15],
-          pageCount: (widget.balances.length / 10),
+          delegate: _balanceDataSource,
+          availableRowsPerPage: const <int>[5, 10],
+          pageCount: (widget.balances.length / _balanceDataSource.rowsPerPage).ceil().toDouble(),
           onRowsPerPageChanged: (int? rowsPerPage) {
             setState(() {
-              _patientDataSource.updateRowsPerPage(rowsPerPage!);
+              _balanceDataSource.updateRowsPerPage(rowsPerPage!);
+            });
+          },
+          onPageNavigationEnd: (int pageIndex) {
+            setState(() {
+              _balanceDataSource.updatePage(pageIndex, _balanceDataSource.rowsPerPage);
             });
           },
         ),
@@ -82,6 +89,13 @@ class _BalanceDataTableState extends State<BalanceDataTable> {
 }
 
 class BalanceDataSource extends DataGridSource {
+  int rowsPerPage = 5;
+  int currentPageIndex = 0;
+
+  List<DataGridRow> _balances = [];
+  final void Function(int id) onEdit;
+  final void Function(int id) onDelete;
+
   BalanceDataSource({
     required List<Balance> balances,
     required this.onEdit,
@@ -101,7 +115,7 @@ class BalanceDataSource extends DataGridSource {
         DataGridCell<String>(columnName: 'Factor de\nCalibracion', value: balance.actuallyFactor.toString()),
         DataGridCell<String>(columnName: 'Fecha de\nRegistro', value: formattedRegisterDate),
         DataGridCell<String>(columnName: 'Fecha de\nActualizacion', value: formattedLastUpdate),
-        DataGridCell<bool>(columnName: 'Estado', value: balance.status == 1),
+        DataGridCell<bool>(columnName: 'Estado', value: balance.available == 1),
         DataGridCell<Widget>(
           columnName: 'Acciones',
           value: Row(
@@ -117,51 +131,59 @@ class BalanceDataSource extends DataGridSource {
     }).toList();
   }
 
-  List<DataGridRow> _balances = [];
-  final void Function(int id) onEdit;
-  final void Function(int id) onDelete;
-
-  @override
-  List<DataGridRow> get rows => _balances;
-
-  @override
-  DataGridRowAdapter buildRow(DataGridRow row) {
-  return DataGridRowAdapter(
-    cells: row.getCells().where((dataGridCell) {
-      return dataGridCell.columnName != 'ID';
-    }).map<Widget>((dataGridCell) {
-      bool isActionColumn = dataGridCell.columnName == 'Acciones';
-      bool isEstadoColumn = dataGridCell.columnName == 'Estado';
-
-      return Container(
-        alignment: Alignment.center,
-        padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 4.0),
-        child: isActionColumn
-            ? dataGridCell.value
-            : isEstadoColumn
-                ? CheckboxToTable(isChecked: dataGridCell.value as bool)
-                : Container(
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFFFE4E1),
-                      borderRadius: BorderRadius.circular(8.0),
-                    ),
-                    padding: const EdgeInsets.symmetric(vertical: 6.0, horizontal: 8.0),
-                    child: Text(
-                      dataGridCell.value.toString(),
-                      style: const TextStyle(
-                        fontWeight: FontWeight.w400,
-                        color: Colors.black,
-                      ),
-                    ),
-                  ),
-      );
-    }).toList(),
-  );
-}
+  void updatePage(int pageIndex, int rowsPerPage) {
+    currentPageIndex = pageIndex;
+    this.rowsPerPage = rowsPerPage;  
+    notifyListeners();  
+  }
 
 
   void updateRowsPerPage(int rowsPerPage) {
-    notifyListeners();
+    this.rowsPerPage = rowsPerPage;
+    currentPageIndex = 0; 
+    notifyListeners(); 
+  }
+
+  @override
+  List<DataGridRow> get rows {
+    int startIndex = currentPageIndex * rowsPerPage;
+    int endIndex = startIndex + rowsPerPage;
+    endIndex = endIndex > _balances.length ? _balances.length : endIndex;
+    return _balances.sublist(startIndex, endIndex);
+  }
+
+  @override
+  DataGridRowAdapter buildRow(DataGridRow row) {
+    return DataGridRowAdapter(
+      cells: row.getCells().where((dataGridCell) {
+        return dataGridCell.columnName != 'ID';
+      }).map<Widget>((dataGridCell) {
+        bool isActionColumn = dataGridCell.columnName == 'Acciones';
+        bool isEstadoColumn = dataGridCell.columnName == 'Estado';
+
+        return Container(
+          alignment: Alignment.center,
+          padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 4.0),
+          child: isActionColumn
+              ? dataGridCell.value
+              : isEstadoColumn
+                  ? CheckboxToTable(isChecked: dataGridCell.value as bool) // Se asegura que se base en el valor correcto
+                  : Container(
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFFFE4E1),
+                        borderRadius: BorderRadius.circular(8.0),
+                      ),
+                      padding: const EdgeInsets.symmetric(vertical: 6.0, horizontal: 8.0),
+                      child: Text(
+                        dataGridCell.value.toString(),
+                        style: const TextStyle(
+                          fontWeight: FontWeight.w400,
+                          color: Colors.black,
+                        ),
+                      ),
+                    ),
+        );
+      }).toList(),
+    );
   }
 }
-

@@ -12,7 +12,7 @@ class DeleteButton extends StatelessWidget {
   Widget build(BuildContext context) {
     return ElevatedButton(
       style: ElevatedButton.styleFrom(
-        backgroundColor: Colors.redAccent,
+        backgroundColor: const Color(0xFFFF9494),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(10),
         ),

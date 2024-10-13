@@ -7,7 +7,7 @@ import 'package:ps3_drops_v1/widgets/checkbox_to_table.dart';
 class TherapyBalancesDataTable extends StatefulWidget {
   final List<Balance> therapyBalances;
   final int? selectedId; 
-  final void Function(int id) onAssign; 
+  final void Function(int id) onAssign;
 
   const TherapyBalancesDataTable({
     required this.therapyBalances,
@@ -21,29 +21,31 @@ class TherapyBalancesDataTable extends StatefulWidget {
 }
 
 class _TherapyBalancesDataTableState extends State<TherapyBalancesDataTable> {
-  int? selectedId; 
+  int? selectedId;
+  late TherapyBalancesDataSource _therapyBalancesDataSource; 
+  int rowsPerPage = 5; 
 
   @override
   void initState() {
     super.initState();
     selectedId = widget.selectedId;
-  }
-
-  void _handleCheckboxChanged(int id) {
-    setState(() {
-      selectedId = id; // Actualizar el ID seleccionado
-    });
-    widget.onAssign(id); // Llamar la función de asignación para manejar el ID seleccionado
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final therapyDataSource = TherapyBalancesDataSource(
+    _therapyBalancesDataSource = TherapyBalancesDataSource(
       therapyBalances: widget.therapyBalances,
       onSelect: _handleCheckboxChanged,
       selectedId: selectedId,
     );
+  }
 
+  void _handleCheckboxChanged(int id) {
+    setState(() {
+      selectedId = id;
+      _therapyBalancesDataSource.updateSelectedId(id); 
+    });
+    widget.onAssign(id);
+  }
+
+  @override
+  Widget build(BuildContext context) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
@@ -54,10 +56,12 @@ class _TherapyBalancesDataTableState extends State<TherapyBalancesDataTable> {
         const SizedBox(height: 8.0),
         Expanded(
           child: SfDataGrid(
-            source: therapyDataSource,
+            source: _therapyBalancesDataSource,
             columnWidthMode: ColumnWidthMode.fill,
             gridLinesVisibility: GridLinesVisibility.none,
             headerGridLinesVisibility: GridLinesVisibility.none,
+            rowsPerPage: _therapyBalancesDataSource.rowsPerPage,
+            rowHeight: 50,
             columns: <GridColumn>[
               buildGridColumn('Balanza', 'Balanza'),
               GridColumn(
@@ -74,11 +78,25 @@ class _TherapyBalancesDataTableState extends State<TherapyBalancesDataTable> {
             ],
           ),
         ),
+        SfDataPager(
+          delegate: _therapyBalancesDataSource,
+          availableRowsPerPage: const <int>[5, 10],
+          pageCount: (widget.therapyBalances.length / _therapyBalancesDataSource.rowsPerPage).ceil().toDouble(),
+          onRowsPerPageChanged: (int? rowsPerPage) {
+            setState(() {
+              _therapyBalancesDataSource.updateRowsPerPage(rowsPerPage!);
+            });
+          },
+          onPageNavigationEnd: (int pageIndex) {  
+            setState(() {
+              _therapyBalancesDataSource.updatePage(pageIndex, rowsPerPage);  
+            });
+          },
+        ),
       ],
     );
   }
 }
-
 
 class TherapyBalancesDataSource extends DataGridSource {
   TherapyBalancesDataSource({
@@ -99,18 +117,62 @@ class TherapyBalancesDataSource extends DataGridSource {
             },
           ),
         ),
-
-
       ]);
     }).toList();
   }
 
   List<DataGridRow> _balances = [];
   final void Function(int id) onSelect;
-  final int? selectedId;
+  int? selectedId;
+  int rowsPerPage = 5;
+  int currentPageIndex = 0;
+
+  void updateSelectedId(int selectedId) {
+    this.selectedId = selectedId;
+    _balances = _balances.map<DataGridRow>((row) {
+      final balanceId = row.getCells().firstWhere((cell) => cell.columnName == 'ID').value;
+      
+      return DataGridRow(cells: [
+        DataGridCell<int>(columnName: 'ID', value: balanceId),
+        DataGridCell<String>(columnName: 'Balanza', value: row.getCells().firstWhere((cell) => cell.columnName == 'Balanza').value),
+        DataGridCell<Widget>(
+          columnName: 'Asignar',
+          value: CheckboxToTable(
+            isChecked: balanceId == selectedId,
+            onChanged: () {
+              onSelect(balanceId);
+            },
+          ),
+        ),
+      ]);
+    }).toList();
+    notifyListeners();
+  }
+
+
+  void updatePage(int pageIndex, int rowsPerPage) {
+    currentPageIndex = pageIndex;
+    this.rowsPerPage = rowsPerPage;  
+    notifyListeners();  
+  }
+
+
+  void updateRowsPerPage(int rowsPerPage) {
+    this.rowsPerPage = rowsPerPage;
+    currentPageIndex = 0; 
+    notifyListeners(); 
+  }
+
 
   @override
-  List<DataGridRow> get rows => _balances;
+  List<DataGridRow> get rows {
+    int startIndex = currentPageIndex * rowsPerPage;
+    int endIndex = startIndex + rowsPerPage;
+    endIndex = endIndex > _balances.length ? _balances.length : endIndex;
+    return _balances.sublist(startIndex, endIndex);
+  }
+
+
 
   @override
   DataGridRowAdapter buildRow(DataGridRow row) {
@@ -143,9 +205,4 @@ class TherapyBalancesDataSource extends DataGridSource {
       }).toList(),
     );
   }
-
-  void updateRowsPerPage(int rowsPerPage) {
-    notifyListeners();
-  }
 }
-

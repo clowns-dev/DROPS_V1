@@ -9,6 +9,7 @@ class Balance {
   final DateTime? registerDate;
   final DateTime? lastUpdate;
   final int? status;
+  final int? userID;
 
   Balance({
     this.idBalance,
@@ -18,9 +19,9 @@ class Balance {
     this.registerDate,
     this.lastUpdate,
     this.status,
+    this.userID
   });
 
-  // Constructor fromJson con manejo de múltiples formatos de fecha
   factory Balance.fromJson(Map<String, dynamic> json) {
     DateFormat dateFormatWithGMT = DateFormat("EEE, dd MMM yyyy HH:mm:ss 'GMT'");
     DateFormat dateFormatWithoutGMT = DateFormat("yyyy-MM-dd HH:mm:ss");
@@ -36,7 +37,7 @@ class Balance {
           if (kDebugMode) {
             print('Error al parsear la fecha: $dateString');
           }
-          return null; // Si ambos fallan, retornar null
+          return null;
         }
       }
     }
@@ -51,6 +52,7 @@ class Balance {
                   ? parseDate(json['lastUpdate'])
                   : null,
       status: json['status'],
+      userID: json['userID']
     );
   }
 }

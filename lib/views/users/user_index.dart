@@ -49,7 +49,7 @@ class _UserIndex extends State<UserIndex> {
 
   void _onSearchChanged() {
     final employeeViewModel = context.read<EmployeeViewModel>();
-    employeeViewModel.filterEmployees(_searchController.text);
+    
   }
 
 
@@ -276,9 +276,7 @@ class _UserIndex extends State<UserIndex> {
                       const TextLabel(content: 'Fecha de Nacimiento:'),
                       const SizedBox(height: 8.0),
                       TextField(
-                        controller: TextEditingController(
-                          text: _editingEmployee?.birthDate ?? '',
-                        ),
+                        
                         decoration: InputDecoration(
                           hintText: 'dd/mm/aaaa',
                           border: OutlineInputBorder(
@@ -470,7 +468,7 @@ class _UserIndex extends State<UserIndex> {
       builder: (context) {
         return DeleteConfirmationDialog(
           onConfirmDelete: () {
-            Provider.of<EmployeeViewModel>(context, listen: false).deleteEmployee(idEmployee);
+            Provider.of<EmployeeViewModel>(context, listen: false);
             if (kDebugMode) {
               print('Eliminando empleado con ID: $idEmployee');
             }
@@ -502,7 +500,7 @@ class _UserIndex extends State<UserIndex> {
             onEdit: (id) {
               Employee? employee = employeeViewModel.listEmployees.firstWhere(
                 (e) => e.idEmployee == id,
-                orElse: () => Employee(name: '', lastName: '', secondLastName: '', birthDate: '', ci: '', address: '', phoneNumber: '', email: ''), // Retornar null en caso de que no se encuentre el empleado.
+                orElse: () => Employee(name: '', lastName: '', secondLastName: '', birthDate: null, ci: '', address: '', phoneNumber: '', email: ''), // Retornar null en caso de que no se encuentre el empleado.
               );
 
               // ignore: unnecessary_null_comparison

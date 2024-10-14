@@ -167,7 +167,7 @@ class BalanceDataSource extends DataGridSource {
           child: isActionColumn
               ? dataGridCell.value
               : isEstadoColumn
-                  ? CheckboxToTable(isChecked: dataGridCell.value as bool) // Se asegura que se base en el valor correcto
+                  ? CheckboxToTable(isChecked: dataGridCell.value as bool)
                   : Container(
                       decoration: BoxDecoration(
                         color: const Color(0xFFFFE4E1),

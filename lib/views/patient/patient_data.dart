@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:ps3_drops_v1/models/patient.dart';
 import 'package:syncfusion_flutter_datagrid/datagrid.dart';
 import 'package:ps3_drops_v1/widgets/edit_button.dart';
@@ -23,7 +24,7 @@ class PatientDataTable extends StatefulWidget {
 
 class _PatientDataTableState extends State<PatientDataTable> {
   late PatientDataSource _patientDataSource;
-
+  int rowsPerPage = 5;
   @override
   void initState() {
     super.initState();
@@ -44,12 +45,16 @@ class _PatientDataTableState extends State<PatientDataTable> {
             columnWidthMode: ColumnWidthMode.fill,
             gridLinesVisibility: GridLinesVisibility.none,
             headerGridLinesVisibility: GridLinesVisibility.none,
+            rowsPerPage: _patientDataSource.rowsPerPage,
+            rowHeight: 50,
             columns: <GridColumn>[
               buildGridColumn('CI', 'CI'),
               buildGridColumn('Nombre', 'Nombre'),
               buildGridColumn('Apellido Paterno', 'Apellido Paterno'),
               buildGridColumn('Apellido Materno', 'Apellido Materno'),
               buildGridColumn('Fecha de Nacimiento', 'Fecha de Nacimiento'),
+              buildGridColumn('Fecha de\nRegistro', 'Fecha de\nRegistro'),
+              buildGridColumn('Fecha de\nActualizacion', 'Fecha de\nActualizacion'),
               GridColumn(
                 columnName: 'Acciones',
                 label: Container(
@@ -66,11 +71,16 @@ class _PatientDataTableState extends State<PatientDataTable> {
         ),
         SfDataPager(
           delegate: _patientDataSource,
-          availableRowsPerPage: const <int>[5, 10, 15],
-          pageCount: (widget.patients.length / 10),
+          availableRowsPerPage: const <int>[5, 10],
+          pageCount: (widget.patients.length / _patientDataSource.rowsPerPage).ceil().toDouble(),
           onRowsPerPageChanged: (int? rowsPerPage) {
             setState(() {
               _patientDataSource.updateRowsPerPage(rowsPerPage!);
+            });
+          },
+          onPageNavigationEnd: (int pageIndex) {
+            setState(() {
+              _patientDataSource.updatePage(pageIndex, _patientDataSource.rowsPerPage);
             });
           },
         ),
@@ -80,19 +90,33 @@ class _PatientDataTableState extends State<PatientDataTable> {
 }
 
 class PatientDataSource extends DataGridSource {
+  int rowsPerPage = 5;
+  int currentPageIndex = 0;
+
   PatientDataSource({
     required List<Patient> patients,
     required this.onEdit,
     required this.onDelete,
   }) {
     _patients = patients.map<DataGridRow>((patient) {
+      final formattedRegisterDate = patient.registerDate != null
+          ? DateFormat('yyyy-MM-dd').format(patient.registerDate!)
+          : 'Sin Registro';
+      final formattedLastUpdate = patient.lastUpdate != null
+          ? DateFormat('yyyy-MM-dd').format(patient.lastUpdate!)
+          : 'Sin Cambios';
+      final formattedBirthDate = patient.birthDate != null
+          ? DateFormat('yyyy-MM-dd').format(patient.birthDate!)
+          : 'Sin Cambios';
       return DataGridRow(cells: [
         DataGridCell<int>(columnName: 'ID', value: patient.idPatient),
         DataGridCell<String>(columnName: 'CI', value: patient.ci),
         DataGridCell<String>(columnName: 'Nombre', value: patient.name),
         DataGridCell<String>(columnName: 'Apellido Paterno', value: patient.lastName),
-        DataGridCell<String>(columnName: 'Apellido Materno', value: patient.secondLastName),
-        DataGridCell<String>(columnName: 'Fecha de Nacimiento', value: patient.birthDate),
+        DataGridCell<String>(columnName: 'Apellido Materno', value: patient.secondLastName ?? 'No tiene'),
+        DataGridCell<String>(columnName: 'Fecha de Nacimiento', value: formattedBirthDate),
+        DataGridCell<String>(columnName: 'Fecha de\nRegistro', value: formattedRegisterDate),
+        DataGridCell<String>(columnName: 'Fecha de\nActualizacion', value: formattedLastUpdate),
         DataGridCell<Widget>(
           columnName: 'Acciones',
           value: Row(
@@ -112,8 +136,26 @@ class PatientDataSource extends DataGridSource {
   final void Function(int id) onEdit;
   final void Function(int id) onDelete;
 
+  void updatePage(int pageIndex, int rowsPerPage) {
+    currentPageIndex = pageIndex;
+    this.rowsPerPage = rowsPerPage;  
+    notifyListeners();  
+  }
+
+
+  void updateRowsPerPage(int rowsPerPage) {
+    this.rowsPerPage = rowsPerPage;
+    currentPageIndex = 0; 
+    notifyListeners(); 
+  }
+
   @override
-  List<DataGridRow> get rows => _patients;
+  List<DataGridRow> get rows {
+    int startIndex = currentPageIndex * rowsPerPage;
+    int endIndex = startIndex + rowsPerPage;
+    endIndex = endIndex > _patients.length ? _patients.length : endIndex;
+    return _patients.sublist(startIndex, endIndex);
+  }
 
   @override
   DataGridRowAdapter buildRow(DataGridRow row) {
@@ -139,14 +181,12 @@ class PatientDataSource extends DataGridSource {
                       fontWeight: FontWeight.w400,
                       color: Colors.black,
                     ),
+                    maxLines: 1,  
+                    overflow: TextOverflow.ellipsis,
                   ),
                 ),
         );
       }).toList(),
     );
-  }
-
-  void updateRowsPerPage(int rowsPerPage) {
-    notifyListeners();
   }
 }

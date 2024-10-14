@@ -1,5 +1,6 @@
-import 'package:flutter/foundation.dart';
+import 'package:syncfusion_flutter_datepicker/datepicker.dart';
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:ps3_drops_v1/models/patient.dart';
 import 'package:ps3_drops_v1/view_models/patient_view_model.dart';
@@ -28,23 +29,25 @@ class _PatientIndexState extends State<PatientIndex> {
   //String _searchQuery = '';
   final TextEditingController _searchController = TextEditingController();
 
+  // Inputs del Formulario
+  final TextEditingController _patientName = TextEditingController();
+  final TextEditingController _patientLastName = TextEditingController();
+  final TextEditingController _patientSecondLastName = TextEditingController();
+  final TextEditingController _patientBirthDate = TextEditingController();
+  final TextEditingController _patientCI = TextEditingController();
+
   @override
   void initState() {
     super.initState();
-    _searchController.addListener(_onSearchChanged);
   }
 
   @override
   void dispose() {
-    _searchController.removeListener(_onSearchChanged);
     _searchController.dispose();
     super.dispose();
   }
 
-  void _onSearchChanged() {
-    final patientViewModel = context.read<PatientViewModel>();
-    patientViewModel.filterEmployees(_searchController.text);
-  }
+  
 
 
   void _toggleView([Patient? patient]) {
@@ -141,7 +144,7 @@ class _PatientIndexState extends State<PatientIndex> {
                       SearchField(
                         controller: _searchController,
                         fullWidth: false,
-                        onChanged: (value) => _onSearchChanged(),
+                        
                       ),
                     ],
                   ),
@@ -173,11 +176,14 @@ class _PatientIndexState extends State<PatientIndex> {
     );
   }
 
-  
-
-
-
-
+  void _resetForm() {
+    _patientCI.clear();
+    _patientName.clear();
+    _patientLastName.clear();
+    _patientSecondLastName.clear();
+    _patientBirthDate.clear();
+    _editingPatient = null; 
+  }
 
   Widget _buildForm() {
     return Center(
@@ -198,9 +204,7 @@ class _PatientIndexState extends State<PatientIndex> {
             const TextLabel(content: 'CI:'),
             const SizedBox(height: 8.0),
             TextField(
-              controller: TextEditingController(
-                text: _editingPatient?.ci ?? '',
-              ),
+              controller: _patientCI,
               decoration: InputDecoration(
                 hintText: 'Ingrese el CI',
                 border: OutlineInputBorder(
@@ -214,9 +218,7 @@ class _PatientIndexState extends State<PatientIndex> {
             const TextLabel(content: 'Nombre:'),
             const SizedBox(height: 8.0),
             TextField(
-              controller: TextEditingController(
-                text: _editingPatient?.name ?? '',
-              ),
+              controller: _patientName,
               decoration: InputDecoration(
                 hintText: 'Ingrese el nombre',
                 border: OutlineInputBorder(
@@ -230,9 +232,7 @@ class _PatientIndexState extends State<PatientIndex> {
             const TextLabel(content: 'Apellido Paterno:'),
             const SizedBox(height: 8.0),
             TextField(
-              controller: TextEditingController(
-                text: _editingPatient?.lastName ?? '',
-              ),
+              controller: _patientLastName,
               decoration: InputDecoration(
                 hintText: 'Ingrese el apellido paterno',
                 border: OutlineInputBorder(
@@ -246,9 +246,7 @@ class _PatientIndexState extends State<PatientIndex> {
             const TextLabel(content: 'Apellido Materno:'),
             const SizedBox(height: 8.0),
             TextField(
-              controller: TextEditingController(
-                text: _editingPatient?.secondLastName ?? '',
-              ),
+              controller: _patientSecondLastName,
               decoration: InputDecoration(
                 hintText: 'Ingrese el apellido materno',
                 border: OutlineInputBorder(
@@ -261,35 +259,64 @@ class _PatientIndexState extends State<PatientIndex> {
             // Campo para Fecha de Nacimiento
             const TextLabel(content: 'Fecha de Nacimiento:'),
             const SizedBox(height: 8.0),
-            TextField(
-              controller: TextEditingController(
-                text: _editingPatient?.birthDate ?? '',
-              ),
-              decoration: InputDecoration(
-                hintText: 'dd/mm/aaaa',
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12.0),
+            InkWell(
+              onTap: () {
+                _showSyncfusionDatePicker(context); // Llamada para abrir el Syncfusion DatePicker
+              },
+              child: InputDecorator(
+                decoration: InputDecoration(
+                  hintText: 'Seleccione una fecha',
+                  suffixIcon: const Icon(Icons.calendar_today),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12.0),
+                  ),
+                ),
+                child: Text(
+                  _patientBirthDate.text.isEmpty
+                      ? 'Seleccione una fecha'
+                      : _patientBirthDate.text, // Mostrar la fecha seleccionada
                 ),
               ),
             ),
+
+
+
             const SizedBox(height: 32.0),
 
             // Botón para guardar
             Center(
               child: ElevatedButton(
                 onPressed: () {
+                  String name = _patientName.text;
+                  String lastName = _patientLastName.text;
+                  String secondLastName = _patientSecondLastName.text;
+                  String ci = _patientCI.text;
+                  DateTime? birthDate;
+                  if (_patientBirthDate.text.isNotEmpty) {
+                    birthDate = DateFormat('dd/MM/yyyy').parse(_patientBirthDate.text);
+                  }
+                  final patientViewModel = context.read<PatientViewModel>();
                   if (_editingPatient != null) {
-                    if (kDebugMode) {
-                      print('Editando paciente con ID: ${_editingPatient?.idPatient}');
+                    if (name.isNotEmpty && lastName.isNotEmpty && birthDate != null && ci.isNotEmpty) {
+                      patientViewModel.editPatient(
+                        _editingPatient!.idPatient!, name, lastName, secondLastName, birthDate, ci, 1
+                      ).then((_) {
+                        patientViewModel.fetchPatients();
+                      });
+                      _resetForm();
+                      _showSuccessDialog(context, true);
                     }
                   } else {
-                    if (kDebugMode) {
-                      print('Creando nuevo paciente');
+                    if (name.isNotEmpty && lastName.isNotEmpty  && birthDate != null && ci.isNotEmpty) {
+                      final patientViewModel = context.read<PatientViewModel>();
+                    
+                      patientViewModel.createNewPatient(name, lastName, secondLastName, birthDate, ci, 1).then((_) {
+                        patientViewModel.fetchPatients();
+                      });
+                      _resetForm();
+                      _showSuccessDialog(context, false);
                     }
                   }
-
-                  // Mostrar el modal de éxito después de guardar o editar
-                  _showSuccessDialog(context, _editingPatient != null);
                 },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.purple.shade300,
@@ -316,6 +343,102 @@ class _PatientIndexState extends State<PatientIndex> {
     );
   }
 
+  DateTime? _selectedDate;
+
+  void _showSyncfusionDatePicker(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20), 
+          ),
+          backgroundColor: const Color(0xFFF5F0FF), 
+          content: SizedBox(
+            height: 350,
+            width: 350,
+            child: Container(
+              padding: const EdgeInsets.all(10), 
+              decoration: BoxDecoration(
+                color: const Color(0xFFF5F0FF), 
+                borderRadius: BorderRadius.circular(20), 
+                border: Border.all(
+                  color: const Color.fromARGB(255, 168, 126, 207), 
+                  width: 2, // Grosor del borde
+                ),
+              ),
+              child: SfDateRangePicker(
+                backgroundColor: const Color(0xFFF5F0FF), 
+                onSelectionChanged: (DateRangePickerSelectionChangedArgs args) {
+                  setState(() {
+                    _selectedDate = args.value;
+                    _patientBirthDate.text = DateFormat('dd/MM/yyyy').format(_selectedDate!);
+                  });
+                  Navigator.pop(context); 
+                },
+                selectionMode: DateRangePickerSelectionMode.single,
+                initialSelectedDate: _selectedDate ?? DateTime.now(),
+                headerStyle: const DateRangePickerHeaderStyle(
+                  backgroundColor: Color(0xFFF0E4FF),
+                  textAlign: TextAlign.center,
+                  textStyle: TextStyle(
+                    fontSize: 18,
+                    color: Color(0xFF4B0082),
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                monthCellStyle: const DateRangePickerMonthCellStyle(
+                  todayTextStyle: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    color: Color(0xFF000000),
+                  ),
+                  todayCellDecoration: BoxDecoration(
+                    color: Color(0xFFFFD700),
+                    shape: BoxShape.circle,
+                  ),
+                  weekendTextStyle: TextStyle(
+                    color: Colors.red,
+                  ),
+                  disabledDatesTextStyle: TextStyle(
+                    color: Colors.grey,
+                  ),
+                ),
+                selectionColor: const Color(0xFF6A0DAD), 
+                rangeSelectionColor: const Color(0xFFE1BEE7), 
+              ),
+            ),
+          ),
+          actions: <Widget>[
+            Center(
+              child: ElevatedButton(
+                onPressed: () {
+                  Navigator.of(context).pop();
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFFFF9494),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  minimumSize: const Size(70, 31),
+                ),
+                child: const Text(
+                  'Cancelar',
+                  style: TextStyle(
+                    color: Colors.black,
+                    fontSize: 16,
+                    fontFamily: 'Poppins',
+                    fontWeight: FontWeight.w500,
+                    height: 1,
+                  ),
+                ),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   void _showSuccessDialog(BuildContext context, bool isEditing) {
     showDialog(
       context: context,
@@ -325,24 +448,26 @@ class _PatientIndexState extends State<PatientIndex> {
           message: isEditing
               ? '¡Se modificó el registro correctamente!'
               : '¡Se creó el registro correctamente!',
-          onBackPressed: () {
-            Navigator.of(context).pop(); // Cerrar el modal
-            _toggleView(); // Volver a la vista de la tabla
+          onBackPressed: () { 
+            Navigator.of(context).pop();
+            _toggleView(); 
           },
         );
       },
     );
   }
 
-  void _showDeleteConfirmationDialog(BuildContext context, int patientId) {
+  void _showDeleteConfirmationDialog(BuildContext context, int? patientId) {
     showDialog(
       context: context,
       builder: (context) {
         return DeleteConfirmationDialog(
           onConfirmDelete: () {
-            Provider.of<PatientViewModel>(context, listen: false).deletePatient(patientId);
-            if (kDebugMode) {
-              print('Eliminando paciente con ID: $patientId');
+            final patientViewModel = context.read<PatientViewModel>();
+            if(patientId != null){
+              patientViewModel.removePatient(patientId, 1).then((_){
+                patientViewModel.fetchPatients();
+              });
             }
           },
         );
@@ -369,14 +494,22 @@ class _PatientIndexState extends State<PatientIndex> {
         } else {
           return PatientDataTable(
             patients: patientViewModel.filteredPatients,
-            onEdit: (id) {
-              Patient? patient = patientViewModel.listPatients.firstWhere(
-                (p) => p.idPatient == id,
-                orElse: () => Patient(name: '', lastName: '', secondLastName: '', birthDate: '', ci: ''),
-              );
-              // ignore: unnecessary_null_comparison
+            onEdit: (id) async {
+              
+              Patient? patient = await patientViewModel.fetchPatientById(id);
+
               if (patient != null) {
-                _toggleView(patient);
+                // Asigna los valores recuperados a los controladores del formulario
+                setState(() {
+                  _patientCI.text = patient.ci;
+                  _patientName.text = patient.name;
+                  _patientLastName.text = patient.lastName;
+                  _patientSecondLastName.text = patient.secondLastName ?? '';
+                  _patientBirthDate.text = DateFormat('dd/MM/yyyy').format(DateTime.parse(patient.birthDate.toString()));
+                  _editingPatient = patient; // Para saber que estamos en modo edición
+                });
+
+                _toggleView(patient); // Abre el formulario con los datos recuperados
               }
             },
             onDelete: (id) {

@@ -6,13 +6,13 @@ import 'package:ps3_drops_v1/widgets/checkbox_to_table.dart';
 
 class TherapyPatientsDataTable extends StatefulWidget {
   final List<Patient> therapyPatients;
-  final int? selectedId; 
-  final void Function(int id) onAssign; 
+  final int? selectedId;
+  final void Function(int id) onAssign;
 
   const TherapyPatientsDataTable({
     required this.therapyPatients,
-    required this.selectedId, 
-    required this.onAssign, 
+    required this.selectedId,
+    required this.onAssign,
     super.key,
   });
 
@@ -21,29 +21,31 @@ class TherapyPatientsDataTable extends StatefulWidget {
 }
 
 class _TherapyPatientsDataTableState extends State<TherapyPatientsDataTable> {
-  int? selectedId; 
+  int? selectedId;
+  late TherapyPatientsDataSource _therapyPatientsDataSource;
+  int rowsPerPage = 5;
 
   @override
   void initState() {
     super.initState();
     selectedId = widget.selectedId;
-  }
-
-  void _handleCheckboxChanged(int id) {
-    setState(() {
-      selectedId = id; // Actualizar el ID seleccionado
-    });
-    widget.onAssign(id); // Llamar la función de asignación para manejar el ID seleccionado
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final therapyDataSource = TherapyPatientsDataSource(
+    _therapyPatientsDataSource = TherapyPatientsDataSource(
       therapyPatients: widget.therapyPatients,
       onSelect: _handleCheckboxChanged,
       selectedId: selectedId,
     );
+  }
 
+  void _handleCheckboxChanged(int id) {
+    setState(() {
+      selectedId = id;
+      _therapyPatientsDataSource.updateSelectedId(id); 
+    });
+    widget.onAssign(id);
+  }
+
+  @override
+  Widget build(BuildContext context) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
@@ -54,10 +56,12 @@ class _TherapyPatientsDataTableState extends State<TherapyPatientsDataTable> {
         const SizedBox(height: 8.0),
         Expanded(
           child: SfDataGrid(
-            source: therapyDataSource,
-            columnWidthMode: ColumnWidthMode.fill,
+            source: _therapyPatientsDataSource,
+            columnWidthMode: ColumnWidthMode.auto,
             gridLinesVisibility: GridLinesVisibility.none,
             headerGridLinesVisibility: GridLinesVisibility.none,
+            rowsPerPage: _therapyPatientsDataSource.rowsPerPage,
+            rowHeight: 50,
             columns: <GridColumn>[
               buildGridColumn('Paciente', 'Paciente'),
               buildGridColumn('CI', 'CI'),
@@ -75,11 +79,25 @@ class _TherapyPatientsDataTableState extends State<TherapyPatientsDataTable> {
             ],
           ),
         ),
+        SfDataPager(
+          delegate: _therapyPatientsDataSource,
+          availableRowsPerPage: const <int>[5, 10],
+          pageCount: (widget.therapyPatients.length / _therapyPatientsDataSource.rowsPerPage).ceil().toDouble(),
+          onRowsPerPageChanged: (int? rowsPerPage) {
+            setState(() {
+              _therapyPatientsDataSource.updateRowsPerPage(rowsPerPage!);
+            });
+          },
+          onPageNavigationEnd: (int pageIndex) {  
+            setState(() {
+              _therapyPatientsDataSource.updatePage(pageIndex, rowsPerPage);  
+            });
+          },
+        ),
       ],
     );
   }
 }
-
 
 class TherapyPatientsDataSource extends DataGridSource {
   TherapyPatientsDataSource({
@@ -87,32 +105,74 @@ class TherapyPatientsDataSource extends DataGridSource {
     required this.onSelect,
     this.selectedId,
   }) {
-    _therapies = therapyPatients.map<DataGridRow>((therapy) {
+    _patients = therapyPatients.map<DataGridRow>((patient) {
       return DataGridRow(cells: [
-        DataGridCell<int>(columnName: 'ID', value: therapy.idPerson),
-        DataGridCell<String>(columnName: 'Paciente', value: therapy.patient),
-        DataGridCell<String>(columnName: 'CI', value: therapy.ci),
+        DataGridCell<int>(columnName: 'ID', value: patient.idPerson),
+        DataGridCell<String>(columnName: 'Paciente', value: patient.patient),
+        DataGridCell<String>(columnName: 'CI', value: patient.ci),
         DataGridCell<Widget>(
           columnName: 'Asignar',
           value: CheckboxToTable(
-            isChecked: therapy.idPerson == selectedId,
+            isChecked: patient.idPerson == selectedId,
             onChanged: () {
-              onSelect(therapy.idPerson!);
+              onSelect(patient.idPerson!);
             },
           ),
         ),
-
-
       ]);
     }).toList();
   }
 
-  List<DataGridRow> _therapies = [];
+  List<DataGridRow> _patients = [];
   final void Function(int id) onSelect;
-  final int? selectedId;
+  int? selectedId;
+  int rowsPerPage = 5;
+  int currentPageIndex = 0;
+
+  void updateSelectedId(int selectedId) {
+    this.selectedId = selectedId;
+    _patients = _patients.map<DataGridRow>((row) {
+      final balanceId = row.getCells().firstWhere((cell) => cell.columnName == 'ID').value;
+      
+      return DataGridRow(cells: [
+        DataGridCell<int>(columnName: 'ID', value: balanceId),
+        DataGridCell<String>(columnName: 'Paciente', value: row.getCells().firstWhere((cell) => cell.columnName == 'Paciente').value),
+        DataGridCell<String>(columnName: 'CI', value: row.getCells().firstWhere((cell) => cell.columnName == 'CI').value),
+        DataGridCell<Widget>(
+          columnName: 'Asignar',
+          value: CheckboxToTable(
+            isChecked: balanceId == selectedId,
+            onChanged: () {
+              onSelect(balanceId);
+            },
+          ),
+        ),
+      ]);
+    }).toList();
+    notifyListeners();
+  }
+
+
+  void updatePage(int pageIndex, int rowsPerPage) {
+    currentPageIndex = pageIndex;
+    this.rowsPerPage = rowsPerPage;  
+    notifyListeners();  
+  }
+
+
+  void updateRowsPerPage(int rowsPerPage) {
+    this.rowsPerPage = rowsPerPage;
+    currentPageIndex = 0; 
+    notifyListeners(); 
+  }
 
   @override
-  List<DataGridRow> get rows => _therapies;
+  List<DataGridRow> get rows {
+    int startIndex = currentPageIndex * rowsPerPage;
+    int endIndex = startIndex + rowsPerPage;
+    endIndex = endIndex > _patients.length ? _patients.length : endIndex;
+    return _patients.sublist(startIndex, endIndex);
+  }
 
   @override
   DataGridRowAdapter buildRow(DataGridRow row) {
@@ -145,9 +205,4 @@ class TherapyPatientsDataSource extends DataGridSource {
       }).toList(),
     );
   }
-
-  void updateRowsPerPage(int rowsPerPage) {
-    notifyListeners();
-  }
 }
-

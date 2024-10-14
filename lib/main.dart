@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:provider/provider.dart';
 import 'package:ps3_drops_v1/view_models/balance_view_model.dart';
 import 'package:ps3_drops_v1/view_models/employee_view_model.dart';
@@ -29,6 +30,17 @@ class MyApp extends StatelessWidget {
     return const MaterialApp(
       title: 'PS3 Drops',
       debugShowCheckedModeBanner: false,
+      localizationsDelegates: [
+        GlobalMaterialLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+      ],
+      supportedLocales: [
+        Locale('es', 'ES'), // Español
+        Locale('en', 'US'), // Inglés
+      ],
+
+      // Opcional: Puedes forzar que la aplicación inicie en un idioma específico
+      locale: Locale('es', 'ES'), // Cambia a 'es' para que la aplicación inicie en español
       home: HomePage(),
     );
   }

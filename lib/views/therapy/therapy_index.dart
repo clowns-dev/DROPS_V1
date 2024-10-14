@@ -49,27 +49,46 @@ class _TherapyIndexState extends State<TherapyIndex> {
   }
 
   void _toggleView({bool isViewing = false}) {
+    final therapyViewModel = context.read<TherapyViewModel>();
+
+    if (!_showForm) {
+      therapyViewModel.updateSelectedPatientId(0);
+      therapyViewModel.updateSelectedNurseId(0);
+      therapyViewModel.updateSelectedBalanceId(0);
+      _stretcherNumberController.clear();
+    }
+
     setState(() {
       _showForm = !_showForm;
       _isViewingTherapy = isViewing;
-
-      if (!_showForm) {
-        _selectedInfoTherapy = null; // Reseteamos la terapia seleccionada cuando regresamos a la tabla
-      }
     });
   }
+
+
 
 
 
   void _onViewTherapy(int id) async {
     final therapyViewModel = context.read<TherapyViewModel>();
+
+    if (kDebugMode) {
+      print("Cargando información de la terapia con ID: $id");
+    }
+
+    // Realiza la carga de datos
     await therapyViewModel.fetchInfoTherapy(id);
 
-    setState(() {
-      _selectedInfoTherapy = therapyViewModel.infoTherapy; 
-      _toggleView(isViewing: true);  
-    });
+    // Luego actualiza el estado con una sola llamada
+    if (mounted) {
+      setState(() {
+        _selectedInfoTherapy = therapyViewModel.infoTherapy;
+        _showForm = true;
+        _isViewingTherapy = true;  // Activa la visualización de la terapia
+      });
+    }
   }
+
+
 
   @override
   Widget build(BuildContext context) {
@@ -371,10 +390,10 @@ class _TherapyIndexState extends State<TherapyIndex> {
             const Center(child: HistoryTitleContainer(titleTable: 'Crear Terapia')),
             const SizedBox(height: 32.0),
             Row(
-              mainAxisAlignment: MainAxisAlignment.center, // Centrar la fila que contiene el input y el botón.
+              mainAxisAlignment: MainAxisAlignment.center, 
               children: [
                 SizedBox(
-                  width: 400, // Establece un ancho fijo para centrar el input y el botón.
+                  width: 400, 
                   child: Row(
                     children: [
                       Expanded(
@@ -392,8 +411,10 @@ class _TherapyIndexState extends State<TherapyIndex> {
 
                           if (patientId != null && nurseId != null && balanceId != null && stretcherNumber.isNotEmpty) {
                             // Llamar al método de creación de terapia
-                            therapyViewModel.createNewTherapy(stretcherNumber, 1);
-                            _showSuccessDialog(context); // Mostrar el diálogo de éxito
+                            therapyViewModel.createNewTherapy(stretcherNumber, 1).then((_) {
+                              therapyViewModel.fetchTherapies();
+                            });
+                            _showSuccessDialog(context);
                           } else {
                             // Manejar el error, por ejemplo, mostrar un mensaje de validación
                             if (kDebugMode) {

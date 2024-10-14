@@ -21,7 +21,7 @@ class TherapyDataTable extends StatefulWidget {
 
 class _TherapyDataTableState extends State<TherapyDataTable> {
   late TherapyDataSource _therapyDataSource;
-
+  int rowsPerPage = 5;
   @override
   void initState() {
     super.initState();
@@ -41,6 +41,8 @@ class _TherapyDataTableState extends State<TherapyDataTable> {
             columnWidthMode: ColumnWidthMode.fill,
             gridLinesVisibility: GridLinesVisibility.none,
             headerGridLinesVisibility: GridLinesVisibility.none,
+            rowsPerPage: _therapyDataSource.rowsPerPage,
+            rowHeight: 50,
             columns: <GridColumn>[
               buildGridColumn('ID\nTerapia', 'ID\nTerapia'),
               buildGridColumn('CI\nEnfermer@', 'CI\nEnfermer@'),
@@ -64,11 +66,16 @@ class _TherapyDataTableState extends State<TherapyDataTable> {
         ),
         SfDataPager(
           delegate: _therapyDataSource,
-          availableRowsPerPage: const <int>[5, 10, 15],
-          pageCount: (widget.therapies.length / 10),
+          availableRowsPerPage: const <int>[5, 10],
+          pageCount: (widget.therapies.length / _therapyDataSource.rowsPerPage).ceil().toDouble(),
           onRowsPerPageChanged: (int? rowsPerPage) {
             setState(() {
               _therapyDataSource.updateRowsPerPage(rowsPerPage!);
+            });
+          },
+          onPageNavigationEnd: (int pageIndex) {
+            setState(() {
+              _therapyDataSource.updatePage(pageIndex, _therapyDataSource.rowsPerPage);
             });
           },
         ),
@@ -78,10 +85,18 @@ class _TherapyDataTableState extends State<TherapyDataTable> {
 }
 
 class TherapyDataSource extends DataGridSource {
+  int rowsPerPage = 5; 
+  int currentPageIndex = 0; 
+  
+  List<DataGridRow> _therapies = []; 
+  
+  final void Function(int id) onView; 
+
   TherapyDataSource({
     required List<Therapy> therapies,
     required this.onView,
   }) {
+    
     _therapies = therapies.map<DataGridRow>((therapy) {
       final formattedStartDate = therapy.startDate != null
           ? DateFormat('yyyy-MM-dd').format(therapy.startDate!)
@@ -110,11 +125,29 @@ class TherapyDataSource extends DataGridSource {
     }).toList();
   }
 
-  List<DataGridRow> _therapies = [];
-  final void Function(int id) onView;
+
+  void updatePage(int pageIndex, int rowsPerPage) {
+    currentPageIndex = pageIndex;
+    this.rowsPerPage = rowsPerPage;  
+    notifyListeners();  
+  }
+
+
+  void updateRowsPerPage(int rowsPerPage) {
+    this.rowsPerPage = rowsPerPage;
+    currentPageIndex = 0; 
+    notifyListeners(); 
+  }
+
 
   @override
-  List<DataGridRow> get rows => _therapies;
+  List<DataGridRow> get rows {
+    int startIndex = currentPageIndex * rowsPerPage;
+    int endIndex = startIndex + rowsPerPage;
+    endIndex = endIndex > _therapies.length ? _therapies.length : endIndex;
+    return _therapies.sublist(startIndex, endIndex);
+  }
+
 
   @override
   DataGridRowAdapter buildRow(DataGridRow row) {
@@ -128,25 +161,21 @@ class TherapyDataSource extends DataGridSource {
           child: isActionColumn
               ? dataGridCell.value
               : Container(
-                decoration: BoxDecoration(
-                  color: const Color(0xFFFFE4E1),
-                  borderRadius: BorderRadius.circular(8.0),
-                ),
-                padding: const EdgeInsets.symmetric(vertical: 6.0, horizontal: 8.0),
-                child: Text(
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFFFE4E1),
+                    borderRadius: BorderRadius.circular(8.0),
+                  ),
+                  padding: const EdgeInsets.symmetric(vertical: 6.0, horizontal: 8.0),
+                  child: Text(
                     dataGridCell.value.toString(),
                     style: const TextStyle(
                       fontWeight: FontWeight.w400,
                       color: Colors.black,
                     ),
                   ),
-              ),
+                ),
         );
       }).toList(),
     );
-  }
-
-  void updateRowsPerPage(int rowsPerPage) {
-    notifyListeners();
   }
 }

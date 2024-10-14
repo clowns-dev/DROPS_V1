@@ -6,13 +6,13 @@ import 'package:ps3_drops_v1/widgets/checkbox_to_table.dart';
 
 class TherapyNursesDataTable extends StatefulWidget {
   final List<Nurse> therapyNurses;
-  final int? selectedId; 
-  final void Function(int id) onAssign; 
+  final int? selectedId;
+  final void Function(int id) onAssign;
 
   const TherapyNursesDataTable({
     required this.therapyNurses,
-    required this.selectedId, 
-    required this.onAssign, 
+    required this.selectedId,
+    required this.onAssign,
     super.key,
   });
 
@@ -21,29 +21,31 @@ class TherapyNursesDataTable extends StatefulWidget {
 }
 
 class _TherapyNursesDataTableState extends State<TherapyNursesDataTable> {
-  int? selectedId; 
+  int? selectedId;
+  late TherapyNursesDataSource _therapyNursesDataSource;
+  int rowsPerPage = 5;
 
   @override
   void initState() {
     super.initState();
     selectedId = widget.selectedId;
-  }
-
-  void _handleCheckboxChanged(int id) {
-    setState(() {
-      selectedId = id; // Actualizar el ID seleccionado
-    });
-    widget.onAssign(id); // Llamar la función de asignación para manejar el ID seleccionado
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final therapyDataSource = TherapyNursesDataSource(
+    _therapyNursesDataSource = TherapyNursesDataSource(
       therapyNurses: widget.therapyNurses,
       onSelect: _handleCheckboxChanged,
       selectedId: selectedId,
     );
+  }
 
+  void _handleCheckboxChanged(int id) {
+    setState(() {
+      selectedId = id;
+      _therapyNursesDataSource.updateSelectedId(id); 
+    });
+    widget.onAssign(id);
+  }
+
+  @override
+  Widget build(BuildContext context) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
@@ -54,10 +56,12 @@ class _TherapyNursesDataTableState extends State<TherapyNursesDataTable> {
         const SizedBox(height: 8.0),
         Expanded(
           child: SfDataGrid(
-            source: therapyDataSource,
-            columnWidthMode: ColumnWidthMode.fill,
+            source: _therapyNursesDataSource, 
+            columnWidthMode: ColumnWidthMode.auto,
             gridLinesVisibility: GridLinesVisibility.none,
             headerGridLinesVisibility: GridLinesVisibility.none,
+            rowsPerPage: _therapyNursesDataSource.rowsPerPage,
+            rowHeight: 50,
             columns: <GridColumn>[
               buildGridColumn('Enfermero', 'Enfermero'),
               buildGridColumn('Cargo', 'Cargo'),
@@ -75,11 +79,25 @@ class _TherapyNursesDataTableState extends State<TherapyNursesDataTable> {
             ],
           ),
         ),
+        SfDataPager(
+          delegate: _therapyNursesDataSource,  // Usa la instancia existente
+          availableRowsPerPage: const <int>[5, 10],
+          pageCount: (widget.therapyNurses.length / _therapyNursesDataSource.rowsPerPage).ceil().toDouble(),
+          onRowsPerPageChanged: (int? rowsPerPage) {
+            setState(() {
+              _therapyNursesDataSource.updateRowsPerPage(rowsPerPage!);  // Actualiza la cantidad de filas por página
+            });
+          },
+          onPageNavigationEnd: (int pageIndex) {
+            setState(() {
+              _therapyNursesDataSource.updatePage(pageIndex, rowsPerPage);  // Cambia la página actual
+            });
+          },
+        ),
       ],
     );
   }
 }
-
 
 class TherapyNursesDataSource extends DataGridSource {
   TherapyNursesDataSource({
@@ -101,18 +119,60 @@ class TherapyNursesDataSource extends DataGridSource {
             },
           ),
         ),
-
-
       ]);
     }).toList();
   }
 
   List<DataGridRow> _nurses = [];
   final void Function(int id) onSelect;
-  final int? selectedId;
+  int? selectedId;
+  int rowsPerPage = 5;
+  int currentPageIndex = 0;
+
+  void updateSelectedId(int selectedId) {
+    this.selectedId = selectedId;
+    _nurses = _nurses.map<DataGridRow>((row) {
+      final nurseId = row.getCells().firstWhere((cell) => cell.columnName == 'ID').value;
+      
+      return DataGridRow(cells: [
+        DataGridCell<int>(columnName: 'ID', value: nurseId),
+        DataGridCell<String>(columnName: 'Enfermero', value: row.getCells().firstWhere((cell) => cell.columnName == 'Enfermero').value),
+        DataGridCell<String>(columnName: 'Cargo', value: row.getCells().firstWhere((cell) => cell.columnName == 'Cargo').value),
+        DataGridCell<Widget>(
+          columnName: 'Asignar',
+          value: CheckboxToTable(
+            isChecked: nurseId == selectedId,
+            onChanged: () {
+              onSelect(nurseId);
+            },
+          ),
+        ),
+      ]);
+    }).toList();
+    notifyListeners();
+  }
+
+
+
+  void updatePage(int pageIndex, int rowsPerPage) {
+    currentPageIndex = pageIndex;
+    this.rowsPerPage = rowsPerPage;
+    notifyListeners();  
+  }
+
+  void updateRowsPerPage(int rowsPerPage) {
+    this.rowsPerPage = rowsPerPage;
+    currentPageIndex = 0;  
+    notifyListeners();  
+  }
 
   @override
-  List<DataGridRow> get rows => _nurses;
+  List<DataGridRow> get rows {
+    int startIndex = currentPageIndex * rowsPerPage;
+    int endIndex = startIndex + rowsPerPage;
+    endIndex = endIndex > _nurses.length ? _nurses.length : endIndex;
+    return _nurses.sublist(startIndex, endIndex);  
+  }
 
   @override
   DataGridRowAdapter buildRow(DataGridRow row) {
@@ -139,15 +199,12 @@ class TherapyNursesDataSource extends DataGridSource {
                       fontWeight: FontWeight.w400,
                       color: Colors.black,
                     ),
+                    maxLines: 1,  
+                    overflow: TextOverflow.ellipsis,  
                   ),
                 ),
         );
       }).toList(),
     );
   }
-
-  void updateRowsPerPage(int rowsPerPage) {
-    notifyListeners();
-  }
 }
-

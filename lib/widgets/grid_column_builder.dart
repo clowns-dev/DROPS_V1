@@ -10,6 +10,7 @@ GridColumn buildGridColumn(String columnName, String label) {
       child: Text(
         label,
         style: const TextStyle(fontWeight: FontWeight.bold),
+        textAlign: TextAlign.center,
       ),
     ),
   );

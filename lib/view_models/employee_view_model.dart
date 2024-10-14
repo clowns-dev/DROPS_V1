@@ -34,27 +34,4 @@ class EmployeeViewModel extends ChangeNotifier {
       notifyListeners();
     }
   }
-
-  void filterEmployees(String query) {
-    if (kDebugMode) {
-      print('Filtrando empleados con consulta: $query');
-    } 
-    if (query.isEmpty) {
-      filteredEmployees = List.from(listEmployees);
-    } else {
-      filteredEmployees = listEmployees.where((employee) {
-        return employee.ci.toLowerCase().contains(query.toLowerCase()) ||
-              employee.name.toLowerCase().contains(query.toLowerCase()) ||
-              employee.lastName.toLowerCase().contains(query.toLowerCase()) ||
-              employee.secondLastName.toLowerCase().contains(query.toLowerCase());
-      }).toList();
-    }
-    notifyListeners();
-  }
-
-  void deleteEmployee(int? employeeId) {
-    listEmployees.removeWhere((employee) => employee.idEmployee == employeeId);
-    filterEmployees(''); 
-    notifyListeners();
-  }
 }

@@ -6,6 +6,7 @@ class Employee extends Patient {
   final String address;
   final dynamic phoneNumber;
   final String email;
+  @override
   final DateTime? registerDate;
   String? rolName;
   final int? idPerson;

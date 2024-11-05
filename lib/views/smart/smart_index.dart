@@ -1,4 +1,5 @@
-import 'package:flutter/foundation.dart';
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:ps3_drops_v1/models/smart.dart';
@@ -21,32 +22,46 @@ class SmartIndex extends StatefulWidget {
 }
 
 class _SmartIndexState extends State<SmartIndex> {
-  final String _selectedFilter = 'Buscar por:';
-  final List<String> _filterOptions = ['Buscar por:', 'Codigo'];
-  Therapy? _editingSmart;
+  Timer? _debounce;
+  String _selectedFilter = 'Buscar por:';
+  final List<String> _filterOptions = ['Buscar por:', 'Codigo', 'Enfermero'];
+  Smart? _editingSmart;
   final TextEditingController _searchController = TextEditingController();
-
+  final TextEditingController _smartCodeController = TextEditingController();
+  int? _idSmart, _idUser, _available, _availabilityStatus;
+  
   @override
   void initState() {
     super.initState();
-    _searchController.addListener(_onSearchChanged);
+    // Eliminamos el listener del controlador de búsqueda en `initState`
   }
 
   @override
   void dispose() {
-    _searchController.removeListener(_onSearchChanged);
     _searchController.dispose();
     super.dispose();
   }
 
-  void _onSearchChanged() {
+  void _filterSmartList(String query) {
     final smartViewModel = context.read<SmartViewModel>();
-    smartViewModel.filterBalances(_searchController.text);
+    smartViewModel.filterSmarts(query, _selectedFilter);
   }
 
-  void _showFormModal(BuildContext context, [Therapy? smart]) {
+
+
+
+
+  void _showFormModal(BuildContext context, [Smart? smart]) {
     setState(() {
       _editingSmart = smart;
+      if(_editingSmart != null){
+        _smartCodeController.text = _editingSmart!.codeRFID ?? '';
+        _idSmart = _editingSmart!.idSmart ?? 0;
+        _idUser = _editingSmart!.idUser ?? 0;
+        _available = _editingSmart!.available ?? 0;
+      } else {
+        _smartCodeController.clear();
+      }
     });
     showDialog(
       context: context,
@@ -100,9 +115,7 @@ class _SmartIndexState extends State<SmartIndex> {
                         const TextLabel(content: 'Código RFID:'),
                         const SizedBox(height: 8.0),
                         TextField(
-                          controller: TextEditingController(
-                            text: _editingSmart?.codeRFID ?? '',
-                          ),
+                          controller: _smartCodeController,
                           decoration: InputDecoration(
                             hintText: 'Ingrese el código RFID',
                             border: OutlineInputBorder(
@@ -110,7 +123,39 @@ class _SmartIndexState extends State<SmartIndex> {
                             ),
                           ),
                         ),
-                        const SizedBox(height: 32.0),
+                        const SizedBox(height: 16.0),
+                        if (_editingSmart != null) ...[
+                        const TextLabel(content: 'Disponibilidad:'),
+                        const SizedBox(height: 8.0),
+                        Row(
+                          children: [
+                            Expanded(
+                              child: RadioListTile<int>(
+                                title: const Text('Disponible'),
+                                value: 1,
+                                groupValue: _available,
+                                onChanged: (value) {
+                                  setState(() {
+                                    _available = value!;
+                                  });
+                                },
+                              ),
+                            ),
+                            Expanded(
+                              child: RadioListTile<int>(
+                                title: const Text('No disponible'),
+                                value: 0,
+                                groupValue: _available,
+                                onChanged: (value) {
+                                  setState(() {
+                                    _available = value!;
+                                  });
+                                },
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
                         Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
@@ -120,14 +165,25 @@ class _SmartIndexState extends State<SmartIndex> {
                                 children: [
                                   ElevatedButton(
                                     onPressed: () {
-                                      if (_editingSmart != null) {
-                                        if (kDebugMode) {
-                                          print('Editando balanza con ID: ${_editingSmart?.idSmart}');
-                                        }
+                                      final smartViewModel = context.read<SmartViewModel>();
+                                      final smartCode = _smartCodeController.text;
+                                      final idSmart = _idSmart;
+                                      final idUser = _idUser;
+                                      final available = _available;  
+
+                                      Smart editSmart = Smart(idSmart: idSmart, codeRFID: smartCode, available: available, idUser: idUser);
+                                      Smart newSmart = Smart(codeRFID: smartCode);
+  
+                                      if(_editingSmart != null){
+                                        smartViewModel.editSmart(editSmart).then((_) {
+                                          smartViewModel.fetchSmarts();
+                                          _clearSearch(); 
+                                        });
                                       } else {
-                                        if (kDebugMode) {
-                                          print('Creando nueva balanza');
-                                        }
+                                        smartViewModel.createNewSmart(newSmart).then((_) {
+                                          smartViewModel.fetchSmarts();
+                                          _clearSearch();
+                                        });
                                       }
                                       _showSuccessDialog(context, _editingSmart != null, dialogContext);
                                     },
@@ -207,6 +263,11 @@ class _SmartIndexState extends State<SmartIndex> {
     );
   }
 
+  void _clearSearch() {
+    _searchController.clear();
+    _filterSmartList('');
+  }
+
 
   @override
   Widget build(BuildContext context) {
@@ -271,13 +332,22 @@ class _SmartIndexState extends State<SmartIndex> {
                       fullWidth: false,
                       value: _selectedFilter,
                       items: _filterOptions,
-                      onChanged: (newValue) {},
+                      onChanged: (newValue) {
+                        setState(() {
+                          _selectedFilter = newValue as String;
+                        });
+                        if (_selectedFilter == 'Buscar por:') {
+                          _filterSmartList('');
+                        }
+                      },
                     ),
                     const SizedBox(width: 16.0),
                     SearchField(
-                      controller: _searchController,
                       fullWidth: false,
-                      onChanged: (value) => _onSearchChanged(),
+                      controller: _searchController,
+                      onChanged: (query) {
+                        _filterSmartList(query); // Filtra según el campo seleccionado
+                      },
                     ),
                   ],
                 ),
@@ -314,7 +384,7 @@ class _SmartIndexState extends State<SmartIndex> {
       builder: (context, smartViewModel, child) {
         if (smartViewModel.isLoading) {
           return const Center(child: CircularProgressIndicator());
-        } else if (smartViewModel.filteredSmarts.isEmpty) {
+        } else if (!smartViewModel.hasMatches) {
           return Center(
             child: Text(
               'Sin coincidencias',
@@ -328,17 +398,19 @@ class _SmartIndexState extends State<SmartIndex> {
         } else {
           return SmartDataTable(
             smarts: smartViewModel.filteredSmarts,
-            onEdit: (id) {
-              Therapy? smart = smartViewModel.filteredSmarts.firstWhere(
-                (s) => s.idSmart == id,
-                orElse: () => Therapy(),
-              );
+            onAssignment: (id) async {},
+            onEdit: (id) async {
+              Smart? smart = await smartViewModel.fetchBalanceById(id);
               // ignore: unnecessary_null_comparison
               if (smart != null) {
+                setState(() {
+                  _editingSmart = smart;
+                });
+                // ignore: use_build_context_synchronously
                 _showFormModal(context, smart);
               }
             },
-            onDelete: (id) {
+            onDelete: (id) async {
               _showDeleteConfirmationDialog(context, id);
             },
           );
@@ -347,18 +419,21 @@ class _SmartIndexState extends State<SmartIndex> {
     );
   }
 
-  void _showDeleteConfirmationDialog(BuildContext context, int smartId) {
+
+
+  void _showDeleteConfirmationDialog(BuildContext context, int? smartId) {
     showDialog(
       context: context,
       builder: (context) {
         return DeleteConfirmationDialog(
           onConfirmDelete: () {
-            Provider.of<SmartViewModel>(context, listen: true).deleteSmart(smartId);
-            if (kDebugMode) {
-              print('Eliminando Manilla con ID: $smartId');
-              
+            final smartViewModel = context.read<SmartViewModel>();
+            if(smartId != null){
+              smartViewModel.removeSmart(smartId).then((_) {
+                smartViewModel.fetchSmarts();
+                _clearSearch();
+              });
             }
-            Navigator.of(context).pop(); // Cerrar el diálogo de confirmación
           },
         );
       },

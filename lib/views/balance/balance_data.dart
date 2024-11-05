@@ -112,7 +112,7 @@ class BalanceDataSource extends DataGridSource {
       return DataGridRow(cells: [
         DataGridCell<int>(columnName: 'ID', value: balance.idBalance),
         DataGridCell<String>(columnName: 'Codigo', value: balance.balanceCode),
-        DataGridCell<String>(columnName: 'Factor de\nCalibracion', value: balance.actuallyFactor.toString()),
+        DataGridCell<String>(columnName: 'Factor de\nCalibracion', value: balance.factor.toString()),
         DataGridCell<String>(columnName: 'Fecha de\nRegistro', value: formattedRegisterDate),
         DataGridCell<String>(columnName: 'Fecha de\nActualizacion', value: formattedLastUpdate),
         DataGridCell<bool>(columnName: 'Estado', value: balance.available == 1),

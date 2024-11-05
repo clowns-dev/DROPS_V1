@@ -54,6 +54,26 @@ class BalanceViewModel extends ChangeNotifier {
     return balance; // Retorna el objeto Balance recuperado
   }
 
+  Future<void> createNewBalance(String? balanceCode, int? userId) async {
+    try {
+      if(balanceCode != null && userId != null){
+        await apiServiceBalance.createBalance(balanceCode, userId);
+
+        if(kDebugMode){
+          print("Balanza creada Exitosamente!");
+        } else {
+          if(kDebugMode){
+            print("Error: Faltan datos para la creacion.");
+          }
+        }
+      }
+    } catch (e){
+      if (kDebugMode){
+        print("Error: No se pudo crear la Balanza.\n Detalles: $e");
+      }
+    }
+  }
+
   Future<void> editBalance(int? idBalance, String? balanceCode, int? userId) async {
     try {
       if(idBalance != null && balanceCode != null && userId != null){
@@ -90,27 +110,6 @@ class BalanceViewModel extends ChangeNotifier {
     } catch (e){
       if (kDebugMode){
         print("Error: No se pudo eliminar la Balanza.\n Detalles: $e");
-      }
-    }
-  }
-
-
-  Future<void> createNewBalance(String? balanceCode, int? userId) async {
-    try {
-      if(balanceCode != null && userId != null){
-        await apiServiceBalance.createBalance(balanceCode, userId);
-
-        if(kDebugMode){
-          print("Balanza creada Exitosamente!");
-        } else {
-          if(kDebugMode){
-            print("Error: Faltan datos para la creacion.");
-          }
-        }
-      }
-    } catch (e){
-      if (kDebugMode){
-        print("Error: No se pudo crear la Balanza.\n Detalles: $e");
       }
     }
   }

@@ -4,7 +4,7 @@ import 'package:http/http.dart' as http;
 import 'package:ps3_drops_v1/models/balance.dart';
 
 class ApiServiceBalance {
-  final String baseUrl = 'http://127.0.0.1:5000/api';
+  final String baseUrl = 'http://127.0.0.1:5000/api/v1';
 
   Future<List<Balance>> fetchBalances() async { 
     try {
@@ -45,6 +45,33 @@ class ApiServiceBalance {
         print('Error al cargar los datos: $e');
       }
       throw Exception('Error al cargar los datos: $e');
+    }
+  }
+
+  Future<Balance> createBalance(String balanceCode, int userId) async {
+    try {
+      final body = jsonEncode({
+        'balance_code': balanceCode,
+        'user_id': userId,
+      });
+
+      final response = await http.post(
+        Uri.parse('$baseUrl/balance/create'),
+        headers: {'Content-Type': 'application/json'},
+        body: body,
+      );
+
+      if (response.statusCode == 201) {
+        final jsonResponse = jsonDecode(response.body);
+        return Balance.fromJson(jsonResponse);
+      } else {
+        throw Exception("Error al crear la balanza: ${response.body}");
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        print("Error: Fallo al crear la Balanza. Detalles: $e");
+      }
+      throw Exception("Error: Fallo al crear la Balanza.");
     }
   }
 
@@ -100,33 +127,6 @@ class ApiServiceBalance {
         print("Error: Fallo al eliminar la Balanza. Detalles: $e");
       }
       throw Exception("Error: Fallo al eliminar la Balanza.");
-    }
-  }
-
-  Future<Balance> createBalance(String balanceCode, int userId) async {
-    try {
-      final body = jsonEncode({
-        'balance_code': balanceCode,
-        'user_id': userId,
-      });
-
-      final response = await http.post(
-        Uri.parse('$baseUrl/balance/create'),
-        headers: {'Content-Type': 'application/json'},
-        body: body,
-      );
-
-      if (response.statusCode == 201) {
-        final jsonResponse = jsonDecode(response.body);
-        return Balance.fromJson(jsonResponse);
-      } else {
-        throw Exception("Error al crear la balanza: ${response.body}");
-      }
-    } catch (e) {
-      if (kDebugMode) {
-        print("Error: Fallo al crear la Balanza. Detalles: $e");
-      }
-      throw Exception("Error: Fallo al crear la Balanza.");
     }
   }
 }

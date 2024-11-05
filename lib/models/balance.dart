@@ -4,7 +4,7 @@ import 'package:intl/intl.dart';
 class Balance {
   final int? idBalance;
   final String? balanceCode;
-  final String? actuallyFactor;
+  final String? factor;
   final int? available;
   final DateTime? registerDate;
   final DateTime? lastUpdate;
@@ -14,7 +14,7 @@ class Balance {
   Balance({
     this.idBalance,
     this.balanceCode,
-    this.actuallyFactor,
+    this.factor,
     this.available,
     this.registerDate,
     this.lastUpdate,
@@ -45,7 +45,7 @@ class Balance {
     return Balance(
       idBalance: json['idBalance'],
       balanceCode: json['balanceCode'],
-      actuallyFactor: json['actuallyFactor'],
+      factor: json['factor'],
       available: json['available'],
       registerDate: parseDate(json['registerDate']),
       lastUpdate: json['lastUpdate'] != null && json['lastUpdate'] != "Sin Cambios"

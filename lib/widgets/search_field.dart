@@ -4,11 +4,13 @@ class SearchField extends StatelessWidget {
   final bool fullWidth;
   final TextEditingController controller;
   final ValueChanged<String>? onChanged;
+  final VoidCallback? onTap; 
 
   const SearchField({
     required this.fullWidth,
     required this.controller,
     this.onChanged,
+    this.onTap,
     super.key,
   });
 
@@ -19,6 +21,7 @@ class SearchField extends StatelessWidget {
       child: TextField(
         controller: controller,
         onChanged: onChanged,
+        onTap: onTap,
         decoration: InputDecoration(
           hintText: 'Buscar',
           hintStyle: TextStyle(
@@ -49,3 +52,4 @@ class SearchField extends StatelessWidget {
     );
   }
 }
+

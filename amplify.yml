@@ -1,0 +1,19 @@
+version: 1
+frontend:
+  phases:
+    preBuild:
+      commands:
+        - wget https://storage.googleapis.com/flutter_infra_release/releases/stable/linux/flutter_linux_2.5.3-stable.tar.xz
+        - tar xf flutter_linux_2.5.3-stable.tar.xz
+        - export PATH="$PATH:$(pwd)/flutter/bin"
+        - flutter doctor
+    build:
+      commands:
+        - flutter build web
+  artifacts:
+    baseDirectory: build/web
+    files:
+      - '**/*'
+  cache:
+    paths:
+      - flutter/bin

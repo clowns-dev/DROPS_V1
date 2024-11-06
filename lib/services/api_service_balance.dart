@@ -105,12 +105,16 @@ class ApiServiceBalance {
 
   Future<Balance> deleteBalance(int idBalance, int userId) async {
     try {
+      if(kDebugMode){
+        print("Balanza a eliminar: $idBalance");
+      }
+
       final body = jsonEncode({
         'balance_id': idBalance,
         'user_id': userId,
       });
 
-      final response = await http.put(
+      final response = await http.delete(
         Uri.parse('$baseUrl/balance/delete'),
         headers: {'Content-Type': 'application/json'},
         body: body,

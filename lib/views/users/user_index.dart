@@ -68,7 +68,6 @@ class _UserIndex extends State<UserIndex> {
     });
   }
 
-
   void _clearSearch() {
     _searchController.clear();
     _filterUserList('');
@@ -190,7 +189,7 @@ class _UserIndex extends State<UserIndex> {
                     ),
                   ],
                 ),
-                padding: const EdgeInsets.all(18.0), // Añadir padding al contenedor
+                padding: const EdgeInsets.all(18.0),
                 child: _showForm ? _buildForm() : _buildTable(),
               ),
             ),
@@ -460,8 +459,8 @@ class _UserIndex extends State<UserIndex> {
               ? '¡Se modificó el registro correctamente!'
               : '¡Se creó el registro correctamente!',
           onBackPressed: () {
-            Navigator.of(context).pop(); // Cerrar el modal
-            _toggleView(); // Volver a la vista de la tabla
+            Navigator.of(context).pop(); 
+            _toggleView();
           },
         );
       },

@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:ps3_drops_v1/models/smart.dart';
@@ -28,12 +29,11 @@ class _SmartIndexState extends State<SmartIndex> {
   Smart? _editingSmart;
   final TextEditingController _searchController = TextEditingController();
   final TextEditingController _smartCodeController = TextEditingController();
-  int? _idSmart, _idUser, _available, _availabilityStatus;
+  int? _idSmart, user_id = 29, _availabilityStatus;
   
   @override
   void initState() {
     super.initState();
-    // Eliminamos el listener del controlador de búsqueda en `initState`
   }
 
   @override
@@ -47,22 +47,16 @@ class _SmartIndexState extends State<SmartIndex> {
     smartViewModel.filterSmarts(query, _selectedFilter);
   }
 
-
-
-
-
   void _showFormModal(BuildContext context, [Smart? smart]) {
-    setState(() {
-      _editingSmart = smart;
-      if(_editingSmart != null){
-        _smartCodeController.text = _editingSmart!.codeRFID ?? '';
-        _idSmart = _editingSmart!.idSmart ?? 0;
-        _idUser = _editingSmart!.idUser ?? 0;
-        _available = _editingSmart!.available ?? 0;
-      } else {
-        _smartCodeController.clear();
-      }
-    });
+    _editingSmart = smart;
+    if (_editingSmart != null) {
+      _smartCodeController.text = _editingSmart!.codeRFID ?? '';
+      _idSmart = _editingSmart!.idSmart ?? 0;
+      _availabilityStatus = _editingSmart!.available; 
+    } else {
+      _smartCodeController.clear();
+    }
+
     showDialog(
       context: context,
       builder: (BuildContext dialogContext) {
@@ -70,180 +64,192 @@ class _SmartIndexState extends State<SmartIndex> {
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(16.0),
           ),
-          child: Container(
-            width: 800,
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(16.0),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.1),
-                  spreadRadius: 4,
-                  blurRadius: 10,
-                  offset: const Offset(0, 3),
-                ),
-              ],
-            ),
-            child: Row(
-              children: [
-                Expanded(
-                  child: ClipRRect(
-                    borderRadius: const BorderRadius.only(
-                      topLeft: Radius.circular(16.0),
-                      bottomLeft: Radius.circular(16.0),
+          child: StatefulBuilder(
+            builder: (BuildContext context, StateSetter setModalState) {
+              return Container(
+                width: 800,
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(16.0),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.1),
+                      spreadRadius: 4,
+                      blurRadius: 10,
+                      offset: const Offset(0, 3),
                     ),
-                    child: Image.asset(
-                      '../assets/img/nurse2.png',
-                      fit: BoxFit.cover,
-                      height: 400,
-                    ),
-                  ),
+                  ],
                 ),
-                Expanded(
-                  child: Padding(
-                    padding: const EdgeInsets.all(24.0),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Center(
-                          child: HistoryTitleContainer(
-                            titleTable: _editingSmart == null ? 'Añadir Manilla' : 'Editar Manilla',
-                          ),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: ClipRRect(
+                        borderRadius: const BorderRadius.only(
+                          topLeft: Radius.circular(16.0),
+                          bottomLeft: Radius.circular(16.0),
                         ),
-                        const SizedBox(height: 24.0),
-                        const TextLabel(content: 'Código RFID:'),
-                        const SizedBox(height: 8.0),
-                        TextField(
-                          controller: _smartCodeController,
-                          decoration: InputDecoration(
-                            hintText: 'Ingrese el código RFID',
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12.0),
-                            ),
-                          ),
+                        child: Image.asset(
+                          '../assets/img/nurse2.png',
+                          fit: BoxFit.cover,
+                          height: 400,
                         ),
-                        const SizedBox(height: 16.0),
-                        if (_editingSmart != null) ...[
-                        const TextLabel(content: 'Disponibilidad:'),
-                        const SizedBox(height: 8.0),
-                        Row(
+                      ),
+                    ),
+                    Expanded(
+                      child: Padding(
+                        padding: const EdgeInsets.all(24.0),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisSize: MainAxisSize.min,
                           children: [
-                            Expanded(
-                              child: RadioListTile<int>(
-                                title: const Text('Disponible'),
-                                value: 1,
-                                groupValue: _available,
-                                onChanged: (value) {
-                                  setState(() {
-                                    _available = value!;
-                                  });
-                                },
+                            Center(
+                              child: HistoryTitleContainer(
+                                titleTable: _editingSmart == null ? 'Añadir Manilla' : 'Editar Manilla',
                               ),
                             ),
-                            Expanded(
-                              child: RadioListTile<int>(
-                                title: const Text('No disponible'),
-                                value: 0,
-                                groupValue: _available,
-                                onChanged: (value) {
-                                  setState(() {
-                                    _available = value!;
-                                  });
-                                },
+                            const SizedBox(height: 24.0),
+                            const TextLabel(content: 'Código RFID:'),
+                            const SizedBox(height: 8.0),
+                            TextField(
+                              controller: _smartCodeController,
+                              decoration: InputDecoration(
+                                hintText: 'Ingrese el código RFID',
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(12.0),
+                                ),
                               ),
                             ),
-                          ],
-                        ),
-                      ],
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Expanded(
-                              child: Row(
-                                mainAxisAlignment: MainAxisAlignment.center,
+                            const SizedBox(height: 16.0),
+                            if (_editingSmart != null) ...[
+                              const TextLabel(content: 'Disponibilidad:'),
+                              const SizedBox(height: 8.0),
+                              Row(
                                 children: [
-                                  ElevatedButton(
-                                    onPressed: () {
-                                      final smartViewModel = context.read<SmartViewModel>();
-                                      final smartCode = _smartCodeController.text;
-                                      final idSmart = _idSmart;
-                                      final idUser = _idUser;
-                                      final available = _available;  
-
-                                      Smart editSmart = Smart(idSmart: idSmart, codeRFID: smartCode, available: available, idUser: idUser);
-                                      Smart newSmart = Smart(codeRFID: smartCode);
-  
-                                      if(_editingSmart != null){
-                                        smartViewModel.editSmart(editSmart).then((_) {
-                                          smartViewModel.fetchSmarts();
-                                          _clearSearch(); 
+                                  Expanded(
+                                    child: RadioListTile<int>(
+                                      title: const Text('Si'),
+                                      value: 1,
+                                      groupValue: _availabilityStatus,
+                                      onChanged: (value) {
+                                        setModalState(() {
+                                          _availabilityStatus = value!;
                                         });
-                                      } else {
-                                        smartViewModel.createNewSmart(newSmart).then((_) {
-                                          smartViewModel.fetchSmarts();
-                                          _clearSearch();
-                                        });
-                                      }
-                                      _showSuccessDialog(context, _editingSmart != null, dialogContext);
-                                    },
-                                    style: ElevatedButton.styleFrom(
-                                      backgroundColor: Colors.purple.shade300,
-                                      padding: const EdgeInsets.symmetric(
-                                        vertical: 16.0,
-                                        horizontal: 32.0,
-                                      ),
-                                      shape: RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.circular(12.0),
-                                      ),
-                                    ),
-                                    child: Text(
-                                      _editingSmart == null ? 'INSERTAR' : 'GUARDAR',
-                                      style: const TextStyle(
-                                        color: Colors.white,
-                                        fontWeight: FontWeight.bold,
-                                      ),
+                                      },
                                     ),
                                   ),
-                                  const SizedBox(width: 30.0),
-                                  ElevatedButton(
-                                    onPressed: () {
-                                      Navigator.of(dialogContext).pop(); 
-                                    },
-                                    style: ElevatedButton.styleFrom(
-                                      backgroundColor: Colors.grey.shade400,
-                                      padding: const EdgeInsets.symmetric(
-                                        vertical: 16.0,
-                                        horizontal: 32.0,
-                                      ),
-                                      shape: RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.circular(12.0),
-                                      ),
-                                    ),
-                                    child: const Text(
-                                      'CANCELAR',
-                                      style: TextStyle(
-                                        color: Colors.white,
-                                        fontWeight: FontWeight.bold,
-                                      ),
+                                  Expanded(
+                                    child: RadioListTile<int>(
+                                      title: const Text('No'),
+                                      value: 0,
+                                      groupValue: _availabilityStatus,
+                                      onChanged: (value) {
+                                        setModalState(() {
+                                          _availabilityStatus = value!;
+                                        });
+                                      },
                                     ),
                                   ),
                                 ],
                               ),
-                            )
+                            ],
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Expanded(
+                                  child: Row(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      ElevatedButton(
+                                        onPressed: () {
+                                          final smartViewModel = context.read<SmartViewModel>();
+                                          final smartCode = _smartCodeController.text;
+                                          final idSmart = _idSmart;
+                                          int? idUser = user_id;
+                                          int? available = _availabilityStatus;
+
+                                          Smart editSmart = Smart(idSmart: idSmart, codeRFID: smartCode, available: available, idUser: idUser);
+                                          Smart newSmart = Smart(codeRFID: smartCode);
+                                          
+                                          if(kDebugMode){
+                                            print("Datos a actualizar:  ${editSmart.idSmart}");
+                                            print("Datos a actualizar:  ${editSmart.codeRFID}");
+                                            print("Datos a actualizar:  ${editSmart.available}");
+                                            print("Datos a actualizar:  ${editSmart.idUser}");
+                                          }
+
+                                          if (_editingSmart != null) {
+                                            smartViewModel.editSmart(editSmart).then((_) {
+                                              smartViewModel.fetchSmarts();
+                                              _clearSearch();
+                                            });
+                                          } else {
+                                            smartViewModel.createNewSmart(newSmart).then((_) {
+                                              smartViewModel.fetchSmarts();
+                                              _clearSearch();
+                                            });
+                                          }
+                                          _showSuccessDialog(context, _editingSmart != null, dialogContext);
+                                        },
+                                        style: ElevatedButton.styleFrom(
+                                          backgroundColor: Colors.purple.shade300,
+                                          padding: const EdgeInsets.symmetric(
+                                            vertical: 16.0,
+                                            horizontal: 32.0,
+                                          ),
+                                          shape: RoundedRectangleBorder(
+                                            borderRadius: BorderRadius.circular(12.0),
+                                          ),
+                                        ),
+                                        child: Text(
+                                          _editingSmart == null ? 'INSERTAR' : 'GUARDAR',
+                                          style: const TextStyle(
+                                            color: Colors.white,
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                        ),
+                                      ),
+                                      const SizedBox(width: 30.0),
+                                      ElevatedButton(
+                                        onPressed: () {
+                                          Navigator.of(dialogContext).pop();
+                                        },
+                                        style: ElevatedButton.styleFrom(
+                                          backgroundColor: Colors.grey.shade400,
+                                          padding: const EdgeInsets.symmetric(
+                                            vertical: 16.0,
+                                            horizontal: 32.0,
+                                          ),
+                                          shape: RoundedRectangleBorder(
+                                            borderRadius: BorderRadius.circular(12.0),
+                                          ),
+                                        ),
+                                        child: const Text(
+                                          'CANCELAR',
+                                          style: TextStyle(
+                                            color: Colors.white,
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                )
+                              ],
+                            ),
                           ],
                         ),
-                      ],
+                      ),
                     ),
-                  ),
+                  ],
                 ),
-              ],
-            ),
+              );
+            },
           ),
         );
       },
     );
   }
+
 
   void _showSuccessDialog(BuildContext context, bool isEditing, BuildContext formDialogContext) {
     showDialog(

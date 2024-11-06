@@ -20,12 +20,13 @@ class BalanceIndex extends StatefulWidget {
 }
 
 class _BalanceIndexState extends State<BalanceIndex> {
-  final String _selectedFilter = 'Buscar por:';
-  final List<String> _filterOptions = ['Buscar por:', 'Codigo', 'Disponible', 'Ocupadas'];
+  String _selectedFilter = 'Buscar por:';
+  final List<String> _filterOptions = ['Buscar por:', 'Codigo'];
   Balance? _editingBalance;
   final TextEditingController _searchController = TextEditingController();
   final TextEditingController _balaceCodeController = TextEditingController();
   int? _idBalance;
+
   @override
   void initState() {
     super.initState();
@@ -33,12 +34,14 @@ class _BalanceIndexState extends State<BalanceIndex> {
 
   @override
   void dispose() {
-    
     _searchController.dispose();
     super.dispose();
   }
 
- 
+   void _filterBalanceList(String query) {
+    final balanceViewModel = context.read<BalanceViewModel>();
+    balanceViewModel.filterSmarts(query, _selectedFilter);
+  }
 
   void _showFormModal(BuildContext context, [Balance? balance]) {
     setState(() {
@@ -274,13 +277,22 @@ class _BalanceIndexState extends State<BalanceIndex> {
                       fullWidth: false,
                       value: _selectedFilter,
                       items: _filterOptions,
-                      onChanged: (newValue) {},
+                      onChanged: (newValue) {
+                        setState(() {
+                          _selectedFilter = newValue as String;
+                        });
+                        if(_selectedFilter == 'Buscar por:'){
+                          _filterBalanceList('');
+                        }
+                      },
                     ),
                     const SizedBox(width: 16.0),
                     SearchField(
                       controller: _searchController,
                       fullWidth: false,
-                      
+                      onChanged: (query){
+                        _filterBalanceList(query);
+                      },
                     ),
                   ],
                 ),

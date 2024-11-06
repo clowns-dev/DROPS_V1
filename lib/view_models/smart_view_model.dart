@@ -110,8 +110,7 @@ class SmartViewModel extends ChangeNotifier {
           modifySmart.available != null &&
           modifySmart.idUser != null) {
           
-        await apiServiceSmart.updateSmart(modifySmart);
-        await fetchSmarts(); // Actualiza la lista después de editar
+        await apiServiceSmart.updateSmart(modifySmart); 
         if (kDebugMode) {
           print("Manilla Editada Exitosamente!");
         }

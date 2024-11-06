@@ -54,6 +54,25 @@ class BalanceViewModel extends ChangeNotifier {
     return balance; // Retorna el objeto Balance recuperado
   }
 
+  void filterSmarts(String query, String field) {
+    if (query.isEmpty || field == 'Buscar por:') {
+      filteredBalances = List.from(listBalances);
+    } else {
+      switch (field) {
+        case 'Codigo':
+          filteredBalances = listBalances
+              .where((balance) => balance.balanceCode?.toLowerCase().contains(query.toLowerCase()) ?? false)
+              .toList();
+          break;
+        default:
+          filteredBalances = List.from(listBalances);
+      }
+    }
+
+    hasMatches = listBalances.isNotEmpty;
+    notifyListeners();
+  }
+
   Future<void> createNewBalance(String? balanceCode, int? userId) async {
     try {
       if(balanceCode != null && userId != null){

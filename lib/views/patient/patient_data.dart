@@ -36,6 +36,14 @@ class _PatientDataTableState extends State<PatientDataTable> {
   }
 
   @override
+  void didUpdateWidget(covariant PatientDataTable oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.patients != widget.patients) {
+      _patientDataSource.updateDataSource(widget.patients);
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Column(
       children: [
@@ -52,6 +60,7 @@ class _PatientDataTableState extends State<PatientDataTable> {
               buildGridColumn('Nombre', 'Nombre'),
               buildGridColumn('Apellido Paterno', 'Apellido Paterno'),
               buildGridColumn('Apellido Materno', 'Apellido Materno'),
+              buildGridColumn('Genero', 'Genero'),
               buildGridColumn('Fecha de Nacimiento', 'Fecha de Nacimiento'),
               buildGridColumn('Fecha de\nRegistro', 'Fecha de\nRegistro'),
               buildGridColumn('Fecha de\nActualizacion', 'Fecha de\nActualizacion'),
@@ -93,11 +102,19 @@ class PatientDataSource extends DataGridSource {
   int rowsPerPage = 5;
   int currentPageIndex = 0;
 
+  List<DataGridRow> _patients = [];
+  final void Function(int id) onEdit;
+  final void Function(int id) onDelete;
+
   PatientDataSource({
     required List<Patient> patients,
     required this.onEdit,
     required this.onDelete,
   }) {
+    _buildDataGridRows(patients);
+  }
+
+  void _buildDataGridRows(List<Patient> patients){
     _patients = patients.map<DataGridRow>((patient) {
       final formattedRegisterDate = patient.registerDate != null
           ? DateFormat('yyyy-MM-dd').format(patient.registerDate!)
@@ -108,12 +125,14 @@ class PatientDataSource extends DataGridSource {
       final formattedBirthDate = patient.birthDate != null
           ? DateFormat('yyyy-MM-dd').format(patient.birthDate!)
           : 'Sin Cambios';
+      final formattedGenre = patient.genre == 'M' ? "Masculino" : "Femenino";
       return DataGridRow(cells: [
         DataGridCell<int>(columnName: 'ID', value: patient.idPatient),
         DataGridCell<String>(columnName: 'CI', value: patient.ci),
         DataGridCell<String>(columnName: 'Nombre', value: patient.name),
         DataGridCell<String>(columnName: 'Apellido Paterno', value: patient.lastName),
         DataGridCell<String>(columnName: 'Apellido Materno', value: patient.secondLastName ?? 'No tiene'),
+        DataGridCell<String>(columnName: 'Genero', value: formattedGenre),
         DataGridCell<String>(columnName: 'Fecha de Nacimiento', value: formattedBirthDate),
         DataGridCell<String>(columnName: 'Fecha de\nRegistro', value: formattedRegisterDate),
         DataGridCell<String>(columnName: 'Fecha de\nActualizacion', value: formattedLastUpdate),
@@ -132,21 +151,23 @@ class PatientDataSource extends DataGridSource {
     }).toList();
   }
 
-  List<DataGridRow> _patients = [];
-  final void Function(int id) onEdit;
-  final void Function(int id) onDelete;
+ 
+
+  void updateDataSource(List<Patient> patients) {
+    _buildDataGridRows(patients);  
+    notifyListeners();        
+  }
 
   void updatePage(int pageIndex, int rowsPerPage) {
     currentPageIndex = pageIndex;
-    this.rowsPerPage = rowsPerPage;  
-    notifyListeners();  
+    this.rowsPerPage = rowsPerPage;
+    notifyListeners();
   }
-
 
   void updateRowsPerPage(int rowsPerPage) {
     this.rowsPerPage = rowsPerPage;
-    currentPageIndex = 0; 
-    notifyListeners(); 
+    currentPageIndex = 0;
+    notifyListeners();
   }
 
   @override

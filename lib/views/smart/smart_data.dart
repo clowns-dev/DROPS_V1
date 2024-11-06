@@ -153,10 +153,9 @@ class SmartDataSource extends DataGridSource {
     }).toList();
   }
 
-  // Método para actualizar los datos en _smarts
   void updateDataSource(List<Smart> smarts) {
-    _buildDataGridRows(smarts);  // Llama al método para reconstruir las filas
-    notifyListeners();           // Notifica a la UI para refrescar
+    _buildDataGridRows(smarts);  
+    notifyListeners();        
   }
 
   void updatePage(int pageIndex, int rowsPerPage) {

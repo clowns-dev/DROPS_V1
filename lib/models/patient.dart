@@ -9,6 +9,7 @@ class Patient {
   final String? secondLastName;
   final DateTime? birthDate;
   final String ci;
+  final String? genre;
   final int? status;
   final DateTime? registerDate;
   final DateTime? lastUpdate;
@@ -22,6 +23,7 @@ class Patient {
     this.secondLastName,
     required this.birthDate,
     required this.ci,
+    this.genre,
     this.status,
     this.registerDate,
     this.lastUpdate,
@@ -59,6 +61,7 @@ class Patient {
                   ? parseDate(json['birthDate'])
                   : null,
       ci: json['ci'],
+      genre: json['genre'],
       status: json['status'],
       registerDate: parseDate(json['registerDate']),
       lastUpdate: json['lastUpdate'] != null && json['lastUpdate'] != "Sin Cambios"

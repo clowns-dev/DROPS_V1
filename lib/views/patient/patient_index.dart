@@ -22,8 +22,8 @@ class PatientIndex extends StatefulWidget {
 }
 
 class _PatientIndexState extends State<PatientIndex> {
-  final String _selectedFilter = 'Nombre';
-  final List<String> _filterOptions = ['Nombre', 'CI', 'Apellido'];
+  String _selectedFilter = 'Buscar por:';
+  final List<String> _filterOptions = ['Buscar por:','Nombre', 'CI', 'Apellido'];
   bool _showForm = false; 
   Patient? _editingPatient; 
   //String _searchQuery = '';
@@ -35,6 +35,7 @@ class _PatientIndexState extends State<PatientIndex> {
   final TextEditingController _patientSecondLastName = TextEditingController();
   final TextEditingController _patientBirthDate = TextEditingController();
   final TextEditingController _patientCI = TextEditingController();
+  int? _valueRadioButtonGenre;
 
   @override
   void initState() {
@@ -47,7 +48,10 @@ class _PatientIndexState extends State<PatientIndex> {
     super.dispose();
   }
 
-  
+  void _filteredPatientList(String query){
+    final patientViewModel = context.read<PatientViewModel>();
+    patientViewModel.filterPatients(query, _selectedFilter);
+  }
 
 
   void _toggleView([Patient? patient]) {
@@ -56,6 +60,12 @@ class _PatientIndexState extends State<PatientIndex> {
       _editingPatient = patient; 
     });
   }
+
+  void _clearSearch() {
+    _searchController.clear();
+    _filteredPatientList('');
+  }
+
 
   @override
   Widget build(BuildContext context) {
@@ -137,14 +147,21 @@ class _PatientIndexState extends State<PatientIndex> {
                         value: _selectedFilter,
                         items: _filterOptions,
                         onChanged: (newValue) {
-                          
+                          setState(() {
+                            _selectedFilter = newValue as String;
+                          });
+                          if(_selectedFilter == 'Buscar por:'){
+                            _filteredPatientList('');
+                          }
                         },
                       ),
                       const SizedBox(width: 16.0),
                       SearchField(
                         controller: _searchController,
                         fullWidth: false,
-                        
+                        onChanged: (query){
+                          _filteredPatientList(query);
+                        },
                       ),
                     ],
                   ),
@@ -242,7 +259,6 @@ class _PatientIndexState extends State<PatientIndex> {
             ),
             const SizedBox(height: 24.0),
 
-            // Campo para Apellido Materno
             const TextLabel(content: 'Apellido Materno:'),
             const SizedBox(height: 8.0),
             TextField(
@@ -254,14 +270,43 @@ class _PatientIndexState extends State<PatientIndex> {
                 ),
               ),
             ),
-            const SizedBox(height: 24.0),
-
-            // Campo para Fecha de Nacimiento
+            const SizedBox(height: 16.0,),
+            const TextLabel(content: 'Genero'),
+            const SizedBox(height: 4.0),
+            Row(
+              children: [
+                Expanded(
+                  child: RadioListTile<int>(
+                    title: const Text('Masculino'),
+                    value: 0,
+                    groupValue: _valueRadioButtonGenre,
+                    onChanged: (value) {
+                      setState(() {
+                        _valueRadioButtonGenre = value!;
+                      });
+                    },
+                  ),
+                ),
+                Expanded(
+                  child: RadioListTile<int>(
+                  title: const Text('Femenino'),
+                  value: 1,
+                  groupValue: _valueRadioButtonGenre,
+                  onChanged: (value) {
+                      setState(() {
+                        _valueRadioButtonGenre = value!;
+                      });
+                    },
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16.0),
             const TextLabel(content: 'Fecha de Nacimiento:'),
-            const SizedBox(height: 8.0),
+            const SizedBox(height: 4.0),
             InkWell(
               onTap: () {
-                _showSyncfusionDatePicker(context); // Llamada para abrir el Syncfusion DatePicker
+                _showSyncfusionDatePicker(context);
               },
               child: InputDecorator(
                 decoration: InputDecoration(
@@ -274,16 +319,11 @@ class _PatientIndexState extends State<PatientIndex> {
                 child: Text(
                   _patientBirthDate.text.isEmpty
                       ? 'Seleccione una fecha'
-                      : _patientBirthDate.text, // Mostrar la fecha seleccionada
+                      : _patientBirthDate.text,
                 ),
               ),
             ),
-
-
-
-            const SizedBox(height: 32.0),
-
-            // Botón para guardar
+            const SizedBox(height: 28.0),
             Center(
               child: ElevatedButton(
                 onPressed: () {
@@ -292,6 +332,8 @@ class _PatientIndexState extends State<PatientIndex> {
                   String secondLastName = _patientSecondLastName.text;
                   String ci = _patientCI.text;
                   DateTime? birthDate;
+                  String genre;
+                  genre = (_valueRadioButtonGenre == 0) ? "M" : "F";
                   if (_patientBirthDate.text.isNotEmpty) {
                     birthDate = DateFormat('dd/MM/yyyy').parse(_patientBirthDate.text);
                   }
@@ -299,9 +341,10 @@ class _PatientIndexState extends State<PatientIndex> {
                   if (_editingPatient != null) {
                     if (name.isNotEmpty && lastName.isNotEmpty && birthDate != null && ci.isNotEmpty) {
                       patientViewModel.editPatient(
-                        _editingPatient!.idPatient!, name, lastName, secondLastName, birthDate, ci, 1
+                        _editingPatient!.idPatient!, name, genre,lastName, secondLastName, birthDate, ci, 1
                       ).then((_) {
                         patientViewModel.fetchPatients();
+                        _clearSearch();
                       });
                       _resetForm();
                       _showSuccessDialog(context, true);
@@ -310,8 +353,9 @@ class _PatientIndexState extends State<PatientIndex> {
                     if (name.isNotEmpty && lastName.isNotEmpty  && birthDate != null && ci.isNotEmpty) {
                       final patientViewModel = context.read<PatientViewModel>();
                     
-                      patientViewModel.createNewPatient(name, lastName, secondLastName, birthDate, ci, 1).then((_) {
+                      patientViewModel.createNewPatient(name, genre,lastName, secondLastName, birthDate, ci, 1).then((_) {
                         patientViewModel.fetchPatients();
+                        _clearSearch();
                       });
                       _resetForm();
                       _showSuccessDialog(context, false);
@@ -505,6 +549,7 @@ class _PatientIndexState extends State<PatientIndex> {
                   _patientName.text = patient.name;
                   _patientLastName.text = patient.lastName;
                   _patientSecondLastName.text = patient.secondLastName ?? '';
+                  _valueRadioButtonGenre = (patient.genre == 'M') ?  0 : 1;
                   _patientBirthDate.text = DateFormat('dd/MM/yyyy').format(DateTime.parse(patient.birthDate.toString()));
                   _editingPatient = patient; // Para saber que estamos en modo edición
                 });

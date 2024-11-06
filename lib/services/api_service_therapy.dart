@@ -4,7 +4,7 @@ import 'package:http/http.dart' as http;
 import 'package:ps3_drops_v1/models/therapy.dart';
 
 class ApiServiceTherapy {
-  final String baseUrl = 'http://127.0.0.1:5000/api';
+  final String baseUrl = 'http://127.0.0.1:5000/api/v1';
 
   Future<List<Therapy>> fetchTherapies() async {
     try {

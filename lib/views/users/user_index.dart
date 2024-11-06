@@ -1,8 +1,8 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:ps3_drops_v1/models/employee.dart';
-import 'package:ps3_drops_v1/view_models/employee_view_model.dart';
+import 'package:ps3_drops_v1/models/user.dart';
+import 'package:ps3_drops_v1/view_models/user_view_model.dart';
 import 'package:ps3_drops_v1/views/users/user_data.dart';
 import 'package:ps3_drops_v1/widgets/text_label.dart';
 import 'package:ps3_drops_v1/widgets/title_container.dart';
@@ -21,49 +21,56 @@ class UserIndex extends StatefulWidget {
 }
 
 class _UserIndex extends State<UserIndex> {
-  final String _selectedFilter = 'Nombre';
-  final String _selectedFilterRol = 'Usuario';
-  final List<String> _filterOptions = ['Nombre', 'CI', 'Apellido'];
-  final List<String> _filterOptionsRol = ['Usuario', 'Enfermero', 'Administrador'];
+  String _selectedFilter = 'Buscar por:';
+  final List<String> _filterOptions = ['Buscar por:', 'CI', 'Nombre','Apellido'];
   bool _showForm = false; 
-  Employee? _editingEmployee; 
+  User? _editingUser; 
   //String _searchQuery = '';
   final TextEditingController _searchController = TextEditingController();
   bool _showNurseFields = false;
 
+  //Campos para la insercion
+  final TextEditingController _nameController = TextEditingController();
+  final TextEditingController _lastNameController = TextEditingController();
+  final TextEditingController _secondLastNameController = TextEditingController();
+  final TextEditingController _phoneController = TextEditingController();
+  final TextEditingController _addressController = TextEditingController();
+  final TextEditingController _ciController = TextEditingController();
+  final TextEditingController _emailController = TextEditingController();
+  final TextEditingController _userBirthDateController = TextEditingController();
+
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.read<EmployeeViewModel>().fetchEmployees();
-    });
-    _searchController.addListener(_onSearchChanged);
   }
 
   @override
-  void dispose() {
-    _searchController.removeListener(_onSearchChanged);
+  void dispose() {// Cancela el debounce al destruir el widget
     _searchController.dispose();
     super.dispose();
   }
 
-  void _onSearchChanged() {
-    final employeeViewModel = context.read<EmployeeViewModel>();
-    
+  void _filterUserList(String query) {
+    final userViewModel = context.read<UserViewModel>();
+    userViewModel.filterUsers(query, _selectedFilter);
   }
-
 
   void _toggleView({bool resetForm = false}) {
     setState(() {
       _showForm = !_showForm;
 
       if (resetForm) {
-        _editingEmployee = null;
+        _editingUser = null;
         _showNurseFields = false;
       } else {
-        _showNurseFields = _editingEmployee?.rolName == 'Enfermera';
+        _showNurseFields = _editingUser?.nameRole == 'Enfermera';
       }
     });
+  }
+
+  void _clearSearch() {
+    _searchController.clear();
+    _filterUserList('');
   }
 
   @override
@@ -143,26 +150,24 @@ class _UserIndex extends State<UserIndex> {
                     children: [
                       DropdownFilter(
                         fullWidth: false,
-                        value: _selectedFilterRol,
-                        items: _filterOptionsRol,
-                        onChanged: (newValueRole) {
-                          
-                        },
-                      ),
-                      const SizedBox(width: 16.0),
-                      DropdownFilter(
-                        fullWidth: false,
                         value: _selectedFilter,
                         items: _filterOptions,
                         onChanged: (newValue) {
-                          
+                          setState(() {
+                            _selectedFilter = newValue as String;
+                          });
+                          if (_selectedFilter == 'Buscar por:') {
+                            _filterUserList('');
+                          }
                         },
                       ),
-                      const SizedBox(width: 16.0),
+                        const SizedBox(width: 16.0),
                       SearchField(
                         controller: _searchController,
                         fullWidth: false,
-                        onChanged: (value) => _onSearchChanged(),
+                        onChanged: (query) {
+                          _filterUserList(query);
+                        },
                       ),
                     ],
                   ),
@@ -184,7 +189,7 @@ class _UserIndex extends State<UserIndex> {
                     ),
                   ],
                 ),
-                padding: const EdgeInsets.all(18.0), // Añadir padding al contenedor
+                padding: const EdgeInsets.all(18.0),
                 child: _showForm ? _buildForm() : _buildTable(),
               ),
             ),
@@ -203,7 +208,7 @@ class _UserIndex extends State<UserIndex> {
           children: [
             Center(
               child: HistoryTitleContainer(
-                titleTable: _editingEmployee == null ? 'Añadir Usuario' : 'Editar Usuario',
+                titleTable: _editingUser == null ? 'Añadir Usuario' : 'Editar Usuario',
               ),
             ),
             const SizedBox(height: 24.0),
@@ -221,7 +226,7 @@ class _UserIndex extends State<UserIndex> {
                       const SizedBox(height: 8.0),
                       TextField(
                         controller: TextEditingController(
-                          text: _editingEmployee?.ci ?? '',
+                          text: _editingUser?.ci ?? '',
                         ),
                         decoration: InputDecoration(
                           hintText: 'Ingrese el C.I.',
@@ -235,7 +240,7 @@ class _UserIndex extends State<UserIndex> {
                       const SizedBox(height: 8.0),
                       TextField(
                         controller: TextEditingController(
-                          text: _editingEmployee?.name ?? '',
+                          text: _editingUser?.name ?? '',
                         ),
                         decoration: InputDecoration(
                           hintText: 'Ingrese el nombre',
@@ -249,7 +254,7 @@ class _UserIndex extends State<UserIndex> {
                       const SizedBox(height: 8.0),
                       TextField(
                         controller: TextEditingController(
-                          text: _editingEmployee?.lastName ?? '',
+                          text: _editingUser?.lastName ?? '',
                         ),
                         decoration: InputDecoration(
                           hintText: 'Ingrese el apellido paterno',
@@ -263,7 +268,7 @@ class _UserIndex extends State<UserIndex> {
                       const SizedBox(height: 8.0),
                       TextField(
                         controller: TextEditingController(
-                          text: _editingEmployee?.secondLastName ?? '',
+                          text: _editingUser?.secondLastName ?? '',
                         ),
                         decoration: InputDecoration(
                           hintText: 'Ingrese el apellido materno',
@@ -296,7 +301,7 @@ class _UserIndex extends State<UserIndex> {
                       const SizedBox(height: 8.0),
                       TextField(
                         controller: TextEditingController(
-                          text: _editingEmployee?.phoneNumber ?? '',
+                          text: _editingUser?.phone ?? '',
                         ),
                         decoration: InputDecoration(
                           hintText: 'Ingrese el número de celular',
@@ -310,7 +315,7 @@ class _UserIndex extends State<UserIndex> {
                       const SizedBox(height: 8.0),
                       TextField(
                         controller: TextEditingController(
-                          text: _editingEmployee?.address ?? '',
+                          text: _editingUser?.address ?? '',
                         ),
                         maxLines: 6,
                         minLines: 5,
@@ -326,7 +331,7 @@ class _UserIndex extends State<UserIndex> {
                       const SizedBox(height: 8.0),
                       TextField(
                         controller: TextEditingController(
-                          text: _editingEmployee?.email ?? '',
+                          text: _editingUser?.email ?? '',
                         ),
                         decoration: InputDecoration(
                           hintText: 'Ingrese el Correo Electronico',
@@ -339,7 +344,7 @@ class _UserIndex extends State<UserIndex> {
                       const TextLabel(content: 'Rol Usuario'),
                       const SizedBox(height: 8.0),
                       DropdownButtonFormField<String>(
-                        value: _editingEmployee?.rolName,
+                        value: _editingUser?.nameRole,
                         decoration: InputDecoration(
                           hintText: 'Ingrese el rol de Usuario',
                           border: OutlineInputBorder(
@@ -355,7 +360,7 @@ class _UserIndex extends State<UserIndex> {
                         }).toList(),
                         onChanged: (String? newValue) {
                           setState(() {
-                            _editingEmployee?.rolName = newValue;
+                            _editingUser?.nameRole = newValue;
                             _showNurseFields = newValue == 'Enfermera';
                           });
                         },
@@ -374,7 +379,7 @@ class _UserIndex extends State<UserIndex> {
                         const SizedBox(height: 8.0),
                         TextField(
                           controller: TextEditingController(
-                            text: _editingEmployee?.email ?? '',
+                            text: _editingUser?.email ?? '',
                           ),
                           decoration: InputDecoration(
                             hintText: 'Ingrese el Rol del Enfermero',
@@ -387,7 +392,7 @@ class _UserIndex extends State<UserIndex> {
                         const TextLabel(content: 'En Turno'),
                         const SizedBox(height: 8.0),
                         SwitchListTile(
-                          value: _editingEmployee?.userID != null,
+                          value: _editingUser?.idUser != null,
                           onChanged: (bool value) {
                             setState(() {
                               // Aquí podrías definir una lógica para actualizar el campo "en turno"
@@ -406,16 +411,16 @@ class _UserIndex extends State<UserIndex> {
             Center(
               child: ElevatedButton(
                 onPressed: () {
-                  if (_editingEmployee != null) {
+                  if (_editingUser != null) {
                     if (kDebugMode) {
-                      print('Editando paciente con ID: ${_editingEmployee?.idPatient}');
+                      print('Editando paciente con ID: ${_editingUser?.idUser}');
                     }
                   } else {
                     if (kDebugMode) {
                       print('Creando nuevo paciente');
                     }
                   }
-                  _showSuccessDialog(context, _editingEmployee != null);
+                  _showSuccessDialog(context, _editingUser != null);
                 },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.purple.shade300,
@@ -428,7 +433,7 @@ class _UserIndex extends State<UserIndex> {
                   ),
                 ),
                 child: Text(
-                  _editingEmployee == null ? 'INSERTAR' : 'GUARDAR',
+                  _editingUser == null ? 'INSERTAR' : 'GUARDAR',
                   style: const TextStyle(
                     color: Colors.white,
                     fontWeight: FontWeight.bold,
@@ -454,8 +459,8 @@ class _UserIndex extends State<UserIndex> {
               ? '¡Se modificó el registro correctamente!'
               : '¡Se creó el registro correctamente!',
           onBackPressed: () {
-            Navigator.of(context).pop(); // Cerrar el modal
-            _toggleView(); // Volver a la vista de la tabla
+            Navigator.of(context).pop(); 
+            _toggleView();
           },
         );
       },
@@ -468,7 +473,7 @@ class _UserIndex extends State<UserIndex> {
       builder: (context) {
         return DeleteConfirmationDialog(
           onConfirmDelete: () {
-            Provider.of<EmployeeViewModel>(context, listen: false);
+            Provider.of<UserViewModel>(context, listen: false);
             if (kDebugMode) {
               print('Eliminando empleado con ID: $idEmployee');
             }
@@ -479,11 +484,11 @@ class _UserIndex extends State<UserIndex> {
   }
 
   Widget _buildTable() {
-    return Consumer<EmployeeViewModel>(
-      builder: (context, employeeViewModel, child) {
-        if (employeeViewModel.isLoading) {
+    return Consumer<UserViewModel>(
+      builder: (context, userViewModel, child) {
+        if (userViewModel.isLoading) {
           return const Center(child: CircularProgressIndicator());
-        } else if (employeeViewModel.filteredEmployees.isEmpty) {
+        } else if (!userViewModel.hasMatches) {
           return Center(
             child: Text(
               'Sin coincidencias',
@@ -495,25 +500,19 @@ class _UserIndex extends State<UserIndex> {
             ),
           );
         } else {
-          return EmployeeDataTable(
-            employees: employeeViewModel.filteredEmployees,
-            onEdit: (id) {
-              Employee? employee = employeeViewModel.listEmployees.firstWhere(
-                (e) => e.idEmployee == id,
-                orElse: () => Employee(name: '', lastName: '', secondLastName: '', birthDate: null, ci: '', address: '', phoneNumber: '', email: ''), // Retornar null en caso de que no se encuentre el empleado.
-              );
-
-              // ignore: unnecessary_null_comparison
-              if (employee != null) {
-                // Actualizar el empleado en edición y mostrar los campos adicionales según el rol
+          return UserDataTable(
+            users: userViewModel.filteredUsers,
+            onEdit: (id) async {
+              User? user = await userViewModel.fetchUserById(id);
+              if (user != null) {
                 setState(() {
-                  _editingEmployee = employee;
-                  _showNurseFields = employee.rolName == 'Enfermera';
-                  _showForm = true; // Mostrar el formulario.
+                  _editingUser = user;
                 });
+                // ignore: use_build_context_synchronously
+                //_showFormModal(context, user);
               }
             },
-            onDelete: (id) {
+            onDelete: (id) async {
               _showDeleteConfirmationDialog(context, id);
             },
           );
@@ -521,6 +520,5 @@ class _UserIndex extends State<UserIndex> {
       },
     );
   }
-
 }
 

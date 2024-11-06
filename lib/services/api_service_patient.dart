@@ -5,7 +5,7 @@ import 'package:intl/intl.dart';
 import '../models/patient.dart';
 
 class ApiServicePatient {
-  final String baseUrl = 'http://127.0.0.1:5000/api';
+  final String baseUrl = 'http://127.0.0.1:5000/api/v1';
 
   Future<List<Patient>> fetchPatients() async {
     try {
@@ -50,7 +50,7 @@ class ApiServicePatient {
     }
   }
 
-  Future<Patient> updatePatient(int idPatient, String name, String lastName, String secondLastName,DateTime birthDate, String ci, int userId) async {
+  Future<Patient> updatePatient(int idPatient, String name, String genre,String lastName, String secondLastName,DateTime birthDate, String ci, int userId) async {
     try {
       String formattedBirthDate = DateFormat('yyyy-MM-dd').format(birthDate);
 
@@ -61,6 +61,7 @@ class ApiServicePatient {
         'second_last_name': secondLastName.isEmpty ? null : secondLastName,
         'birth_date': formattedBirthDate,
         'ci': ci,
+        'genre' : genre,
         'user_id': userId,
       });
 
@@ -91,7 +92,7 @@ class ApiServicePatient {
         'user_id': userId,
       });
 
-      final response = await http.put(
+      final response = await http.delete(
         Uri.parse('$baseUrl/patient/delete'),
         headers: {'Content-Type': 'application/json'},
         body: body,
@@ -111,7 +112,7 @@ class ApiServicePatient {
     }
   }
 
-  Future<Patient> createPatient(String name, String lastName, String secondLastName,DateTime birthDate, String ci, int userId) async {
+  Future<Patient> createPatient(String name,String genre, String lastName, String secondLastName,DateTime birthDate, String ci, int userId) async {
     try {
       String formattedBirthDate = DateFormat('yyyy-MM-dd').format(birthDate);
       final body = jsonEncode({
@@ -120,6 +121,7 @@ class ApiServicePatient {
         'second_last_name': secondLastName.isEmpty ? null : secondLastName,
         'birth_date': formattedBirthDate,
         'ci': ci,
+        'genre': genre,
         'user_id': userId,
       });
 

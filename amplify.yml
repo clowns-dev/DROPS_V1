@@ -3,9 +3,8 @@ frontend:
   phases:
     preBuild:
       commands:
-        - wget https://github.com/flutter/flutter/archive/refs/tags/3.3.10.tar.gz -O flutter.tar.gz
-        - tar -xzf flutter.tar.gz
-        - export PATH="$PATH:$(pwd)/flutter-3.3.10/bin"
+        - git clone https://github.com/flutter/flutter.git -b 3.3.10
+        - export PATH="$PATH:$(pwd)/flutter/bin"
         - flutter doctor
         - flutter --version
     build:
@@ -17,4 +16,4 @@ frontend:
       - '**/*'
   cache:
     paths:
-      - flutter-3.3.10/bin
+      - flutter/bin

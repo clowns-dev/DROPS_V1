@@ -22,9 +22,7 @@ class UserViewModel extends ChangeNotifier {
       listUsers = await apiServiceUser.fetchUsers();
       filteredUsers = List.from(listUsers); 
       hasMatches = filteredUsers.isNotEmpty;
-      if (kDebugMode) {
-        print('Usuarios cargados: ${listUsers.length}');
-      }
+
     } catch (e) {
       if (kDebugMode) {
         print('Error al obtener los registros de Usuarios: $e');
@@ -49,12 +47,12 @@ class UserViewModel extends ChangeNotifier {
           break;
         case 'Nombre':
           filteredUsers = listUsers
-              .where((user) => user.name.toLowerCase().contains(query.toLowerCase()))
+              .where((user) => user.name?.toLowerCase().contains(query.toLowerCase()) ?? false)
               .toList();
           break;
         case 'Apellido':
           filteredUsers = listUsers
-              .where((user) => user.lastName.toLowerCase().contains(query.toLowerCase()))
+              .where((user) => user.lastName?.toLowerCase().contains(query.toLowerCase()) ?? false)
               .toList();
           break;
         default:
@@ -91,6 +89,7 @@ class UserViewModel extends ChangeNotifier {
     try {
       if(newUser != null){
         await apiServiceUser.createUser(newUser);
+
         if(kDebugMode){
           print("Usuario creada Exitosamente!");
         } else {

@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:ps3_drops_v1/models/user.dart';
 import 'package:ps3_drops_v1/view_models/user_view_model.dart';
@@ -12,6 +13,7 @@ import 'package:ps3_drops_v1/widgets/dropdown_filter.dart';
 import 'package:ps3_drops_v1/widgets/add_title_button.dart';
 import 'package:ps3_drops_v1/widgets/success_dialog.dart';
 import 'package:ps3_drops_v1/widgets/delete_confirmation_dialog.dart';
+import 'package:syncfusion_flutter_datepicker/datepicker.dart';
 
 class UserIndex extends StatefulWidget {
   const UserIndex({super.key});
@@ -24,10 +26,9 @@ class _UserIndex extends State<UserIndex> {
   String _selectedFilter = 'Buscar por:';
   final List<String> _filterOptions = ['Buscar por:', 'CI', 'Nombre','Apellido'];
   bool _showForm = false; 
-  User? _editingUser; 
-  //String _searchQuery = '';
+  User? _editingUser, user; 
+  DateTime? _selectedDate;
   final TextEditingController _searchController = TextEditingController();
-  bool _showNurseFields = false;
 
   //Campos para la insercion
   final TextEditingController _nameController = TextEditingController();
@@ -38,6 +39,8 @@ class _UserIndex extends State<UserIndex> {
   final TextEditingController _ciController = TextEditingController();
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _userBirthDateController = TextEditingController();
+  String? nameRoleController;
+  int? _genreValueController;
 
   @override
   void initState() {
@@ -45,7 +48,7 @@ class _UserIndex extends State<UserIndex> {
   }
 
   @override
-  void dispose() {// Cancela el debounce al destruir el widget
+  void dispose() {
     _searchController.dispose();
     super.dispose();
   }
@@ -55,22 +58,28 @@ class _UserIndex extends State<UserIndex> {
     userViewModel.filterUsers(query, _selectedFilter);
   }
 
-  void _toggleView({bool resetForm = false}) {
+  void _toggleView([User? patient]) {
     setState(() {
       _showForm = !_showForm;
-
-      if (resetForm) {
-        _editingUser = null;
-        _showNurseFields = false;
-      } else {
-        _showNurseFields = _editingUser?.nameRole == 'Enfermera';
-      }
+      _editingUser = patient; 
     });
   }
 
   void _clearSearch() {
     _searchController.clear();
     _filterUserList('');
+  }
+
+  void _resetForm(){
+    _ciController.clear();
+    _nameController.clear();
+    _lastNameController.clear();
+    _secondLastNameController.clear();
+    _emailController.clear();
+    _phoneController.clear();
+    _addressController.clear();
+    _genreValueController = null;
+    _editingUser = null;
   }
 
   @override
@@ -212,8 +221,6 @@ class _UserIndex extends State<UserIndex> {
               ),
             ),
             const SizedBox(height: 24.0),
-
-            // Distribución de los campos en dos columnas
             Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -225,9 +232,7 @@ class _UserIndex extends State<UserIndex> {
                       const TextLabel(content: 'CI:'),
                       const SizedBox(height: 8.0),
                       TextField(
-                        controller: TextEditingController(
-                          text: _editingUser?.ci ?? '',
-                        ),
+                        controller: _ciController,
                         decoration: InputDecoration(
                           hintText: 'Ingrese el C.I.',
                           border: OutlineInputBorder(
@@ -239,9 +244,7 @@ class _UserIndex extends State<UserIndex> {
                       const TextLabel(content: 'Nombre:'),
                       const SizedBox(height: 8.0),
                       TextField(
-                        controller: TextEditingController(
-                          text: _editingUser?.name ?? '',
-                        ),
+                        controller: _nameController,
                         decoration: InputDecoration(
                           hintText: 'Ingrese el nombre',
                           border: OutlineInputBorder(
@@ -253,9 +256,7 @@ class _UserIndex extends State<UserIndex> {
                       const TextLabel(content: 'Apellido Paterno:'),
                       const SizedBox(height: 8.0),
                       TextField(
-                        controller: TextEditingController(
-                          text: _editingUser?.lastName ?? '',
-                        ),
+                        controller: _lastNameController,
                         decoration: InputDecoration(
                           hintText: 'Ingrese el apellido paterno',
                           border: OutlineInputBorder(
@@ -267,9 +268,7 @@ class _UserIndex extends State<UserIndex> {
                       const TextLabel(content: 'Apellido Materno:'),
                       const SizedBox(height: 8.0),
                       TextField(
-                        controller: TextEditingController(
-                          text: _editingUser?.secondLastName ?? '',
-                        ),
+                        controller: _secondLastNameController,
                         decoration: InputDecoration(
                           hintText: 'Ingrese el apellido materno',
                           border: OutlineInputBorder(
@@ -280,12 +279,22 @@ class _UserIndex extends State<UserIndex> {
                       const SizedBox(height: 24.0),
                       const TextLabel(content: 'Fecha de Nacimiento:'),
                       const SizedBox(height: 8.0),
-                      TextField(
-                        
-                        decoration: InputDecoration(
-                          hintText: 'dd/mm/aaaa',
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12.0),
+                      InkWell(
+                        onTap: () {
+                          _showSyncfusionDatePicker(context);
+                        },
+                        child: InputDecorator(
+                          decoration: InputDecoration(
+                            hintText: 'Seleccione una fecha',
+                            suffixIcon: const Icon(Icons.calendar_today),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12.0),
+                            ),
+                          ),
+                          child: Text(
+                            _userBirthDateController.text.isEmpty
+                                ? 'Seleccione una fecha'
+                                : _userBirthDateController.text,
                           ),
                         ),
                       ),
@@ -300,9 +309,7 @@ class _UserIndex extends State<UserIndex> {
                       const TextLabel(content: 'Celular:'),
                       const SizedBox(height: 8.0),
                       TextField(
-                        controller: TextEditingController(
-                          text: _editingUser?.phone ?? '',
-                        ),
+                        controller: _phoneController,
                         decoration: InputDecoration(
                           hintText: 'Ingrese el número de celular',
                           border: OutlineInputBorder(
@@ -314,9 +321,7 @@ class _UserIndex extends State<UserIndex> {
                       const TextLabel(content: 'Direccion:'),
                       const SizedBox(height: 8.0),
                       TextField(
-                        controller: TextEditingController(
-                          text: _editingUser?.address ?? '',
-                        ),
+                        controller: _addressController,
                         maxLines: 6,
                         minLines: 5,
                         decoration: InputDecoration(
@@ -330,9 +335,7 @@ class _UserIndex extends State<UserIndex> {
                       const TextLabel(content: 'Correo Electronico:'),
                       const SizedBox(height: 8.0),
                       TextField(
-                        controller: TextEditingController(
-                          text: _editingUser?.email ?? '',
-                        ),
+                        controller: _emailController,
                         decoration: InputDecoration(
                           hintText: 'Ingrese el Correo Electronico',
                           border: OutlineInputBorder(
@@ -344,14 +347,14 @@ class _UserIndex extends State<UserIndex> {
                       const TextLabel(content: 'Rol Usuario'),
                       const SizedBox(height: 8.0),
                       DropdownButtonFormField<String>(
-                        value: _editingUser?.nameRole,
+                        value: nameRoleController,
                         decoration: InputDecoration(
                           hintText: 'Ingrese el rol de Usuario',
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(12.0),
                           ),
                         ),
-                        items: <String>['Enfermera', 'Doctor', 'Admin']
+                        items: <String>['Administrador', 'Enfermero', 'Biomedico']
                             .map<DropdownMenuItem<String>>((String value) {
                           return DropdownMenuItem<String>(
                             value: value,
@@ -360,8 +363,7 @@ class _UserIndex extends State<UserIndex> {
                         }).toList(),
                         onChanged: (String? newValue) {
                           setState(() {
-                            _editingUser?.nameRole = newValue;
-                            _showNurseFields = newValue == 'Enfermera';
+                            nameRoleController = newValue;
                           });
                         },
                       ),
@@ -370,57 +372,101 @@ class _UserIndex extends State<UserIndex> {
                   ),
                 ),
                 const SizedBox(width: 40.0),
-                // Tercera columna para campos adicionales de "Enfermera"
-                if (_showNurseFields)
-                  Expanded(
-                    child: Column(
-                      children: [
-                        const TextLabel(content: 'Rol Enfermero'),
-                        const SizedBox(height: 8.0),
-                        TextField(
-                          controller: TextEditingController(
-                            text: _editingUser?.email ?? '',
-                          ),
-                          decoration: InputDecoration(
-                            hintText: 'Ingrese el Rol del Enfermero',
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12.0),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const TextLabel(content: 'Genero'),
+                      const SizedBox(height: 8.0),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: RadioListTile<int>(
+                              title: const Text('Masculino'),
+                              value: 0,
+                              groupValue: _genreValueController,
+                              onChanged: (value) {
+                                setState(() {
+                                  _genreValueController = value!;
+                                });
+                              },
                             ),
                           ),
-                        ),
-                        const SizedBox(height: 24.0),
-                        const TextLabel(content: 'En Turno'),
-                        const SizedBox(height: 8.0),
-                        SwitchListTile(
-                          value: _editingUser?.idUser != null,
-                          onChanged: (bool value) {
-                            setState(() {
-                              // Aquí podrías definir una lógica para actualizar el campo "en turno"
-                            });
-                          },
-                          title: const Text('En turno'),
-                        ),
-                      ],
-                    ),
+                          Expanded(
+                            child: RadioListTile<int>(
+                              title: const Text('Femenino'),
+                              value: 1,
+                              groupValue: _genreValueController,
+                              onChanged: (value) {
+                                setState(() {
+                                  _genreValueController = value!;
+                                });
+                              },
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
                   ),
+                ),
               ],
             ),
             const SizedBox(height: 32.0),
-
-            // Botón para guardar
             Center(
               child: ElevatedButton(
                 onPressed: () {
-                  if (_editingUser != null) {
-                    if (kDebugMode) {
-                      print('Editando paciente con ID: ${_editingUser?.idUser}');
+                  String name = _nameController.text;
+                  String lastName = _lastNameController.text;
+                  String secondLastName = _secondLastNameController.text;
+                  String phone = _phoneController.text;
+                  String address = _addressController.text;
+                  String ci = _ciController.text;
+                  String email = _emailController.text;
+                  DateTime? birthDate;
+                  String genre;
+                  int? role;
+                  genre = (_genreValueController == 0) ? "M" : "F";
+                  if(_userBirthDateController.text.isNotEmpty){
+                    birthDate = DateFormat('dd/MM/yyyy').parse(_userBirthDateController.text);
+                  }
+
+                  switch(nameRoleController){
+                    case "Administrador":
+                      role = 1;
+                      break;
+                    case "Enfermero":
+                      role = 2;
+                      break;
+                    case "Biomedico":
+                      role = 3;
+                      break;
+                    default:
+                      role = 0; 
+                  }
+
+
+                  final userViewModel = context.read<UserViewModel>();
+                  if(_editingUser != null){
+                    if(name.isNotEmpty && lastName.isNotEmpty && phone.isNotEmpty && address.isNotEmpty && ci.isNotEmpty && email.isNotEmpty && birthDate != null && genre.isNotEmpty){
+                      user = User(idUser: _editingUser!.idUser!,name: name, lastName: lastName, secondLastName: secondLastName, phone:phone, email:  email,address: address, birthDate: birthDate, genre: genre,ci: ci, idRole: role);
+                      userViewModel.editUser(user).then((_) {
+                        userViewModel.fetchUsers();
+                        _clearSearch();
+                      });
+                      _showSuccessDialog(context, true);
+                      _resetForm();
                     }
                   } else {
-                    if (kDebugMode) {
-                      print('Creando nuevo paciente');
+                    if(name.isNotEmpty && lastName.isNotEmpty && phone.isNotEmpty && address.isNotEmpty && ci.isNotEmpty && email.isNotEmpty && birthDate != null && genre.isNotEmpty){
+                      user = User(name: name, lastName: lastName, secondLastName: secondLastName, phone:phone, email:  email,address: address, birthDate: birthDate, genre: genre,ci: ci, idRole: role);
+                      userViewModel.createNewUser(user).then((_) {
+                        userViewModel.fetchUsers();
+                        _clearSearch();
+                      });
+                      _showSuccessDialog(context, false);
+                      _resetForm();
                     }
                   }
-                  _showSuccessDialog(context, _editingUser != null);
                 },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.purple.shade300,
@@ -447,7 +493,99 @@ class _UserIndex extends State<UserIndex> {
     );
   }
 
-
+  void _showSyncfusionDatePicker(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20), 
+          ),
+          backgroundColor: const Color(0xFFF5F0FF), 
+          content: SizedBox(
+            height: 350,
+            width: 350,
+            child: Container(
+              padding: const EdgeInsets.all(10), 
+              decoration: BoxDecoration(
+                color: const Color(0xFFF5F0FF), 
+                borderRadius: BorderRadius.circular(20), 
+                border: Border.all(
+                  color: const Color.fromARGB(255, 168, 126, 207), 
+                  width: 2, // Grosor del borde
+                ),
+              ),
+              child: SfDateRangePicker(
+                backgroundColor: const Color(0xFFF5F0FF), 
+                onSelectionChanged: (DateRangePickerSelectionChangedArgs args) {
+                  setState(() {
+                    _selectedDate = args.value;
+                    _userBirthDateController.text = DateFormat('dd/MM/yyyy').format(_selectedDate!);
+                  });
+                  Navigator.pop(context); 
+                },
+                selectionMode: DateRangePickerSelectionMode.single,
+                initialSelectedDate: _selectedDate ?? DateTime.now(),
+                headerStyle: const DateRangePickerHeaderStyle(
+                  backgroundColor: Color(0xFFF0E4FF),
+                  textAlign: TextAlign.center,
+                  textStyle: TextStyle(
+                    fontSize: 18,
+                    color: Color(0xFF4B0082),
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                monthCellStyle: const DateRangePickerMonthCellStyle(
+                  todayTextStyle: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    color: Color(0xFF000000),
+                  ),
+                  todayCellDecoration: BoxDecoration(
+                    color: Color(0xFFFFD700),
+                    shape: BoxShape.circle,
+                  ),
+                  weekendTextStyle: TextStyle(
+                    color: Colors.red,
+                  ),
+                  disabledDatesTextStyle: TextStyle(
+                    color: Colors.grey,
+                  ),
+                ),
+                selectionColor: const Color(0xFF6A0DAD), 
+                rangeSelectionColor: const Color(0xFFE1BEE7), 
+              ),
+            ),
+          ),
+          actions: <Widget>[
+            Center(
+              child: ElevatedButton(
+                onPressed: () {
+                  Navigator.of(context).pop();
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFFFF9494),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  minimumSize: const Size(70, 31),
+                ),
+                child: const Text(
+                  'Cancelar',
+                  style: TextStyle(
+                    color: Colors.black,
+                    fontSize: 16,
+                    fontFamily: 'Poppins',
+                    fontWeight: FontWeight.w500,
+                    height: 1,
+                  ),
+                ),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
 
   void _showSuccessDialog(BuildContext context, bool isEditing) {
     showDialog(
@@ -467,21 +605,32 @@ class _UserIndex extends State<UserIndex> {
     );
   }
 
-  void _showDeleteConfirmationDialog(BuildContext context, int? idEmployee) {
+  void _showDeleteConfirmationDialog(BuildContext context, int? userID) {
+     
+    if(userID == null){
+      if (kDebugMode) {
+        print("El userID es null, no se puede mostrar el diálogo de eliminación.");
+        return;
+      }
+    }
+
     showDialog(
       context: context,
       builder: (context) {
         return DeleteConfirmationDialog(
           onConfirmDelete: () {
-            Provider.of<UserViewModel>(context, listen: false);
-            if (kDebugMode) {
-              print('Eliminando empleado con ID: $idEmployee');
+            final userViewModel = context.read<UserViewModel>();
+            if(userID != null){
+              userViewModel.removeUser(userID).then((_){
+                userViewModel.fetchUsers();
+              });
             }
           },
         );
       },
     );
   }
+
 
   Widget _buildTable() {
     return Consumer<UserViewModel>(
@@ -503,16 +652,43 @@ class _UserIndex extends State<UserIndex> {
           return UserDataTable(
             users: userViewModel.filteredUsers,
             onEdit: (id) async {
+
               User? user = await userViewModel.fetchUserById(id);
+
               if (user != null) {
                 setState(() {
                   _editingUser = user;
+                  _ciController.text = user.ci ?? '';
+                  _nameController.text = user.name ?? '';
+                  _lastNameController.text = user.lastName ?? '';
+                  _secondLastNameController.text = user.secondLastName ?? '';
+                  _phoneController.text = user.phone ?? '';
+                  _emailController.text = user.email ?? '';
+                  _addressController.text = user.address ?? '';
+                  _userBirthDateController.text = user.birthDate != null
+                      ? DateFormat('dd/MM/yyyy').format(user.birthDate!)
+                      : '';
+                  _genreValueController = (user.genre == 'M') ? 0 : 1;
+
+                  // Set the role based on `idRole`
+                  switch (user.idRole) {
+                    case 1:
+                      nameRoleController = "Administrador";
+                      break;
+                    case 2:
+                      nameRoleController = "Enfermero";
+                      break;
+                    case 3:
+                      nameRoleController = "Biomedico";
+                      break;
+                    default:
+                      nameRoleController = "No tiene";
+                  }
                 });
-                // ignore: use_build_context_synchronously
-                //_showFormModal(context, user);
+                _toggleView(user);
               }
             },
-            onDelete: (id) async {
+            onDelete: (id) {
               _showDeleteConfirmationDialog(context, id);
             },
           );
@@ -521,4 +697,3 @@ class _UserIndex extends State<UserIndex> {
     );
   }
 }
-

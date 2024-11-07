@@ -194,6 +194,8 @@ class UserDataSource extends DataGridSource {
                       fontWeight: FontWeight.w400,
                       color: Colors.black,
                     ),
+                    maxLines: 1,  
+                    overflow: TextOverflow.ellipsis,
                   ),
                 ),
         );

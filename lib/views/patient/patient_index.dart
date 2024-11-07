@@ -183,7 +183,7 @@ class _PatientIndexState extends State<PatientIndex> {
                     ),
                   ],
                 ),
-                padding: const EdgeInsets.all(18.0), // Añadir padding al contenedor
+                padding: const EdgeInsets.all(18.0),
                 child: _showForm ? _buildForm() : _buildTable(),
               ),
             ),
@@ -543,7 +543,6 @@ class _PatientIndexState extends State<PatientIndex> {
               Patient? patient = await patientViewModel.fetchPatientById(id);
 
               if (patient != null) {
-                // Asigna los valores recuperados a los controladores del formulario
                 setState(() {
                   _patientCI.text = patient.ci;
                   _patientName.text = patient.name;
@@ -551,10 +550,9 @@ class _PatientIndexState extends State<PatientIndex> {
                   _patientSecondLastName.text = patient.secondLastName ?? '';
                   _valueRadioButtonGenre = (patient.genre == 'M') ?  0 : 1;
                   _patientBirthDate.text = DateFormat('dd/MM/yyyy').format(DateTime.parse(patient.birthDate.toString()));
-                  _editingPatient = patient; // Para saber que estamos en modo edición
+                  _editingPatient = patient; 
                 });
-
-                _toggleView(patient); // Abre el formulario con los datos recuperados
+                _toggleView(patient); 
               }
             },
             onDelete: (id) {

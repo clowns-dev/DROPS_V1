@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
+import 'package:intl/intl.dart';
 import '../models/user.dart';
 
 class ApiServiceUser {
@@ -51,11 +52,30 @@ class ApiServiceUser {
 
   Future<User> createUser(User newUser) async {
     try {
+      String formattedBirthDate = DateFormat('yyyy-MM-dd').format(newUser.birthDate!);
+
+      final body = jsonEncode({
+        'name': newUser.name,
+        'last_name': newUser.lastName,
+        'second_last_name': newUser.secondLastName,
+        'phone': newUser.phone,
+        'email': newUser.email,
+        'address': newUser.address,
+        'birth_date': formattedBirthDate,
+        'genre': newUser.genre,
+        'ci': newUser.ci,
+        'role_id': newUser.idRole
+      });
+
+
+
+
       final response = await http.post(
         Uri.parse('$baseUrl/user/create'),
         headers: {'Content-Type': 'application/json'},
-        body: jsonEncode(newUser.toJsonInsert()),
+        body: body,
       );
+   
 
       if (response.statusCode == 201) {
         final jsonResponse = jsonDecode(response.body);

@@ -22,13 +22,12 @@ class UserViewModel extends ChangeNotifier {
       listUsers = await apiServiceUser.fetchUsers();
       filteredUsers = List.from(listUsers); 
       hasMatches = filteredUsers.isNotEmpty;
-
     } catch (e) {
       if (kDebugMode) {
         print('Error al obtener los registros de Usuarios: $e');
       }
     } finally {
-      isLoading = false;  // Asegúrate de que esto esté aquí
+      isLoading = false;  
       notifyListeners();
     }
   }
@@ -38,7 +37,6 @@ class UserViewModel extends ChangeNotifier {
     if (query.isEmpty || field == 'Buscar por:') {
       filteredUsers = List.from(listUsers);
     } else {
-      // Filtramos según el campo seleccionado
       switch (field) {
         case 'CI':
           filteredUsers = listUsers
@@ -84,6 +82,18 @@ class UserViewModel extends ChangeNotifier {
     }
     return user;
   }
+
+  Future<bool> isCiRegistered(String ci) async {
+  try {
+    return await apiServiceUser.verifyExistUser(ci);
+  } catch (e) {
+    if (kDebugMode) {
+      print('Error al verificar si el CI está registrado: $e');
+    }
+    return false;
+  }
+}
+
 
   Future<void> createNewUser(User? newUser) async {
     try {

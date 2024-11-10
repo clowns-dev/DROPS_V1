@@ -77,6 +77,8 @@ flutter:
     - assets/img/aceptar.png
     - assets/img/nurse.png
     - assets/img/nurse2.png
+    - assets/img/error_form.png
+    - assets/img/user_exist.webp
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images

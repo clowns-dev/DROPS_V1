@@ -13,10 +13,6 @@ class ApiServiceUser {
       
       if(response.statusCode == 200){
         List<dynamic> jsonResponse = json.decode(response.body);
-  
-        if (kDebugMode) {
-          print('Contenido JSON: $jsonResponse');
-        }
         return jsonResponse.map((data) => User.fromJson(data)).toList();
       } else {
         throw Exception('Error al obtener los registros de Usuarios: ${response.statusCode}');
@@ -49,6 +45,30 @@ class ApiServiceUser {
       throw Exception('Error al cargar los datos: $e');
     }
   }
+
+  Future<bool> verifyExistUser(String ci) async {
+    try {
+      final response = await http.get(Uri.parse('$baseUrl/user/checkExist/$ci'));
+      if (response.statusCode == 200) {
+        final jsonResponse = json.decode(response.body);
+        if (kDebugMode) {
+          print('Contenido JSON: $jsonResponse');
+        }
+        
+        if (jsonResponse['ci'] != null && jsonResponse['ci'].isNotEmpty) {
+          return true; // El usuario existe
+        }
+      }
+      return false;
+    } catch (e) {
+      if (kDebugMode) {
+        print('Error al verificar existencia.');
+      }
+      throw Exception('Error al verificar existencia.');
+    }
+  }
+
+
 
   Future<User> createUser(User newUser) async {
     try {
@@ -93,10 +113,26 @@ class ApiServiceUser {
 
   Future<User> updateUser(User updateUser) async {
     try {
+      String formattedBirthDate = DateFormat('yyyy-MM-dd').format(updateUser.birthDate!);
+
+      final body = jsonEncode({
+        'user_id': updateUser.idUser,
+        'name': updateUser.name,
+        'last_name': updateUser.lastName,
+        'second_last_name': updateUser.secondLastName,
+        'phone': updateUser.phone,
+        'email': updateUser.email,
+        'address': updateUser.address,
+        'birth_date': formattedBirthDate,
+        'genre': updateUser.genre,
+        'ci': updateUser.ci,
+        'role_id': updateUser.idRole
+      });
+
       final response = await http.put(
         Uri.parse('$baseUrl/user/update'),
         headers: {'Content-Type': 'application/json'},
-        body: jsonEncode(updateUser.toJsonUpdate()),
+        body: body,
       );
 
       if (response.statusCode == 200) {

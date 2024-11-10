@@ -61,7 +61,18 @@ class _UserDataTableState extends State<UserDataTable> {
               buildGridColumn('Apellido\nPaterno', 'Apellido\nPaterno'),
               buildGridColumn('Apellido\nMaterno', 'Apellido\nMaterno'),
               buildGridColumn('Telefono', 'Telefono'),
-              buildGridColumn('Correo', 'Correo'),
+              GridColumn(
+                columnName: 'Correo',
+                label: Container(
+                  padding: const EdgeInsets.all(8.0),
+                  alignment: Alignment.center,
+                  child: const Text(
+                    'Correo',
+                    style: TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                ),
+                width: 380, // Ajusta el ancho de la columna de Correo, puedes probar con otros valores
+              ),
               buildGridColumn('Fecha de\nRegistro', 'Fecha de\nRegistro'),
               buildGridColumn('Rol Usuario', 'Rol Usuario'),
               GridColumn(
@@ -118,8 +129,8 @@ class UserDataSource extends DataGridSource {
     _users = users.map<DataGridRow>((user) {
       final formattedDate = user.registerDate != null
           ? DateFormat('yyyy-MM-dd').format(user.registerDate!)
+          
           : 'No registrado';
-
       return DataGridRow(cells: [
         DataGridCell<int>(columnName: 'ID', value: user.idUser),
         DataGridCell<String>(columnName: 'CI', value: user.ci),

@@ -61,7 +61,7 @@ class User {
     }
 
     return User(
-      idUser: json['idPatient'],
+      idUser: json['idUser'],
       name: json['name'],
       lastName: json['lastName'],
       secondLastName: json['secondLastName'] ?? 'No tiene',
@@ -79,7 +79,7 @@ class User {
       lastUpdate: json['lastUpdate'] != null && json['lastUpdate'] != "Sin Cambios"
                   ? parseDate(json['lastUpdate'])
                   : null,
-      idRole: json['userID']
+      idRole: json['idRole']
     );
   }
 

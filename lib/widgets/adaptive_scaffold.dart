@@ -20,6 +20,7 @@ class AdaptiveScaffoldDestination {
 
 class AdaptiveScaffold extends StatefulWidget {
   final Widget? title;
+  final Widget? logo;
   final List<Widget> actions;
   final Widget? body;
   final int currentIndex;
@@ -29,6 +30,7 @@ class AdaptiveScaffold extends StatefulWidget {
 
   const AdaptiveScaffold({
     this.title,
+    this.logo,
     this.body,
     this.actions = const [],
     required this.currentIndex,
@@ -46,6 +48,9 @@ class _AdaptiveScaffoldState extends State<AdaptiveScaffold> {
   @override
   Widget build(BuildContext context) {
     const backgroundColor = Color.fromARGB(236, 238, 240, 255);
+    const navigationBackgroundColor = Color(0xFFACB3CC);
+    const selectedColor = Color.fromARGB(255, 168, 126, 207);
+    const unselectedColor = Colors.black87;
 
     if (_isLargeScreen(context)) {
       return Scaffold(
@@ -57,12 +62,19 @@ class _AdaptiveScaffoldState extends State<AdaptiveScaffold> {
               shape: const RoundedRectangleBorder(
                 borderRadius: BorderRadius.zero,
               ),
-              backgroundColor: const Color(0xFFACB3CC), 
+              backgroundColor: navigationBackgroundColor,
               child: Column(
                 children: [
                   DrawerHeader(
                     child: Center(
-                      child: widget.title,
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          if (widget.logo != null) widget.logo!,
+                          const SizedBox(width: 8),
+                          if (widget.title != null) widget.title!,
+                        ],
+                      ),
                     ),
                   ),
                   Expanded(
@@ -73,27 +85,23 @@ class _AdaptiveScaffoldState extends State<AdaptiveScaffold> {
                           if (widget.destinations[i].title != 'Salir')
                             InkWell(
                               onTap: () => _destinationTapped(widget.destinations[i]),
-                              onHover: (hovering) {
-                                setState(() {
-                                  // Actualiza el estado si se requiere
-                                });
-                              },
                               child: Container(
                                 color: widget.currentIndex == i
-                                    ? const Color.fromARGB(255, 168, 126, 207)
-                                    : const Color.fromARGB(255, 198, 199, 201),
-                                padding: const EdgeInsets.symmetric(vertical: 20.0, horizontal: 16.0),
+                                    ? selectedColor
+                                    : navigationBackgroundColor,
+                                padding: const EdgeInsets.symmetric(
+                                    vertical: 20.0, horizontal: 16.0),
                                 child: Row(
                                   children: [
                                     Icon(
                                       widget.destinations[i].icon,
-                                      color: widget.currentIndex == i ? Colors.white : Colors.black87,
+                                      color: widget.currentIndex == i ? Colors.white : unselectedColor,
                                     ),
                                     const SizedBox(width: 16.0),
                                     Text(
                                       widget.destinations[i].title,
                                       style: TextStyle(
-                                        color: widget.currentIndex == i ? Colors.white : Colors.black87,
+                                        color: widget.currentIndex == i ? Colors.white : unselectedColor,
                                         fontSize: 19,
                                         fontWeight: FontWeight.w400,
                                       ),
@@ -105,11 +113,10 @@ class _AdaptiveScaffoldState extends State<AdaptiveScaffold> {
                       ],
                     ),
                   ),
-                  // Botón de "Salir" al final
                   Container(
                     padding: const EdgeInsets.symmetric(vertical: 10),
                     width: double.infinity,
-                    color: const Color(0xFFFF9494), 
+                    color: const Color(0xFFFF9494),
                     child: TextButton(
                       onPressed: () {
                         widget.onNavigationIndexChange?.call(widget.destinations.length - 1);
@@ -133,7 +140,7 @@ class _AdaptiveScaffoldState extends State<AdaptiveScaffold> {
             ),
             Expanded(
               child: Container(
-                color: backgroundColor, // Fondo para el contenido principal
+                color: backgroundColor,
                 child: Scaffold(
                   appBar: AppBar(
                     actions: widget.actions,
@@ -166,18 +173,30 @@ class _AdaptiveScaffoldState extends State<AdaptiveScaffold> {
         body: Row(
           children: [
             NavigationRail(
-              backgroundColor: const Color(0xFFACB3CC),
-              leading: widget.floatingActionButton,
-              destinations: [
-                ...widget.destinations.map(
-                  (d) => NavigationRailDestination(
-                    icon: Icon(d.icon),
-                    label: Text(d.title),
-                  ),
-                ),
-              ],
+              backgroundColor: navigationBackgroundColor,
+              indicatorColor: selectedColor,
               selectedIndex: widget.currentIndex,
-              onDestinationSelected: widget.onNavigationIndexChange ?? (_) {},
+              onDestinationSelected: widget.onNavigationIndexChange,
+              selectedIconTheme: const IconThemeData(color: Colors.white),
+              unselectedIconTheme: const IconThemeData(color: unselectedColor),
+              selectedLabelTextStyle: const TextStyle(color: Colors.white),
+              unselectedLabelTextStyle: const TextStyle(color: unselectedColor),
+              destinations: [
+                ...widget.destinations.map((d) {
+                  final bool isSelected = widget.destinations.indexOf(d) == widget.currentIndex;
+                  return NavigationRailDestination(
+                    icon: Tooltip(
+                      message: d.title,
+                      child: Icon(
+                          d.icon,
+                          color: isSelected ? Colors.white : unselectedColor,
+                        ),
+                    ),
+                    label: Text(d.title),
+                  );
+                }),
+              ],
+              
             ),
             VerticalDivider(
               width: 1,
@@ -186,7 +205,7 @@ class _AdaptiveScaffoldState extends State<AdaptiveScaffold> {
             ),
             Expanded(
               child: Container(
-                color: backgroundColor, 
+                color: backgroundColor,
                 child: widget.body!,
               ),
             ),
@@ -195,31 +214,43 @@ class _AdaptiveScaffoldState extends State<AdaptiveScaffold> {
       );
     }
 
-    // Para pantallas pequeñas
+    // Pantallas pequeñas (móviles)
     return Scaffold(
       extendBodyBehindAppBar: true,
       backgroundColor: backgroundColor,
       appBar: AppBar(
-        title: widget.title,
+        title: widget.title, // Solo el título DROPS
         actions: widget.actions,
         backgroundColor: Colors.transparent,
         elevation: 0,
       ),
       body: Container(
-        color: backgroundColor, 
+        color: backgroundColor,
         child: widget.body,
       ),
       bottomNavigationBar: BottomNavigationBar(
-        items: [
-          ...widget.destinations.map(
-            (d) => BottomNavigationBarItem(
-              icon: Icon(d.icon),
-              label: d.title,
-            ),
-          ),
-        ],
+        backgroundColor: navigationBackgroundColor,
+        selectedItemColor: Colors.white,
+        unselectedItemColor: unselectedColor,
         currentIndex: widget.currentIndex,
         onTap: widget.onNavigationIndexChange,
+        items: [
+          ...widget.destinations.map((d) {
+                  final bool isSelected = widget.destinations.indexOf(d) == widget.currentIndex;
+                  return BottomNavigationBarItem(
+                    icon: Tooltip(
+                      message: d.title,
+                      child: Icon(
+                          d.icon,
+                          color: isSelected ? Colors.white : unselectedColor,
+                        ),
+                    ),
+                    label: d.title,
+                    backgroundColor: navigationBackgroundColor
+                  );
+                }),
+        ],
+        
       ),
       floatingActionButton: widget.floatingActionButton,
     );

@@ -66,6 +66,15 @@ class _PatientIndexState extends State<PatientIndex> {
     _filteredPatientList('');
   }
 
+   void _resetForm() {
+    _patientCI.clear();
+    _patientName.clear();
+    _patientLastName.clear();
+    _patientSecondLastName.clear();
+    _patientBirthDate.clear();
+    _editingPatient = null; 
+  }
+
 
   @override
   Widget build(BuildContext context) {
@@ -193,14 +202,7 @@ class _PatientIndexState extends State<PatientIndex> {
     );
   }
 
-  void _resetForm() {
-    _patientCI.clear();
-    _patientName.clear();
-    _patientLastName.clear();
-    _patientSecondLastName.clear();
-    _patientBirthDate.clear();
-    _editingPatient = null; 
-  }
+ 
 
   Widget _buildForm() {
     return Center(

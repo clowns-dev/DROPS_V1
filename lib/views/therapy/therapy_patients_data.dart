@@ -25,6 +25,15 @@ class _TherapyPatientsDataTableState extends State<TherapyPatientsDataTable> {
   late TherapyPatientsDataSource _therapyPatientsDataSource;
   int rowsPerPage = 5;
 
+  void _handleCheckboxChanged(int id) {
+    setState(() {
+      selectedId = id;
+      _therapyPatientsDataSource.updateSelectedId(id); 
+    });
+    widget.onAssign(id);
+  }
+
+
   @override
   void initState() {
     super.initState();
@@ -36,24 +45,20 @@ class _TherapyPatientsDataTableState extends State<TherapyPatientsDataTable> {
     );
   }
 
-  void _handleCheckboxChanged(int id) {
-    setState(() {
-      selectedId = id;
-      _therapyPatientsDataSource.updateSelectedId(id); 
-    });
-    widget.onAssign(id);
+  @override
+  void didUpdateWidget(covariant TherapyPatientsDataTable oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.therapyPatients != widget.therapyPatients) {
+      _therapyPatientsDataSource.updateDataSource(widget.therapyPatients);
+    }
   }
+ 
 
   @override
   Widget build(BuildContext context) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
-        const Text(
-          'Pacientes',
-          style: TextStyle(fontSize: 20.0, fontWeight: FontWeight.bold),
-        ),
-        const SizedBox(height: 8.0),
         Expanded(
           child: SfDataGrid(
             source: _therapyPatientsDataSource,
@@ -100,70 +105,62 @@ class _TherapyPatientsDataTableState extends State<TherapyPatientsDataTable> {
 }
 
 class TherapyPatientsDataSource extends DataGridSource {
-  TherapyPatientsDataSource({
-    required List<Patient> therapyPatients,
-    required this.onSelect,
-    this.selectedId,
-  }) {
-    _patients = therapyPatients.map<DataGridRow>((patient) {
-      return DataGridRow(cells: [
-        DataGridCell<int>(columnName: 'ID', value: patient.idPerson),
-        DataGridCell<String>(columnName: 'Paciente', value: patient.patient),
-        DataGridCell<String>(columnName: 'CI', value: patient.ci),
-        DataGridCell<Widget>(
-          columnName: 'Asignar',
-          value: CheckboxToTable(
-            isChecked: patient.idPerson == selectedId,
-            onChanged: () {
-              onSelect(patient.idPerson!);
-            },
-          ),
-        ),
-      ]);
-    }).toList();
-  }
-
   List<DataGridRow> _patients = [];
   final void Function(int id) onSelect;
   int? selectedId;
   int rowsPerPage = 5;
   int currentPageIndex = 0;
 
-  void updateSelectedId(int selectedId) {
-    this.selectedId = selectedId;
-    _patients = _patients.map<DataGridRow>((row) {
-      final balanceId = row.getCells().firstWhere((cell) => cell.columnName == 'ID').value;
-      
+  
+  TherapyPatientsDataSource({
+    required List<Patient> therapyPatients,
+    required this.onSelect,
+    this.selectedId,
+  }) {
+    _buildDataGridRows(therapyPatients);
+  }
+
+  void _buildDataGridRows(List<Patient> therapyPatients) {
+    _patients = therapyPatients.map<DataGridRow>((patient) {
       return DataGridRow(cells: [
-        DataGridCell<int>(columnName: 'ID', value: balanceId),
-        DataGridCell<String>(columnName: 'Paciente', value: row.getCells().firstWhere((cell) => cell.columnName == 'Paciente').value),
-        DataGridCell<String>(columnName: 'CI', value: row.getCells().firstWhere((cell) => cell.columnName == 'CI').value),
+        DataGridCell<int>(columnName: 'ID', value: patient.idPerson),
+        DataGridCell<String>(columnName: 'Paciente', value: patient.patient ?? 'Desconocido'),
+        DataGridCell<String>(columnName: 'CI', value: patient.ci ?? 'N/A'),
         DataGridCell<Widget>(
           columnName: 'Asignar',
           value: CheckboxToTable(
-            isChecked: balanceId == selectedId,
+            isChecked: patient.idPerson == selectedId,
             onChanged: () {
-              onSelect(balanceId);
+              if (patient.idPerson != null) {
+                onSelect(patient.idPerson!);
+              }
             },
           ),
         ),
       ]);
     }).toList();
+  }
+
+  void updateDataSource(List<Patient> patients) {
+    _buildDataGridRows(patients);
     notifyListeners();
   }
 
+  void updateSelectedId(int selectedId) {
+    this.selectedId = selectedId;
+    notifyListeners(); // Solo notifica el cambio sin recrear la lista
+  }
 
   void updatePage(int pageIndex, int rowsPerPage) {
     currentPageIndex = pageIndex;
-    this.rowsPerPage = rowsPerPage;  
-    notifyListeners();  
+    this.rowsPerPage = rowsPerPage;
+    notifyListeners();
   }
-
 
   void updateRowsPerPage(int rowsPerPage) {
     this.rowsPerPage = rowsPerPage;
-    currentPageIndex = 0; 
-    notifyListeners(); 
+    currentPageIndex = 0;
+    notifyListeners();
   }
 
   @override
@@ -175,32 +172,46 @@ class TherapyPatientsDataSource extends DataGridSource {
   }
 
   @override
-  DataGridRowAdapter buildRow(DataGridRow row) {
+   DataGridRowAdapter buildRow(DataGridRow row) {
+    final int patientId = row.getCells().firstWhere((cell) => cell.columnName == 'ID').value ?? -1;
+
     return DataGridRowAdapter(
       cells: row.getCells().where((dataGridCell) {
         return dataGridCell.columnName != 'ID';
       }).map<Widget>((dataGridCell) {
         bool isActionColumn = dataGridCell.columnName == 'Asignar';
 
-        return Container(
-          alignment: Alignment.center,
-          padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 4.0),
-          child: isActionColumn
-              ? dataGridCell.value
-              : Container(
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFFFE4E1),
-                    borderRadius: BorderRadius.circular(8.0),
-                  ),
-                  padding: const EdgeInsets.symmetric(vertical: 6.0, horizontal: 8.0),
-                  child: Text(
-                    dataGridCell.value.toString(),
-                    style: const TextStyle(
-                      fontWeight: FontWeight.w400,
-                      color: Colors.black,
+        return GestureDetector(
+          onTap: () {
+            onSelect(patientId); // Marca al hacer clic en cualquier parte de la fila
+          },
+          child: Container(
+            alignment: Alignment.center,
+            padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 4.0),
+            child: isActionColumn
+                ? CheckboxToTable(
+                    isChecked: patientId == selectedId,
+                    onChanged: () {
+                      if (patientId != -1) onSelect(patientId); // Marca solo un checkbox
+                    },
+                  )
+                : Container(
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFFFE4E1),
+                      borderRadius: BorderRadius.circular(8.0),
+                    ),
+                    padding: const EdgeInsets.symmetric(vertical: 6.0, horizontal: 8.0),
+                    child: Text(
+                      dataGridCell.value.toString(),
+                      style: const TextStyle(
+                        fontWeight: FontWeight.w400,
+                        color: Colors.black,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                     ),
                   ),
-                ),
+          ),
         );
       }).toList(),
     );

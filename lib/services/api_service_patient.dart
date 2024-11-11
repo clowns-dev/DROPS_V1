@@ -50,19 +50,19 @@ class ApiServicePatient {
     }
   }
 
-  Future<Patient> updatePatient(int idPatient, String name, String genre,String lastName, String secondLastName,DateTime birthDate, String ci, int userId) async {
+  Future<Patient> updatePatient(Patient modifyPatient) async {
     try {
-      String formattedBirthDate = DateFormat('yyyy-MM-dd').format(birthDate);
+      String formattedBirthDate = DateFormat('yyyy-MM-dd').format(modifyPatient.birthDate!);
 
       final body = jsonEncode({
-        'patient_id': idPatient,
-        'name': name,
-        'last_name': lastName,
-        'second_last_name': secondLastName.isEmpty ? null : secondLastName,
+        'patient_id': modifyPatient.idPatient,
+        'name': modifyPatient.name,
+        'last_name': modifyPatient.lastName,
+        'second_last_name': modifyPatient.secondLastName!.isEmpty ? "" : modifyPatient.secondLastName,
         'birth_date': formattedBirthDate,
-        'ci': ci,
-        'genre' : genre,
-        'user_id': userId,
+        'ci': modifyPatient.ci,
+        'genre' : modifyPatient.genre,
+        'user_id': modifyPatient.userID,
       });
 
       final response = await http.put(
@@ -82,6 +82,28 @@ class ApiServicePatient {
         print("Error: Fallo al actualizar el Paciente. Detalles: $e");
       }
       throw Exception("Error: Fallo al actualizar al Paciente.");
+    }
+  }
+
+  Future<bool> verifyExistPatient(String ci) async {
+    try {
+      final response = await http.get(Uri.parse('$baseUrl/patient/checkExist/$ci'));
+      if (response.statusCode == 200) {
+        final jsonResponse = json.decode(response.body);
+        if (kDebugMode) {
+          print('Contenido JSON: $jsonResponse');
+        }
+        
+        if (jsonResponse['ci'] != null && jsonResponse['ci'].isNotEmpty) {
+          return true; // El usuario existe
+        }
+      }
+      return false;
+    } catch (e) {
+      if (kDebugMode) {
+        print('Error al verificar existencia.');
+      }
+      throw Exception('Error al verificar existencia.');
     }
   }
 
@@ -112,17 +134,17 @@ class ApiServicePatient {
     }
   }
 
-  Future<Patient> createPatient(String name,String genre, String lastName, String secondLastName,DateTime birthDate, String ci, int userId) async {
+  Future<Patient> createPatient(Patient insertPatient) async {
     try {
-      String formattedBirthDate = DateFormat('yyyy-MM-dd').format(birthDate);
+      String formattedBirthDate = DateFormat('yyyy-MM-dd').format(insertPatient.birthDate!);
       final body = jsonEncode({
-        'name': name,
-        'last_name': lastName,
-        'second_last_name': secondLastName.isEmpty ? null : secondLastName,
+        'name': insertPatient.name,
+        'last_name': insertPatient.lastName,
+        'second_last_name': insertPatient.secondLastName!.isEmpty ? "" : insertPatient.secondLastName,
         'birth_date': formattedBirthDate,
-        'ci': ci,
-        'genre': genre,
-        'user_id': userId,
+        'ci': insertPatient.ci,
+        'genre': insertPatient.genre,
+        'user_id': insertPatient.userID,
       });
 
       final response = await http.post(

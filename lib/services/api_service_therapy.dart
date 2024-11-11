@@ -12,9 +12,6 @@ class ApiServiceTherapy {
 
       if (response.statusCode == 200) {
         List<dynamic> jsonResponse = json.decode(response.body);
-        if (kDebugMode) {
-          print('Contenido JSON: $jsonResponse');
-        }
         return jsonResponse.map((data) => Therapy.fromJson(data)).toList();
 
         
@@ -35,9 +32,6 @@ class ApiServiceTherapy {
 
       if(response.statusCode == 200){
         List<dynamic> jsonResponse = json.decode(response.body);
-        if (kDebugMode) {
-          print('Contenido JSON: $jsonResponse');
-        }
         return jsonResponse.map((data) => Patient.fromJson(data)).toList();
       } else {
         throw Exception('Error: Fallo al cargar los Datos. Codigo de Estado: ${response.statusCode}');
@@ -56,9 +50,6 @@ class ApiServiceTherapy {
 
       if(response.statusCode == 200){
         List<dynamic> jsonResponse = json.decode(response.body);
-        if (kDebugMode) {
-          print('Contenido JSON: $jsonResponse');
-        }
         return jsonResponse.map((data) => Nurse.fromJson(data)).toList();
       } else {
         throw Exception('Error: Fallo al cargar los Datos. Codigo de Estado: ${response.statusCode}');
@@ -77,9 +68,6 @@ class ApiServiceTherapy {
 
       if(response.statusCode == 200){
         List<dynamic> jsonResponse = json.decode(response.body);
-        if (kDebugMode) {
-          print('Contenido JSON: $jsonResponse');
-        }
         return jsonResponse.map((data) => Balance.fromJson(data)).toList();
       } else {
         throw Exception('Error: Fallo al cargar los Datos. Codigo de Estado: ${response.statusCode}');
@@ -113,14 +101,14 @@ class ApiServiceTherapy {
     }
   }
 
-  Future<Therapy> createTherapy(int patientId, int nurseId, int balanceId, String stretcherNumber, int userId) async {
+  Future<Therapy> createTherapy(Therapy insertTherapy) async {
     try {
       final body = jsonEncode({
-        'stretcher_number': stretcherNumber,
-        'id_balance': balanceId,
-        'id_patient': patientId,
-        'id_nurse': nurseId,
-        'id_user': userId,
+        'stretcher_number': insertTherapy.stretcherNumber,
+        'balance_id': insertTherapy.idBalance,
+        'patient_id': insertTherapy.idPerson,
+        'nurse_id': insertTherapy.idNurse,
+        'user_id': insertTherapy.userID,
       });
 
       final response = await http.post(

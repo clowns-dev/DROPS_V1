@@ -49,12 +49,21 @@ class PatientViewModel extends ChangeNotifier {
     return patient;
   }
 
+  Future<bool> isCiRegistered(String ci) async {
+    try {
+      return await apiServicePatient.verifyExistPatient(ci);
+    } catch (e) {
+      if (kDebugMode) {
+        print('Error al verificar si el CI está registrado: $e');
+      }
+      return false;
+    }
+  }
+
   void filterPatients(String query, String field) {
     if (query.isEmpty || field == 'Buscar por:') {
-      // Si el campo de búsqueda está vacío o se selecciona la opción por defecto, mostrar todos los registros
       filteredPatients = List.from(listPatients);
     } else {
-      // Filtra la lista según el campo seleccionado
       switch (field) {
         case 'CI':
           filteredPatients = listPatients
@@ -85,10 +94,11 @@ class PatientViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> editPatient(int? idPatient, String? name, String? genre,String? lastName, String secondLastName, DateTime? birthDate, String? ci, int? userId) async {
+  Future<void> editPatient(Patient updatePatient) async {
     try{
-      if(idPatient != null && name != null && lastName != null  && birthDate != null && ci != null && userId != null){
-        await apiServicePatient.updatePatient(idPatient, name, genre!,lastName, secondLastName, birthDate, ci, userId);
+      // ignore: unnecessary_null_comparison
+      if(updatePatient.idPatient != null && updatePatient.name != null && updatePatient.lastName != null  && updatePatient.birthDate != null && updatePatient.ci != null && updatePatient.userID != null){
+        await apiServicePatient.updatePatient(updatePatient);
 
         if(kDebugMode){
           print("Paciente Editado Exitosamente!");
@@ -125,11 +135,12 @@ class PatientViewModel extends ChangeNotifier {
     }
   }
 
-  Future<void> createNewPatient(String? name, String? genre ,String? lastName, String? secondLastName, DateTime? birthDate, String? ci, int? userId) async {
+  Future<void> createNewPatient(Patient newPatient) async {
     try {
-      if(name != null && lastName != null && birthDate != null && ci != null && userId != null){
+      // ignore: unnecessary_null_comparison
+      if(newPatient.name != null && newPatient.lastName != null && newPatient.birthDate != null && newPatient.ci != null && newPatient.userID != null){
 
-        await apiServicePatient.createPatient(name, genre!,lastName, secondLastName!, birthDate, ci, userId);
+        await apiServicePatient.createPatient(newPatient);
 
         if(kDebugMode){
           print("Paciente Creado Exitosamente!");

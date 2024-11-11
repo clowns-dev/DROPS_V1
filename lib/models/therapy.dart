@@ -9,6 +9,7 @@ class Therapy {
   final int? status;
   final DateTime? registerDate;
   final int? userID;
+  final int? idNurse;
   final int? idBalance;
   final int? idPerson;
   final String? ciNurse;
@@ -25,6 +26,7 @@ class Therapy {
     this.status,
     this.registerDate,
     this.userID,
+    this.idNurse,
     this.idBalance,
     this.idPerson,
     this.ciNurse,
@@ -63,7 +65,7 @@ class Patient{
 
   factory Patient.fromJson(Map<String, dynamic> json){
     return Patient(
-      idPerson: json['idPerson'],
+      idPerson: json['idPatient'],
       patient: json['patient'],
       ci: json['ci'],
     );
@@ -90,19 +92,19 @@ class Balance{
 class Nurse{
   final int? idNurse;
   final String? fullName;
-  final String? role;
+  final String? ci;
 
   Nurse({
     this.idNurse,
     this.fullName,
-    this.role,
+    this.ci,
   });
 
   factory Nurse.fromJson(Map<String, dynamic> json){
     return Nurse(
-      idNurse: json['idNurse'],
+      idNurse: json['idUser'],
       fullName: json['fullName'],
-      role: json['role'],
+      ci: json['ci'],
     );
   }
 }
@@ -158,6 +160,4 @@ class InfoTherapy{
       numberBoth: json['numberBoth'] != null ? int.tryParse(json['numberBoth'].toString()) : null,
     );
   }
-
-
 }

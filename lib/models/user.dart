@@ -4,8 +4,8 @@ import 'package:intl/intl.dart';
 class User {
   ///Propiedades
   final int? idUser;
-  final String name;
-  final String lastName;
+  final String? name;
+  final String? lastName;
   final String? secondLastName;
   final String? phone;
   final String? email;
@@ -22,15 +22,15 @@ class User {
   ///Constructor
   User({
     this.idUser,
-    required this.name,
-    required this.lastName,
+    this.name,
+    this.lastName,
     this.secondLastName,
     this.phone,
-    required this.email,
+    this.email,
     this.address,
     this.birthDate,
     this.genre,
-    required this.ci,
+    this.ci,
     this.status,
     this.nameRole,
     this.registerDate,
@@ -61,7 +61,7 @@ class User {
     }
 
     return User(
-      idUser: json['idPatient'],
+      idUser: json['idUser'],
       name: json['name'],
       lastName: json['lastName'],
       secondLastName: json['secondLastName'] ?? 'No tiene',
@@ -79,7 +79,7 @@ class User {
       lastUpdate: json['lastUpdate'] != null && json['lastUpdate'] != "Sin Cambios"
                   ? parseDate(json['lastUpdate'])
                   : null,
-      idRole: json['userID']
+      idRole: json['idRole']
     );
   }
 

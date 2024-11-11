@@ -21,7 +21,7 @@ class Patient {
     required this.name,
     required this.lastName,
     this.secondLastName,
-    required this.birthDate,
+    this.birthDate,
     required this.ci,
     this.genre,
     this.status,

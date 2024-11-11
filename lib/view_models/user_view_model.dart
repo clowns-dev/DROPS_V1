@@ -84,15 +84,15 @@ class UserViewModel extends ChangeNotifier {
   }
 
   Future<bool> isCiRegistered(String ci) async {
-  try {
-    return await apiServiceUser.verifyExistUser(ci);
-  } catch (e) {
-    if (kDebugMode) {
-      print('Error al verificar si el CI está registrado: $e');
+    try {
+      return await apiServiceUser.verifyExistUser(ci);
+    } catch (e) {
+      if (kDebugMode) {
+        print('Error al verificar si el CI está registrado: $e');
+      }
+      return false;
     }
-    return false;
   }
-}
 
 
   Future<void> createNewUser(User? newUser) async {

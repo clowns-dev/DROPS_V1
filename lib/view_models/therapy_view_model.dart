@@ -6,6 +6,9 @@ class TherapyViewModel extends ChangeNotifier {
   ApiServiceTherapy apiServiceTherapy = ApiServiceTherapy();
   List<Therapy> listTherapies = [];
   List<Therapy> filteredTherapies = [];
+  List<Nurse> filteredNurses = [];
+  List<Patient> filteredPatients = [];
+  List<Balance> filteredBalances = [];
   InfoTherapy? infoTherapy;
   int? selectedTherapyId;
 
@@ -20,6 +23,9 @@ class TherapyViewModel extends ChangeNotifier {
 
   bool isLoading = false;
   bool hasMatches = true;
+  bool hasMatchesPatients = true;
+  bool hasMatchesNurses = true;
+  bool hasMatchesBalances = true;
 
   TherapyViewModel() {
     fetchTherapies();
@@ -34,9 +40,6 @@ class TherapyViewModel extends ChangeNotifier {
     try {
       listTherapies = await apiServiceTherapy.fetchTherapies();
       filteredTherapies = List.from(listTherapies); 
-      if (kDebugMode) {
-        print('Terapias cargadas: ${listTherapies.length}');
-      }
     } catch (e) {
       if (kDebugMode) {
         print('Error al obtener los registros de Terapias: $e');
@@ -47,19 +50,41 @@ class TherapyViewModel extends ChangeNotifier {
     }
   }
 
-  Future<void> createNewTherapy(String stretcherNumber, int userId) async {
+  void filterTherapies(String query, String field) {
+    if (query.isEmpty || field == 'Buscar por:') {
+      filteredTherapies = List.from(listTherapies);
+    } else {
+      switch (field) {
+        case 'CI Enfermero':
+          filteredTherapies = listTherapies
+              .where((therapy) => therapy.ciNurse?.toLowerCase().contains(query.toLowerCase()) ?? false)
+              .toList();
+          break;
+        case 'CI Paciente':
+          filteredTherapies = listTherapies
+              .where((therapy) => therapy.ciPatient?.toLowerCase().contains(query.toLowerCase()) ?? false)
+              .toList();
+          break;
+        case 'Camilla':
+          filteredTherapies = listTherapies
+              .where((therapy) => therapy.stretcherNumber?.toLowerCase().contains(query.toLowerCase()) ?? false)
+              .toList();
+          break;
+        default:
+          filteredTherapies = List.from(listTherapies);
+      }
+    }
+    hasMatches = filteredTherapies.isNotEmpty;
+    notifyListeners();
+  }
+
+  Future<void> createNewTherapy(Therapy newTherapy) async {
     try {
-      if (selectedPatientId != null && selectedNurseId != null && selectedBalanceId != null) {
-        await apiServiceTherapy.createTherapy(
-          selectedPatientId!,
-          selectedNurseId!,
-          selectedBalanceId!,
-          stretcherNumber,
-          userId,
-        );
-        if (kDebugMode) {
-          print("Terapia creada exitosamente.");
-        }
+      if (newTherapy.idPerson != null && newTherapy.idNurse != null && newTherapy.idBalance != null && newTherapy.stretcherNumber != null) {
+        await apiServiceTherapy.createTherapy(newTherapy);
+        selectedPatientId = null;
+        selectedNurseId = null;
+        selectedBalanceId = null;
       } else {
         if (kDebugMode) {
           print("Error: Faltan datos de selección.");
@@ -77,9 +102,7 @@ class TherapyViewModel extends ChangeNotifier {
     notifyListeners();
     try {
       listPatients = await apiServiceTherapy.fetchTherapyPatients();
-      if (kDebugMode) {
-        print('Pacientes cargados: ${listPatients.length}');
-      }
+      filteredPatients = List.from(listPatients);
     } catch (e) {
       if (kDebugMode) {
         print('Error: Fallo al obtener los registros de Pacientes.');
@@ -90,14 +113,25 @@ class TherapyViewModel extends ChangeNotifier {
     }
   }
 
+  void filterPatients(String query) {
+    if (query.isEmpty) {
+      filteredPatients = List.from(listPatients);
+    } else {
+      filteredPatients = listPatients.where((patient) {
+        return patient.patient?.toLowerCase().contains(query.toLowerCase()) ?? false;
+      }).toList();
+    }
+ 
+    hasMatchesPatients = filteredPatients.isNotEmpty;
+    notifyListeners();
+  }
+
   Future<void> fetchTherapyNurses() async {
     isLoading = true;
     notifyListeners();
     try {
       listNurses = await apiServiceTherapy.fetchTherapyNurses();
-      if (kDebugMode) {
-        print('Enfermeros cargados: ${listPatients.length}');
-      }
+      filteredNurses = List.from(listNurses);
     } catch (e) {
       if (kDebugMode) {
         print('Error: Fallo al obtener los registros de Enfermeros.');
@@ -108,14 +142,25 @@ class TherapyViewModel extends ChangeNotifier {
     }
   }
 
+  void filterNurses(String query) {
+    if (query.isEmpty) {
+      filteredNurses = List.from(listNurses);
+    } else {
+      filteredNurses = listNurses.where((nurse) {
+        return nurse.fullName?.toLowerCase().contains(query.toLowerCase()) ?? false;
+      }).toList();
+    }
+ 
+    hasMatches = filteredNurses.isNotEmpty;
+    notifyListeners();
+  }
+
   Future<void> fetchTherapyBalances() async {
     isLoading = true;
     notifyListeners();
     try {
       listBalances = await apiServiceTherapy.fetchTherapyBalances();
-      if (kDebugMode) {
-        print('Balanzas cargados: ${listPatients.length}');
-      }
+      filteredBalances = List.from(listBalances);
     } catch (e) {
       if (kDebugMode) {
         print('Error: Fallo al obtener los registros de Balanzas.');
@@ -126,20 +171,26 @@ class TherapyViewModel extends ChangeNotifier {
     }
   }
 
+  void filterBalances(String query) {
+    if (query.isEmpty) {
+      filteredBalances = List.from(listBalances);
+    } else {
+      filteredBalances = listBalances.where((balance) {
+        return balance.code?.toLowerCase().contains(query.toLowerCase()) ?? false;
+      }).toList();
+    }
+ 
+    hasMatches = filteredBalances.isNotEmpty;
+    notifyListeners();
+  }
+
   Future<void> fetchInfoTherapy(int therapyId) async {
     isLoading = true;
     selectedTherapyId = therapyId;
     notifyListeners();
     try {
-      if (kDebugMode) {
-        print('Cargando información para terapia ID: $selectedTherapyId');
-      }
-
       infoTherapy = await apiServiceTherapy.fetchInfoTherapy(selectedTherapyId!);
 
-      if (kDebugMode) {
-        print('Información de Terapia Cargada: ${infoTherapy?.idTherapy}');
-      }
     } catch (e) {
       if (kDebugMode) {
         print("Error: Fallo al obtener la información de la Terapia: $e");
@@ -150,19 +201,21 @@ class TherapyViewModel extends ChangeNotifier {
     }
   }
 
-
-  void updateSelectedPatientId(int id) {
+  int? updateSelectedPatientId(int id) {
     selectedPatientId = id;
     notifyListeners(); 
+    return selectedPatientId;
   }
 
-  void updateSelectedNurseId(int id) {
+  int? updateSelectedNurseId(int id) {
     selectedNurseId = id;
     notifyListeners(); 
+    return selectedNurseId;
   }
 
-  void updateSelectedBalanceId(int id) {
+  int? updateSelectedBalanceId(int id) {
     selectedBalanceId = id;
-    notifyListeners(); 
+    notifyListeners();
+    return selectedBalanceId; 
   }
 }

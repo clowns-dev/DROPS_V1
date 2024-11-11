@@ -1,4 +1,3 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
@@ -17,14 +16,12 @@ import 'package:ps3_drops_v1/widgets/add_title_button.dart';
 import 'package:ps3_drops_v1/widgets/success_dialog.dart';
 import 'package:ps3_drops_v1/widgets/delete_confirmation_dialog.dart';
 import 'package:syncfusion_flutter_datepicker/datepicker.dart';
-
 class UserIndex extends StatefulWidget {
   const UserIndex({super.key});
 
   @override
   State<UserIndex> createState() => _UserIndex();
 }
-
 class _UserIndex extends State<UserIndex> {
   String _selectedFilter = 'Buscar por:';
   final List<String> _filterOptions = ['Buscar por:', 'CI', 'Nombre','Apellido'];
@@ -32,7 +29,6 @@ class _UserIndex extends State<UserIndex> {
   User? _editingUser, user; 
   DateTime? _selectedDate;
   final TextEditingController _searchController = TextEditingController();
-
   //Campos para la insercion
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _lastNameController = TextEditingController();
@@ -62,7 +58,6 @@ class _UserIndex extends State<UserIndex> {
     'genre': false,
   };
 
-
   @override
   void initState() {
     super.initState();
@@ -81,18 +76,18 @@ class _UserIndex extends State<UserIndex> {
   }
 
   void _toggleView([User? user]) {
-  setState(() {
-    _showForm = !_showForm;
-    
-    if (!_showForm) {
-      _resetForm();
-    } else {
-      _resetFieldErrors();
-    }
+    setState(() {
+      _showForm = !_showForm;
+      
+      if (!_showForm) {
+        _resetForm();
+      } else {
+        _resetFieldErrors();
+      }
 
-    _editingUser = user;
-  });
-}
+      _editingUser = user;
+    });
+  }
 
   void _clearSearch() {
     _searchController.clear();
@@ -209,7 +204,6 @@ class _UserIndex extends State<UserIndex> {
     );
   }
 
-
   void _showSuccessDialog(BuildContext context, bool isEditing) {
     showDialog(
       context: context,
@@ -221,11 +215,9 @@ class _UserIndex extends State<UserIndex> {
               : '¡Se creó el registro correctamente!',
           onBackPressed: () {
             Navigator.of(context).pop(); 
-            if (!isEditing) {
             setState(() {
               _showForm = false;
             });
-          }
           },
         );
       },
@@ -239,8 +231,8 @@ class _UserIndex extends State<UserIndex> {
         return ErrorDialog(
           title: isEditing ? "Faltan datos" : 'Faltan datos',
           message: isEditing
-              ? '¡Falta datos necesarios para la edicion.!'
-              : '¡Faltan datos necesarios para la creacion.!',
+              ? '¡Falta datos necesarios para la edicion!'
+              : '¡Faltan datos necesarios para la creacion!',
           onBackPressed: () {
             Navigator.of(context).pop(); 
           },
@@ -265,14 +257,6 @@ class _UserIndex extends State<UserIndex> {
   }
 
   void _showDeleteConfirmationDialog(BuildContext context, int? userID) {
-     
-    if(userID == null){
-      if (kDebugMode) {
-        print("El userID es null, no se puede mostrar el diálogo de eliminación.");
-        return;
-      }
-    }
-
     showDialog(
       context: context,
       builder: (context) {
@@ -288,11 +272,6 @@ class _UserIndex extends State<UserIndex> {
         );
       },
     );
-  }
-
-  bool _isValidEmail(String email) {
-    final emailRegex = RegExp(r'^[^@]+@[^@]+\.[^@]+$');
-    return emailRegex.hasMatch(email);
   }
 
   void _resetFieldErrors() {
@@ -323,12 +302,12 @@ class _UserIndex extends State<UserIndex> {
       _fieldErrors['nameInvalid'] = !RegExp(r'^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$').hasMatch(_nameController.text.trim());
       _fieldErrors['lastName'] = _lastNameController.text.trim().isEmpty;
       _fieldErrors['lastNameInvalid'] = !RegExp(r'^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$').hasMatch(_lastNameController.text.trim());
-      _fieldErrors['secondLastName'] = !RegExp(r'^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$').hasMatch(_secondLastNameController.text.trim());
+      _fieldErrors['secondLastName'] =  _secondLastNameController.text.isNotEmpty && !RegExp(r'^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$').hasMatch(_secondLastNameController.text.trim());
       _fieldErrors['phone'] = _phoneController.text.trim().isEmpty;
       _fieldErrors['phoneInvalid'] = !RegExp(r'^[0-9]+$').hasMatch(_phoneController.text.trim());
       _fieldErrors['address'] = _addressController.text.trim().isEmpty;
       _fieldErrors['email'] = _emailController.text.trim().isEmpty;
-      _fieldErrors['emailInvalid'] = !_isValidEmail(_emailController.text.trim());
+      _fieldErrors['emailInvalid'] = !RegExp(r'^[^@]+@[^@]+\.[^@]+$').hasMatch(_emailController.text.trim());
 
       if (_userBirthDateController.text.isEmpty) {
         _fieldErrors['birthDate'] = true;
@@ -418,7 +397,6 @@ class _UserIndex extends State<UserIndex> {
         return 0;
     }
   }
-
 
   @override
   Widget build(BuildContext context) {
@@ -583,7 +561,7 @@ class _UserIndex extends State<UserIndex> {
                           errorText: _fieldErrors['ci']! ? 'Campo obligatorio' : null,
                         ),
                       ),
-                      const SizedBox(height: 24.0),
+                      const SizedBox(height: 7.0),
                       const TextLabel(content: 'Nombre:'),
                       const SizedBox(height: 8.0),
                       TextField(
@@ -606,7 +584,7 @@ class _UserIndex extends State<UserIndex> {
                            errorText: _fieldErrors['name']! ? 'Campo obligatorio' : _fieldErrors['nameInvalid']! ? 'Nombre invalido' : null,
                         ),
                       ),
-                      const SizedBox(height: 24.0),
+                      const SizedBox(height: 7.0),
                       const TextLabel(content: 'Apellido Paterno:'),
                       const SizedBox(height: 8.0),
                       TextField(
@@ -629,11 +607,16 @@ class _UserIndex extends State<UserIndex> {
                           errorText: _fieldErrors['lastName']! ? 'Campo obligatorio' : _fieldErrors['lastNameInvalid']! ? 'Apellido invalido' : null,
                         ),
                       ),
-                      const SizedBox(height: 24.0),
+                      const SizedBox(height: 7.0),
                       const TextLabel(content: 'Apellido Materno:'),
                       const SizedBox(height: 8.0),
                       TextField(
                         controller: _secondLastNameController,
+                        onChanged: (_){
+                          setState(() {
+                            _fieldErrors['secondLastName'] =  _secondLastNameController.text.isNotEmpty && !RegExp(r'^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$').hasMatch(_secondLastNameController.text.trim());
+                          });
+                        },
                         inputFormatters: [
                           LengthLimitingTextInputFormatter(45),
                         ],
@@ -645,7 +628,7 @@ class _UserIndex extends State<UserIndex> {
                           errorText: _fieldErrors['secondLastName']! ? 'Apellido Invalido' : null,
                         ),
                       ),
-                      const SizedBox(height: 24.0),
+                      const SizedBox(height: 7.0),
                       const TextLabel(content: 'Fecha de Nacimiento:'),
                       const SizedBox(height: 8.0),
                      InkWell(
@@ -706,7 +689,7 @@ class _UserIndex extends State<UserIndex> {
                             : _fieldErrors['phoneInvalid']!? 'Número inválido' : null,
                         ),
                       ),
-                      const SizedBox(height: 24.0),
+                      const SizedBox(height: 7.0),
                       const TextLabel(content: 'Dirección:'),
                       const SizedBox(height: 8.0),
                       TextField(
@@ -731,7 +714,7 @@ class _UserIndex extends State<UserIndex> {
                         ),
                       ),
 
-                      const SizedBox(height: 24.0),
+                      const SizedBox(height: 7.0),
                       const TextLabel(content: 'Correo Electrónico:'),
                       const SizedBox(height: 8.0),
                       TextField(
@@ -742,7 +725,7 @@ class _UserIndex extends State<UserIndex> {
                         onChanged: (_) {
                           setState(() {
                             _fieldErrors['email'] = _emailController.text.trim().isEmpty;
-                            _fieldErrors['emailInvalid'] = !_isValidEmail(_emailController.text.trim());
+                            _fieldErrors['emailInvalid'] = !RegExp(r'^[^@]+@[^@]+\.[^@]+$').hasMatch(_emailController.text.trim());
                           });
                         },
                         decoration: InputDecoration(
@@ -751,10 +734,12 @@ class _UserIndex extends State<UserIndex> {
                             borderRadius: BorderRadius.circular(12.0),
                             borderSide: BorderSide(color: _fieldErrors['email']! ? Colors.red : Colors.grey),
                           ),
-                          errorText: _fieldErrors['email']! ? 'Correo electrónico obligatorio' : null,
+                         errorText: _fieldErrors['email']!
+                            ? 'Campo obligatorio'
+                            : _fieldErrors['emailInvalid']!? 'Correo inválido' : null,
                         ),
                       ),
-                      const SizedBox(height: 24.0),
+                      const SizedBox(height: 7.0),
                       const TextLabel(content: 'Rol de Usuario'),
                       const SizedBox(height: 8.0),
                       DropdownButtonFormField<String>(
@@ -828,7 +813,7 @@ class _UserIndex extends State<UserIndex> {
                 ),
               ],
             ),
-            const SizedBox(height: 32.0),
+            const SizedBox(height: 26.0),
             Center(
               child: ElevatedButton(
                 onPressed: _validateAndSubmit,
@@ -853,7 +838,6 @@ class _UserIndex extends State<UserIndex> {
       ),
     );
   }
-
 
   Widget _buildTable() {
     return Consumer<UserViewModel>(

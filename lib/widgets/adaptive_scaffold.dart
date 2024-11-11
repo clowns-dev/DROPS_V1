@@ -221,7 +221,7 @@ class _AdaptiveScaffoldState extends State<AdaptiveScaffold> {
       appBar: AppBar(
         title: widget.title, // Solo el título DROPS
         actions: widget.actions,
-        backgroundColor: Colors.transparent,
+        backgroundColor: navigationBackgroundColor,
         elevation: 0,
       ),
       body: Container(
@@ -230,7 +230,7 @@ class _AdaptiveScaffoldState extends State<AdaptiveScaffold> {
       ),
       bottomNavigationBar: BottomNavigationBar(
         backgroundColor: navigationBackgroundColor,
-        selectedItemColor: Colors.white,
+        selectedItemColor: const Color.fromARGB(255, 240, 221, 236),
         unselectedItemColor: unselectedColor,
         currentIndex: widget.currentIndex,
         onTap: widget.onNavigationIndexChange,
@@ -242,7 +242,7 @@ class _AdaptiveScaffoldState extends State<AdaptiveScaffold> {
                       message: d.title,
                       child: Icon(
                           d.icon,
-                          color: isSelected ? Colors.white : unselectedColor,
+                          color: isSelected ? const Color.fromARGB(255, 240, 221, 236) : unselectedColor,
                         ),
                     ),
                     label: d.title,

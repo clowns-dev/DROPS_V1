@@ -70,6 +70,25 @@ class ApiServiceSmart {
     }
   }
 
+  Future<bool> verifyExistCodeRFID(String codeRFID) async {
+    try{
+      final response = await http.get(Uri.parse('$baseUrl/smart/checkExist/$codeRFID'));
+      if(response.statusCode == 200){
+        final jsonResponse = jsonDecode(response.body);
+
+        if(jsonResponse['code_rfid'] != null && jsonResponse['code_rfid'].isNotEmpty){
+          return true;
+        }
+      }
+      return false;
+    }catch (e){
+      if (kDebugMode) {
+        print('Error al verificar existencia.');
+      }
+      throw Exception('Error al verificar existencia.');
+    }
+  }
+
   Future<Smart> createSmart(Smart createSmart) async {
     try {
       final response = await http.post(

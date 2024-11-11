@@ -62,8 +62,6 @@ class SmartViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
-
-
   Future<Smart?> fetchBalanceById(int id) async {
     isLoading = true;
     Smart? smart;
@@ -81,6 +79,17 @@ class SmartViewModel extends ChangeNotifier {
       notifyListeners();
     }
     return smart;
+  }
+
+  Future<bool> isCodeRegistered(String codeRFID) async {
+    try{
+      return await apiServiceSmart.verifyExistCodeRFID(codeRFID);
+    }catch(e){
+      if (kDebugMode) {
+        print('Error al verificar si el codeRFID está registrado: $e');
+      }
+      return false;
+    }
   }
 
   Future<void> createNewSmart(Smart newSmart) async {

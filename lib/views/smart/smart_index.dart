@@ -1,11 +1,9 @@
-import 'dart:async';
-
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:ps3_drops_v1/models/smart.dart';
 import 'package:ps3_drops_v1/view_models/smart_view_model.dart';
 import 'package:ps3_drops_v1/views/smart/smart_data.dart';
+import 'package:ps3_drops_v1/widgets/error_exist_dialog.dart';
 import 'package:ps3_drops_v1/widgets/text_label.dart';
 import 'package:ps3_drops_v1/widgets/title_container.dart';
 import 'package:ps3_drops_v1/widgets/history_title_container.dart';
@@ -23,14 +21,147 @@ class SmartIndex extends StatefulWidget {
 }
 
 class _SmartIndexState extends State<SmartIndex> {
-  Timer? _debounce;
   String _selectedFilter = 'Buscar por:';
   final List<String> _filterOptions = ['Buscar por:', 'Codigo', 'Enfermero'];
-  Smart? _editingSmart;
+  Smart? _editingSmart, smart;
   final TextEditingController _searchController = TextEditingController();
   final TextEditingController _smartCodeController = TextEditingController();
+  // ignore: non_constant_identifier_names
   int? _idSmart, user_id = 29, _availabilityStatus;
   
+  Map<String, bool> _fieldErrors = {
+    'codeRfid': false,
+    'codeRfidInvalid': false,
+    'available': false,
+    'userId':false
+  };
+
+  void _resetFieldErrors(){
+    setState(() {
+      _fieldErrors = {
+        'codeRfid': false,
+        'codeRfidInvalid': false,
+        'available': false,
+        'userId': false
+      };
+    });
+  }
+
+  void _resetForm(){
+    _smartCodeController.clear();
+  }
+
+  void _showSuccessDialog(BuildContext context, bool isEditing) {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return SuccessDialog(
+          title: isEditing ? 'Edición exitosa' : 'Registro Exitoso',
+          message: isEditing
+              ? '¡Se modificó el registro correctamente!'
+              : '¡Se creó el registro correctamente!',
+          onBackPressed: () {
+            Navigator.of(context).pop(); 
+            //Navigator.of(formDialogContext).pop(); 
+          },
+        );
+      },
+    );
+  }
+
+  void _showErrorExistsDialog() {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return UserExistsDialog(
+          title: "Manilla Registrada",
+          message:  'Manilla ya registrado!',
+          onBackPressed: () {
+            Navigator.of(context).pop(); 
+          },
+        );
+      },
+    );
+  }
+
+  void _clearSearch() {
+    _searchController.clear();
+    _filterSmartList('');
+  }
+
+  void _showDeleteConfirmationDialog(BuildContext context, int? smartId) {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return DeleteConfirmationDialog(
+          onConfirmDelete: () {
+            final smartViewModel = context.read<SmartViewModel>();
+            if(smartId != null){
+              smartViewModel.removeSmart(smartId).then((_) {
+                smartViewModel.fetchSmarts();
+                _clearSearch();
+              });
+            }
+          },
+        );
+      },
+    );
+  }
+
+  void _validateAndSubmit() async {
+    setState(() {
+      _fieldErrors['codeRfid'] = _smartCodeController.text.trim().isEmpty;
+      _fieldErrors['codeRfidInvalid'] = !RegExp(r'^[a-zA-Z0-9\s\-_/\\]+$').hasMatch(_smartCodeController.text.trim());
+      _fieldErrors['available'] = _availabilityStatus == 0 || _availabilityStatus == 0;
+      _fieldErrors['userId'] = user_id == null || user_id == 0;
+    });
+
+    if(_fieldErrors.containsValue(true)){
+      return;
+    }
+
+    final smartViewModel = context.read<SmartViewModel>();
+    bool isCodeRegistered = await smartViewModel.isCodeRegistered(_smartCodeController.text.trim());
+
+    if(isCodeRegistered && _editingSmart == null){
+      _showErrorExistsDialog();
+      return;
+    }
+
+    if(_editingSmart != null){
+      smart = Smart(
+        idSmart: _editingSmart!.idSmart,
+        codeRFID: _smartCodeController.text,
+        available: _availabilityStatus,
+        idUser: user_id // ! Cambiarlo por el id capturado del usuario logueado.
+      );
+
+      smartViewModel.editSmart(smart!).then((_) {
+        smartViewModel.fetchSmarts();
+        _clearSearch();
+        _resetForm();
+        if(mounted){
+          // ignore: use_build_context_synchronously
+          _showSuccessDialog(context, true);
+        }
+      });
+    } else {
+      smart = Smart(
+        codeRFID: _smartCodeController.text,
+        idUser: user_id
+      );
+      smartViewModel.createNewSmart(smart!).then((_) {
+        smartViewModel.fetchSmarts();
+        _clearSearch();
+        _resetForm();
+        if(mounted){
+          // ignore: use_build_context_synchronously
+          _showSuccessDialog(context, true);
+        }
+      });
+    }
+  }
+
   @override
   void initState() {
     super.initState();
@@ -160,46 +291,7 @@ class _SmartIndexState extends State<SmartIndex> {
                                     mainAxisAlignment: MainAxisAlignment.center,
                                     children: [
                                       ElevatedButton(
-                                        onPressed: () {
-                                          final smartViewModel = context.read<SmartViewModel>();
-                                          final smartCode = _smartCodeController.text;
-                                          final idSmart = _idSmart;
-                                          int? idUser = user_id;
-                                          int? available = _availabilityStatus;
-
-                                          Smart editSmart = Smart(idSmart: idSmart, codeRFID: smartCode, available: available, idUser: idUser);
-                                          Smart newSmart = Smart(codeRFID: smartCode);
-                                          
-                                          if(kDebugMode){
-                                            print("Datos a actualizar:  ${editSmart.idSmart}");
-                                            print("Datos a actualizar:  ${editSmart.codeRFID}");
-                                            print("Datos a actualizar:  ${editSmart.available}");
-                                            print("Datos a actualizar:  ${editSmart.idUser}");
-                                          }
-
-                                          if (_editingSmart != null) {
-                                            smartViewModel.editSmart(editSmart).then((_) {
-                                              smartViewModel.fetchSmarts();
-                                              _clearSearch();
-                                            });
-                                          } else {
-                                            smartViewModel.createNewSmart(newSmart).then((_) {
-                                              smartViewModel.fetchSmarts();
-                                              _clearSearch();
-                                            });
-                                          }
-                                          _showSuccessDialog(context, _editingSmart != null, dialogContext);
-                                        },
-                                        style: ElevatedButton.styleFrom(
-                                          backgroundColor: Colors.purple.shade300,
-                                          padding: const EdgeInsets.symmetric(
-                                            vertical: 16.0,
-                                            horizontal: 32.0,
-                                          ),
-                                          shape: RoundedRectangleBorder(
-                                            borderRadius: BorderRadius.circular(12.0),
-                                          ),
-                                        ),
+                                        onPressed: _validateAndSubmit,
                                         child: Text(
                                           _editingSmart == null ? 'INSERTAR' : 'GUARDAR',
                                           style: const TextStyle(
@@ -250,35 +342,9 @@ class _SmartIndexState extends State<SmartIndex> {
     );
   }
 
-
-  void _showSuccessDialog(BuildContext context, bool isEditing, BuildContext formDialogContext) {
-    showDialog(
-      context: context,
-      builder: (context) {
-        return SuccessDialog(
-          title: isEditing ? 'Edición exitosa' : 'Registro Exitoso',
-          message: isEditing
-              ? '¡Se modificó el registro correctamente!'
-              : '¡Se creó el registro correctamente!',
-          onBackPressed: () {
-            Navigator.of(context).pop(); 
-            Navigator.of(formDialogContext).pop(); 
-          },
-        );
-      },
-    );
-  }
-
-  void _clearSearch() {
-    _searchController.clear();
-    _filterSmartList('');
-  }
-
-
   @override
   Widget build(BuildContext context) {
     final screenSize = MediaQuery.of(context).size;
-
     return Scaffold(
       appBar: AppBar(
         title: Row(
@@ -410,6 +476,7 @@ class _SmartIndexState extends State<SmartIndex> {
               // ignore: unnecessary_null_comparison
               if (smart != null) {
                 setState(() {
+                  _resetFieldErrors();
                   _editingSmart = smart;
                 });
                 // ignore: use_build_context_synchronously
@@ -421,27 +488,6 @@ class _SmartIndexState extends State<SmartIndex> {
             },
           );
         }
-      },
-    );
-  }
-
-
-
-  void _showDeleteConfirmationDialog(BuildContext context, int? smartId) {
-    showDialog(
-      context: context,
-      builder: (context) {
-        return DeleteConfirmationDialog(
-          onConfirmDelete: () {
-            final smartViewModel = context.read<SmartViewModel>();
-            if(smartId != null){
-              smartViewModel.removeSmart(smartId).then((_) {
-                smartViewModel.fetchSmarts();
-                _clearSearch();
-              });
-            }
-          },
-        );
       },
     );
   }

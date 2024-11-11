@@ -38,7 +38,7 @@ class _BalanceIndexState extends State<BalanceIndex> {
     super.dispose();
   }
 
-   void _filterBalanceList(String query) {
+  void _filterBalanceList(String query) {
     final balanceViewModel = context.read<BalanceViewModel>();
     balanceViewModel.filterSmarts(query, _selectedFilter);
   }

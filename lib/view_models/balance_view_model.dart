@@ -54,6 +54,17 @@ class BalanceViewModel extends ChangeNotifier {
     return balance; // Retorna el objeto Balance recuperado
   }
 
+  Future<bool> isCodeRegistered(String code) async {
+    try {
+      return await apiServiceBalance.verifyExistBalance(code);
+    } catch (e) {
+      if (kDebugMode) {
+        print('Error al verificar si la balanza está registrada: $e');
+      }
+      return false;
+    }
+  }
+
   void filterSmarts(String query, String field) {
     if (query.isEmpty || field == 'Buscar por:') {
       filteredBalances = List.from(listBalances);

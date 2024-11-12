@@ -48,6 +48,28 @@ class ApiServiceBalance {
     }
   }
 
+  Future<bool> verifyExistBalance(String code) async {
+    try {
+      final response = await http.get(Uri.parse('$baseUrl/balance/checkExist/$code'));
+      if (response.statusCode == 200) {
+        final jsonResponse = json.decode(response.body);
+        if (kDebugMode) {
+          print('Contenido JSON: $jsonResponse');
+        }
+        
+        if (jsonResponse['balance_code'] != null && jsonResponse['balance_code'].isNotEmpty) {
+          return true; 
+        }
+      }
+      return false;
+    } catch (e) {
+      if (kDebugMode) {
+        print('Error al verificar existencia.');
+      }
+      throw Exception('Error al verificar existencia.');
+    }
+  } 
+
   Future<Balance> createBalance(String balanceCode, int userId) async {
     try {
       final body = jsonEncode({

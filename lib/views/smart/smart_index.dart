@@ -1,9 +1,10 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:ps3_drops_v1/models/smart.dart';
 import 'package:ps3_drops_v1/view_models/smart_view_model.dart';
 import 'package:ps3_drops_v1/views/smart/smart_data.dart';
-import 'package:ps3_drops_v1/widgets/error_exist_dialog.dart';
 import 'package:ps3_drops_v1/widgets/text_label.dart';
 import 'package:ps3_drops_v1/widgets/title_container.dart';
 import 'package:ps3_drops_v1/widgets/history_title_container.dart';
@@ -21,6 +22,7 @@ class SmartIndex extends StatefulWidget {
 }
 
 class _SmartIndexState extends State<SmartIndex> {
+  Timer? _debounce;
   String _selectedFilter = 'Buscar por:';
   final List<String> _filterOptions = ['Buscar por:', 'Codigo', 'Enfermero'];
   Smart? _editingSmart, smart;
@@ -33,7 +35,8 @@ class _SmartIndexState extends State<SmartIndex> {
     'codeRfid': false,
     'codeRfidInvalid': false,
     'available': false,
-    'userId':false
+    'userId':false,
+    'codeRegistered':false
   };
 
   void _resetFieldErrors(){
@@ -42,13 +45,28 @@ class _SmartIndexState extends State<SmartIndex> {
         'codeRfid': false,
         'codeRfidInvalid': false,
         'available': false,
-        'userId': false
+        'userId': false,
+        'codeRegistered':false
       };
     });
   }
 
   void _resetForm(){
     _smartCodeController.clear();
+    _resetFieldErrors();
+  }
+
+  void _onCodeChanged(String code) {
+    if (_debounce?.isActive ?? false) _debounce!.cancel();
+    _debounce = Timer(const Duration(milliseconds: 500), () async {
+      final smartViewModel = context.read<SmartViewModel>();
+      bool isCodeRegistered = await smartViewModel.isCodeRegistered(code.trim());
+      setState(() {
+        _fieldErrors['codeRfid'] = code.trim().isEmpty;
+        _fieldErrors['codeRfidInvalid'] = !RegExp(r'^[a-zA-Z0-9\s\-_/\\]+$').hasMatch(code.trim());
+        _fieldErrors['codeRegistered'] = isCodeRegistered && _editingSmart == null;
+      });
+    });
   }
 
   void _showSuccessDialog(BuildContext context, bool isEditing) {
@@ -63,21 +81,6 @@ class _SmartIndexState extends State<SmartIndex> {
           onBackPressed: () {
             Navigator.of(context).pop(); 
             //Navigator.of(formDialogContext).pop(); 
-          },
-        );
-      },
-    );
-  }
-
-  void _showErrorExistsDialog() {
-    showDialog(
-      context: context,
-      builder: (context) {
-        return UserExistsDialog(
-          title: "Manilla Registrada",
-          message:  'Manilla ya registrado!',
-          onBackPressed: () {
-            Navigator.of(context).pop(); 
           },
         );
       },
@@ -108,55 +111,52 @@ class _SmartIndexState extends State<SmartIndex> {
     );
   }
 
-  void _validateAndSubmit() async {
+  Future<void> _validateAndSubmit() async {
+    final smartViewModel = context.read<SmartViewModel>();
+    bool isCodeRegistered = await smartViewModel.isCodeRegistered(_smartCodeController.text.trim());
     setState(() {
       _fieldErrors['codeRfid'] = _smartCodeController.text.trim().isEmpty;
       _fieldErrors['codeRfidInvalid'] = !RegExp(r'^[a-zA-Z0-9\s\-_/\\]+$').hasMatch(_smartCodeController.text.trim());
-      _fieldErrors['available'] = _availabilityStatus == 0 || _availabilityStatus == 0;
+      _fieldErrors['available'] = _availabilityStatus == null || _availabilityStatus == 0;
       _fieldErrors['userId'] = user_id == null || user_id == 0;
+      _fieldErrors['codeRegistered'] = isCodeRegistered && _editingSmart == null;
     });
 
-    if(_fieldErrors.containsValue(true)){
+    // Verificar si hay errores en los campos básicos
+    if (_fieldErrors.containsValue(true)) {
       return;
     }
-
-    final smartViewModel = context.read<SmartViewModel>();
-    bool isCodeRegistered = await smartViewModel.isCodeRegistered(_smartCodeController.text.trim());
-
-    if(isCodeRegistered && _editingSmart == null){
-      _showErrorExistsDialog();
-      return;
-    }
-
-    if(_editingSmart != null){
+    
+    // Si estamos editando, actualizamos el registro existente
+    if (_editingSmart != null) {
       smart = Smart(
         idSmart: _editingSmart!.idSmart,
         codeRFID: _smartCodeController.text,
         available: _availabilityStatus,
-        idUser: user_id // ! Cambiarlo por el id capturado del usuario logueado.
+        idUser: user_id,
       );
 
       smartViewModel.editSmart(smart!).then((_) {
         smartViewModel.fetchSmarts();
         _clearSearch();
         _resetForm();
-        if(mounted){
-          // ignore: use_build_context_synchronously
+        if (mounted) {
           _showSuccessDialog(context, true);
         }
       });
     } else {
+      // Crear un nuevo registro de Smart
       smart = Smart(
         codeRFID: _smartCodeController.text,
-        idUser: user_id
+        available: _availabilityStatus,
+        idUser: user_id,
       );
       smartViewModel.createNewSmart(smart!).then((_) {
         smartViewModel.fetchSmarts();
         _clearSearch();
         _resetForm();
-        if(mounted){
-          // ignore: use_build_context_synchronously
-          _showSuccessDialog(context, true);
+        if (mounted) {
+          _showSuccessDialog(context, false);
         }
       });
     }
@@ -169,6 +169,7 @@ class _SmartIndexState extends State<SmartIndex> {
 
   @override
   void dispose() {
+    _debounce?.cancel();
     _searchController.dispose();
     super.dispose();
   }
@@ -179,13 +180,13 @@ class _SmartIndexState extends State<SmartIndex> {
   }
 
   void _showFormModal(BuildContext context, [Smart? smart]) {
-    _editingSmart = smart;
+     _editingSmart = smart;
     if (_editingSmart != null) {
-      _smartCodeController.text = _editingSmart!.codeRFID ?? '';
-      _idSmart = _editingSmart!.idSmart ?? 0;
-      _availabilityStatus = _editingSmart!.available; 
+      _smartCodeController.text = _editingSmart!.codeRFID ?? ''; // Verificación con ?? ''
+      _idSmart = _editingSmart!.idSmart ?? 0; // Verificación con ?? 0
+      _availabilityStatus = _editingSmart!.available ?? 0; // Verificación con ?? 0
     } else {
-      _smartCodeController.clear();
+      _resetForm();
     }
 
     showDialog(
@@ -243,11 +244,29 @@ class _SmartIndexState extends State<SmartIndex> {
                             const SizedBox(height: 8.0),
                             TextField(
                               controller: _smartCodeController,
+                              onChanged: _onCodeChanged,
+                              inputFormatters: [
+                                LengthLimitingTextInputFormatter(50),
+                              ],
                               decoration: InputDecoration(
                                 hintText: 'Ingrese el código RFID',
                                 border: OutlineInputBorder(
                                   borderRadius: BorderRadius.circular(12.0),
+                                  borderSide: BorderSide(
+                                    color: _fieldErrors['codeRfid']!
+                                        ? Colors.red
+                                        : _fieldErrors['codeRegistered']!
+                                            ? Colors.orange
+                                            : Colors.grey,
+                                  ),
                                 ),
+                                errorText: _fieldErrors['codeRfid']!
+                                    ? 'El código RFID no puede estar vacío'
+                                    : _fieldErrors['codeRfidInvalid']!
+                                        ? 'El código RFID contiene caracteres no válidos'
+                                        : _fieldErrors['codeRegistered']!
+                                            ? 'Este código ya está registrado'
+                                            : null,
                               ),
                             ),
                             const SizedBox(height: 16.0),
@@ -258,7 +277,7 @@ class _SmartIndexState extends State<SmartIndex> {
                                 children: [
                                   Expanded(
                                     child: RadioListTile<int>(
-                                      title: const Text('Si'),
+                                      title: const Text('Sí'),
                                       value: 1,
                                       groupValue: _availabilityStatus,
                                       onChanged: (value) {
@@ -291,7 +310,21 @@ class _SmartIndexState extends State<SmartIndex> {
                                     mainAxisAlignment: MainAxisAlignment.center,
                                     children: [
                                       ElevatedButton(
-                                        onPressed: _validateAndSubmit,
+                                        onPressed: () {
+                                          setModalState(() {
+                                            _validateAndSubmit();
+                                          });
+                                        },
+                                        style: ElevatedButton.styleFrom(
+                                          backgroundColor: Colors.purple.shade300,
+                                          padding: const EdgeInsets.symmetric(
+                                            vertical: 16.0,
+                                            horizontal: 32.0,
+                                          ),
+                                          shape: RoundedRectangleBorder(
+                                            borderRadius: BorderRadius.circular(12.0),
+                                          ),
+                                        ),
                                         child: Text(
                                           _editingSmart == null ? 'INSERTAR' : 'GUARDAR',
                                           style: const TextStyle(

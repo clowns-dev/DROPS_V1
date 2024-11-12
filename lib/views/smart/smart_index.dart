@@ -29,8 +29,8 @@ class _SmartIndexState extends State<SmartIndex> {
   final TextEditingController _searchController = TextEditingController();
   final TextEditingController _smartCodeController = TextEditingController();
   // ignore: non_constant_identifier_names
-  int? _idSmart, user_id = 29, _availabilityStatus;
-  
+  int? user_id = 29, _availabilityStatus;
+
   Map<String, bool> _fieldErrors = {
     'codeRfid': false,
     'codeRfidInvalid': false,
@@ -111,23 +111,24 @@ class _SmartIndexState extends State<SmartIndex> {
     );
   }
 
-  Future<void> _validateAndSubmit() async {
+  Future<void> _validateAndSubmit(BuildContext formDialogContext) async {
     final smartViewModel = context.read<SmartViewModel>();
     bool isCodeRegistered = await smartViewModel.isCodeRegistered(_smartCodeController.text.trim());
+
     setState(() {
       _fieldErrors['codeRfid'] = _smartCodeController.text.trim().isEmpty;
       _fieldErrors['codeRfidInvalid'] = !RegExp(r'^[a-zA-Z0-9\s\-_/\\]+$').hasMatch(_smartCodeController.text.trim());
-      _fieldErrors['available'] = _availabilityStatus == null || _availabilityStatus == 0;
+      _fieldErrors['available'] = _availabilityStatus == null;
       _fieldErrors['userId'] = user_id == null || user_id == 0;
       _fieldErrors['codeRegistered'] = isCodeRegistered && _editingSmart == null;
     });
 
-    // Verificar si hay errores en los campos básicos
     if (_fieldErrors.containsValue(true)) {
       return;
     }
-    
-    // Si estamos editando, actualizamos el registro existente
+    // ignore: use_build_context_synchronously
+    Navigator.of(formDialogContext).pop();
+
     if (_editingSmart != null) {
       smart = Smart(
         idSmart: _editingSmart!.idSmart,
@@ -136,31 +137,29 @@ class _SmartIndexState extends State<SmartIndex> {
         idUser: user_id,
       );
 
-      smartViewModel.editSmart(smart!).then((_) {
-        smartViewModel.fetchSmarts();
-        _clearSearch();
-        _resetForm();
-        if (mounted) {
-          _showSuccessDialog(context, true);
-        }
-      });
+      await smartViewModel.editSmart(smart!);
+      smartViewModel.fetchSmarts();
+      _clearSearch();
+      _resetForm();
+      // ignore: use_build_context_synchronously
+      _showSuccessDialog(context, true);
     } else {
-      // Crear un nuevo registro de Smart
       smart = Smart(
         codeRFID: _smartCodeController.text,
         available: _availabilityStatus,
         idUser: user_id,
       );
-      smartViewModel.createNewSmart(smart!).then((_) {
-        smartViewModel.fetchSmarts();
-        _clearSearch();
-        _resetForm();
-        if (mounted) {
-          _showSuccessDialog(context, false);
-        }
-      });
+
+      await smartViewModel.createNewSmart(smart!);
+      smartViewModel.fetchSmarts();
+      _clearSearch();
+      _resetForm();
+      // ignore: use_build_context_synchronously
+      _showSuccessDialog(context, false);
     }
   }
+
+
 
   @override
   void initState() {
@@ -183,7 +182,7 @@ class _SmartIndexState extends State<SmartIndex> {
      _editingSmart = smart;
     if (_editingSmart != null) {
       _smartCodeController.text = _editingSmart!.codeRFID ?? ''; // Verificación con ?? ''
-      _idSmart = _editingSmart!.idSmart ?? 0; // Verificación con ?? 0
+// Verificación con ?? 0
       _availabilityStatus = _editingSmart!.available ?? 0; // Verificación con ?? 0
     } else {
       _resetForm();
@@ -312,7 +311,7 @@ class _SmartIndexState extends State<SmartIndex> {
                                       ElevatedButton(
                                         onPressed: () {
                                           setModalState(() {
-                                            _validateAndSubmit();
+                                            _validateAndSubmit(dialogContext);
                                           });
                                         },
                                         style: ElevatedButton.styleFrom(

@@ -1,60 +1,57 @@
 import 'package:flutter/foundation.dart';
-import 'package:ps3_drops_v1/models/therapy.dart';
-import 'package:ps3_drops_v1/services/api_service_therapy.dart';
+import '../models/therapy.dart';
+import '../services/api_service_therapy.dart';
 
 class TherapyViewModel extends ChangeNotifier {
-  ApiServiceTherapy apiServiceTherapy = ApiServiceTherapy();
-  List<Therapy> listTherapies = [];
-  List<Therapy> filteredTherapies = [];
+  ApiServiceTherapy apiServiceTherapy = ApiServiceTherapy(); 
+  List<Therapy> listTherapies = []; 
+  List<Therapy> filteredTherapies = []; 
   bool isLoading = false;
   bool hasMatches = true;
 
-
   TherapyViewModel() {
-    fetchTherapies();
+    fetchTherapies(); 
   }
-
 
   Future<void> fetchTherapies() async {
     isLoading = true;
     notifyListeners();
     try {
-      listTherapies = await apiServiceTherapy.fetchTherapies();
+      listTherapies = await apiServiceTherapy.fetchTherapies(); 
       filteredTherapies = List.from(listTherapies); 
       if (kDebugMode) {
         print('Terapias cargadas: ${listTherapies.length}');
       }
     } catch (e) {
       if (kDebugMode) {
-        print('Error al obtener los registros de Terapias: $e');
+        print('Error al obtener las terapias: $e');
       }
     } finally {
       isLoading = false;
-      notifyListeners();
+      notifyListeners(); 
     }
   }
 
-  void filterBalances(String query) {
+  void filterTherapies(String query) {
     if (kDebugMode) {
-      print('Filtrando de Terapias con consulta: $query');
-    } 
+      print('Filtrando terapias con consulta: $query');
+    }
     if (query.isEmpty) {
-      filteredTherapies = List.from(listTherapies);
+      filteredTherapies = List.from(listTherapies); 
     } else {
       filteredTherapies = listTherapies.where((therapy) {
-        return therapy.stretcherNumber?.toLowerCase().contains(query.toLowerCase());
+        return therapy.idTherapy.toString().contains(query) || 
+               therapy.stretcherNumber.toString().contains(query) || 
+               therapy.startDate.toString().contains(query) || 
+               therapy.idPatient.toString().contains(query); 
       }).toList();
     }
-    notifyListeners();
+    notifyListeners(); 
   }
 
-  void deletePatient(int therapyId) {
+  void deleteTherapy(int therapyId) {
     listTherapies.removeWhere((therapy) => therapy.idTherapy == therapyId);
-    filterBalances(''); 
+    filterTherapies(''); 
     notifyListeners();
   }
-}
-
-extension on int? {
-  toLowerCase() {}
 }

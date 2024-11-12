@@ -18,18 +18,18 @@ class Therapy {
     this.volume,
     this.finishDate,
     this.idPatient,
-    this.idNurse
+    this.idNurse,
   });
 
-  factory Therapy.fromJson(Map<String, dynamic> json){
+  factory Therapy.fromJson(Map<String, dynamic> json) {
     return Therapy(
       idTherapy: json['idTherapy'],
       suggestedTime: json['suggestedTime'],
       extraTime: json['extraTime'],
       stretcherNumber: json['stretcherNumber'],
-      startDate: json['startDate'],
-      volume: json['volume'],
-      finishDate: json['finishDate'],
+      startDate: DateTime.parse(json['startDate']), // Conversión de String a DateTime
+      volume: json['volume'] != null ? json['volume'].toDouble() : null, // Conversión de número a double
+      finishDate: DateTime.parse(json['finishDate']), // Conversión de String a DateTime
       idPatient: json['idPatient'],
       idNurse: json['idNurse'],
     );

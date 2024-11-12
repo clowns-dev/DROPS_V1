@@ -1,9 +1,9 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:ps3_drops_v1/models/patient.dart';
-import 'package:ps3_drops_v1/view_models/patient_view_model.dart';
-import 'package:ps3_drops_v1/views/patient/patient_data.dart';
+import 'package:ps3_drops_v1/models/therapy.dart';
+import 'package:ps3_drops_v1/view_models/therapy_view_model.dart';
+import 'package:ps3_drops_v1/views/therapy/therapy_data.dart';
 import 'package:ps3_drops_v1/widgets/text_label.dart';
 import 'package:ps3_drops_v1/widgets/title_container.dart';
 import 'package:ps3_drops_v1/widgets/history_title_container.dart';
@@ -13,18 +13,18 @@ import 'package:ps3_drops_v1/widgets/add_title_button.dart';
 import 'package:ps3_drops_v1/widgets/success_dialog.dart';
 import 'package:ps3_drops_v1/widgets/delete_confirmation_dialog.dart';
 
-class PatientIndex extends StatefulWidget {
-  const PatientIndex({super.key});
+class TherapyIndex extends StatefulWidget {
+  const TherapyIndex({super.key});
 
   @override
-  State<PatientIndex> createState() => _PatientIndexState();
+  State<TherapyIndex> createState() => _TherapyIndexState();
 }
 
-class _PatientIndexState extends State<PatientIndex> {
+class _TherapyIndexState extends State<TherapyIndex> {
   final String _selectedFilter = 'Nombre';
   final List<String> _filterOptions = ['Nombre', 'CI', 'Apellido'];
   bool _showForm = false;
-  Patient? _editingPatient;
+  Therapy? _editingTherapy;
   //String _searchQuery = '';
   final TextEditingController _searchController = TextEditingController();
 
@@ -42,14 +42,14 @@ class _PatientIndexState extends State<PatientIndex> {
   }
 
   void _onSearchChanged() {
-    final patientViewModel = context.read<PatientViewModel>();
-    patientViewModel.filterEmployees(_searchController.text);
+    final therapyViewModel = context.read<TherapyViewModel>();
+    therapyViewModel.filterTherapies(_searchController.text);
   }
 
-  void _toggleView([Patient? patient]) {
+  void _toggleView([Therapy? therapy]) {
     setState(() {
       _showForm = !_showForm;
-      _editingPatient = patient;
+      _editingTherapy = therapy;
     });
   }
 
@@ -63,7 +63,7 @@ class _PatientIndexState extends State<PatientIndex> {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             const TitleContainer(
-              title: 'Gestión de Pacientes',
+              title: 'Gestión de Terapias',
             ),
             LayoutBuilder(
               builder: (context, constraints) {
@@ -99,7 +99,7 @@ class _PatientIndexState extends State<PatientIndex> {
                         ),
                         const SizedBox(width: 8.0),
                         AddTitleButton(
-                          titleButton: _showForm ? 'Volver' : 'Añadir Usuario',
+                          titleButton: _showForm ? 'Volver' : 'Crear Terapia',
                         ),
                       ],
                     ),
@@ -125,7 +125,7 @@ class _PatientIndexState extends State<PatientIndex> {
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
                   const HistoryTitleContainer(
-                    titleTable: 'Historial de Pacientes',
+                    titleTable: 'Historial de Terapias',
                   ),
                   Row(
                     mainAxisSize: MainAxisSize.min,
@@ -183,22 +183,22 @@ class _PatientIndexState extends State<PatientIndex> {
           children: [
             Center(
               child: HistoryTitleContainer(
-                titleTable: _editingPatient == null
-                    ? 'Añadir Usuario'
-                    : 'Editar Usuario',
+                titleTable: _editingTherapy == null
+                    ? 'Añadir Terapia'
+                    : 'Editar Terapia',
               ),
             ),
             const SizedBox(height: 24.0),
 
-            // Campo para CI
-            const TextLabel(content: 'CI:'),
+            // Campo para Tiempo Sugerido (Suggested Time)
+            const TextLabel(content: 'Tiempo Sugerido:'),
             const SizedBox(height: 8.0),
             TextField(
               controller: TextEditingController(
-                text: _editingPatient?.ci ?? '',
+                text: _editingTherapy?.suggestedTime.toString() ?? '',
               ),
               decoration: InputDecoration(
-                hintText: 'Ingrese el CI',
+                hintText: 'Ingrese el tiempo sugerido',
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12.0),
                 ),
@@ -206,15 +206,15 @@ class _PatientIndexState extends State<PatientIndex> {
             ),
             const SizedBox(height: 24.0),
 
-            // Campo para Nombre
-            const TextLabel(content: 'Nombre:'),
+            // Campo para Tiempo Extra (Extra Time)
+            const TextLabel(content: 'Tiempo Extra:'),
             const SizedBox(height: 8.0),
             TextField(
               controller: TextEditingController(
-                text: _editingPatient?.name ?? '',
+                text: _editingTherapy?.extraTime.toString() ?? '',
               ),
               decoration: InputDecoration(
-                hintText: 'Ingrese el nombre',
+                hintText: 'Ingrese el tiempo extra',
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12.0),
                 ),
@@ -222,15 +222,15 @@ class _PatientIndexState extends State<PatientIndex> {
             ),
             const SizedBox(height: 24.0),
 
-            // Campo para Apellido Paterno
-            const TextLabel(content: 'Apellido Paterno:'),
+            // Campo para Número de Camilla (Stretcher Number)
+            const TextLabel(content: 'Número de Camilla:'),
             const SizedBox(height: 8.0),
             TextField(
               controller: TextEditingController(
-                text: _editingPatient?.lastName ?? '',
+                text: _editingTherapy?.stretcherNumber.toString() ?? '',
               ),
               decoration: InputDecoration(
-                hintText: 'Ingrese el apellido paterno',
+                hintText: 'Ingrese el número de camilla',
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12.0),
                 ),
@@ -238,15 +238,15 @@ class _PatientIndexState extends State<PatientIndex> {
             ),
             const SizedBox(height: 24.0),
 
-            // Campo para Apellido Materno
-            const TextLabel(content: 'Apellido Materno:'),
+            // Campo para Fecha de Inicio (Start Date)
+            const TextLabel(content: 'Fecha de Inicio:'),
             const SizedBox(height: 8.0),
             TextField(
               controller: TextEditingController(
-                text: _editingPatient?.secondLastName ?? '',
+                text: _editingTherapy?.startDate.toString() ?? '',
               ),
               decoration: InputDecoration(
-                hintText: 'Ingrese el apellido materno',
+                hintText: 'Ingrese la fecha de inicio',
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12.0),
                 ),
@@ -254,15 +254,15 @@ class _PatientIndexState extends State<PatientIndex> {
             ),
             const SizedBox(height: 24.0),
 
-            // Campo para Fecha de Nacimiento
-            const TextLabel(content: 'Fecha de Nacimiento:'),
+            // Campo para Volumen (Volume)
+            const TextLabel(content: 'Volumen:'),
             const SizedBox(height: 8.0),
             TextField(
               controller: TextEditingController(
-                text: _editingPatient?.birthDate ?? '',
+                text: _editingTherapy?.volume.toString() ?? '',
               ),
               decoration: InputDecoration(
-                hintText: 'dd/mm/aaaa',
+                hintText: 'Ingrese el volumen',
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12.0),
                 ),
@@ -274,19 +274,19 @@ class _PatientIndexState extends State<PatientIndex> {
             Center(
               child: ElevatedButton(
                 onPressed: () {
-                  if (_editingPatient != null) {
+                  if (_editingTherapy != null) {
                     if (kDebugMode) {
                       print(
-                          'Editando paciente con ID: ${_editingPatient?.idPatient}');
+                          'Editando terapia con ID: ${_editingTherapy?.idTherapy}');
                     }
                   } else {
                     if (kDebugMode) {
-                      print('Creando nuevo paciente');
+                      print('Creando nueva terapia');
                     }
                   }
 
                   // Mostrar el modal de éxito después de guardar o editar
-                  _showSuccessDialog(context, _editingPatient != null);
+                  _showSuccessDialog(context, _editingTherapy != null);
                 },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.purple.shade300,
@@ -299,7 +299,7 @@ class _PatientIndexState extends State<PatientIndex> {
                   ),
                 ),
                 child: Text(
-                  _editingPatient == null ? 'INSERTAR' : 'GUARDAR',
+                  _editingTherapy == null ? 'INSERTAR' : 'GUARDAR',
                   style: const TextStyle(
                     color: Colors.white,
                     fontWeight: FontWeight.bold,
@@ -331,16 +331,16 @@ class _PatientIndexState extends State<PatientIndex> {
     );
   }
 
-  void _showDeleteConfirmationDialog(BuildContext context, int patientId) {
+  void _showDeleteConfirmationDialog(BuildContext context, int TherapyId) {
     showDialog(
       context: context,
       builder: (context) {
         return DeleteConfirmationDialog(
           onConfirmDelete: () {
-            Provider.of<PatientViewModel>(context, listen: false)
-                .deletePatient(patientId);
+            Provider.of<TherapyViewModel>(context, listen: false)
+                .deleteTherapy(TherapyId);
             if (kDebugMode) {
-              print('Eliminando paciente con ID: $patientId');
+              print('Eliminando terapia con ID: $TherapyId');
             }
           },
         );
@@ -349,11 +349,11 @@ class _PatientIndexState extends State<PatientIndex> {
   }
 
   Widget _buildTable() {
-    return Consumer<PatientViewModel>(
-      builder: (context, patientViewModel, child) {
-        if (patientViewModel.isLoading) {
+    return Consumer<TherapyViewModel>(
+      builder: (context, therapyViewModel, child) {
+        if (therapyViewModel.isLoading) {
           return const Center(child: CircularProgressIndicator());
-        } else if (patientViewModel.filteredPatients.isEmpty) {
+        } else if (therapyViewModel.filteredTherapies.isEmpty) {
           return Center(
             child: Text(
               'Sin coincidencias',
@@ -365,25 +365,20 @@ class _PatientIndexState extends State<PatientIndex> {
             ),
           );
         } else {
-          return PatientDataTable(
-            patients: patientViewModel.filteredPatients,
-            onEdit: (id) {
-              Patient? patient = patientViewModel.listPatients.firstWhere(
-                (p) => p.idPatient == id,
-                orElse: () => Patient(
-                    name: '',
-                    lastName: '',
-                    secondLastName: '',
-                    birthDate: '',
-                    ci: ''),
+          return TherapyDataTable(
+            therapies: therapyViewModel.filteredTherapies,
+            onView: (id) {
+              // Puedes definir la lógica que ocurre al presionar "Ver"
+              Therapy? therapy = therapyViewModel.listTherapies.firstWhere(
+                (t) => t.idTherapy == id,
+                orElse: () => Therapy(
+                    suggestedTime: 0,
+                    extraTime: 0,
+                    stretcherNumber: 0,
+                    startDate: DateTime.now(),
+                    volume: 0.0),
               );
-              // ignore: unnecessary_null_comparison
-              if (patient != null) {
-                _toggleView(patient);
-              }
-            },
-            onDelete: (id) {
-              _showDeleteConfirmationDialog(context, id);
+              _toggleView(therapy);
             },
           );
         }

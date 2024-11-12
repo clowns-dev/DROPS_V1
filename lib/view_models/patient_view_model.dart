@@ -53,11 +53,6 @@ class PatientViewModel extends ChangeNotifier {
 }
 
 
-
-
-
-
-
   void deletePatient(int patientId) {
     listPatients.removeWhere((patient) => patient.idPatient == patientId);
     filterEmployees(''); 

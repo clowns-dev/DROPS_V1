@@ -95,6 +95,8 @@ class _TherapyIndexState extends State<TherapyIndex> {
       
       if (!_showForm) {
         _resetForm();
+        _isViewingTherapy = false; 
+        _selectedInfoTherapy = null; 
       } else {
         _resetFieldErrors();
       }

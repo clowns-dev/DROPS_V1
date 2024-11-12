@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
@@ -118,12 +119,20 @@ class _SmartIndexState extends State<SmartIndex> {
     setState(() {
       _fieldErrors['codeRfid'] = _smartCodeController.text.trim().isEmpty;
       _fieldErrors['codeRfidInvalid'] = !RegExp(r'^[a-zA-Z0-9\s\-_/\\]+$').hasMatch(_smartCodeController.text.trim());
-      _fieldErrors['available'] = _availabilityStatus == null;
       _fieldErrors['userId'] = user_id == null || user_id == 0;
       _fieldErrors['codeRegistered'] = isCodeRegistered && _editingSmart == null;
+
+      if (_editingSmart != null) {
+      _fieldErrors['available'] = _availabilityStatus == null;
+      } else {
+        _fieldErrors['available'] = false; 
+      }
     });
 
     if (_fieldErrors.containsValue(true)) {
+      if(kDebugMode){
+        print("Estado fieldErrors: $_fieldErrors");
+      }
       return;
     }
     // ignore: use_build_context_synchronously
@@ -146,7 +155,6 @@ class _SmartIndexState extends State<SmartIndex> {
     } else {
       smart = Smart(
         codeRFID: _smartCodeController.text,
-        available: _availabilityStatus,
         idUser: user_id,
       );
 
@@ -181,9 +189,8 @@ class _SmartIndexState extends State<SmartIndex> {
   void _showFormModal(BuildContext context, [Smart? smart]) {
      _editingSmart = smart;
     if (_editingSmart != null) {
-      _smartCodeController.text = _editingSmart!.codeRFID ?? ''; // Verificación con ?? ''
-// Verificación con ?? 0
-      _availabilityStatus = _editingSmart!.available ?? 0; // Verificación con ?? 0
+      _smartCodeController.text = _editingSmart!.codeRFID ?? ''; 
+      _availabilityStatus = _editingSmart!.available ?? 0; 
     } else {
       _resetForm();
     }

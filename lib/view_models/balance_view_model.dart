@@ -65,7 +65,7 @@ class BalanceViewModel extends ChangeNotifier {
     }
   }
 
-  void filterSmarts(String query, String field) {
+  void filterBalances(String query, String field) {
     if (query.isEmpty || field == 'Buscar por:') {
       filteredBalances = List.from(listBalances);
     } else {
@@ -80,14 +80,14 @@ class BalanceViewModel extends ChangeNotifier {
       }
     }
 
-    hasMatches = listBalances.isNotEmpty;
+    hasMatches = filteredBalances.isNotEmpty;
     notifyListeners();
   }
 
-  Future<void> createNewBalance(String? balanceCode, int? userId) async {
+  Future<void> createNewBalance(Balance newBalance) async {
     try {
-      if(balanceCode != null && userId != null){
-        await apiServiceBalance.createBalance(balanceCode, userId);
+      if(newBalance.balanceCode != null && newBalance.userID != null){
+        await apiServiceBalance.createBalance(newBalance);
 
         if(kDebugMode){
           print("Balanza creada Exitosamente!");
@@ -104,10 +104,10 @@ class BalanceViewModel extends ChangeNotifier {
     }
   }
 
-  Future<void> editBalance(int? idBalance, String? balanceCode, int? userId) async {
+  Future<void> editBalance(Balance updateBalance) async {
     try {
-      if(idBalance != null && balanceCode != null && userId != null){
-        await apiServiceBalance.updateBalance(idBalance, balanceCode, userId);
+      if(updateBalance.idBalance != null && updateBalance.balanceCode != null && updateBalance.userID != null){
+        await apiServiceBalance.updateBalance(updateBalance);
 
         if(kDebugMode){
           print("Balanza Editada Exitosamente!");

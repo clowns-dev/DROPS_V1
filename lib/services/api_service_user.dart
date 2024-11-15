@@ -68,8 +68,6 @@ class ApiServiceUser {
     }
   }
 
-
-
   Future<User> createUser(User newUser) async {
     try {
       String formattedBirthDate = DateFormat('yyyy-MM-dd').format(newUser.birthDate!);

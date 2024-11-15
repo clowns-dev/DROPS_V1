@@ -1,15 +1,18 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
+import 'package:ps3_drops_v1/views/balance/balance_calibration.dart';
 import 'package:ps3_drops_v1/views/balance/balance_index.dart';
 import 'package:ps3_drops_v1/views/patient/patient_index.dart';
 import 'package:ps3_drops_v1/views/smart/smart_index.dart';
 import 'package:ps3_drops_v1/views/therapy/therapy_index.dart';
+import 'package:ps3_drops_v1/views/therapy/therapy_monitoring.dart';
+import 'package:ps3_drops_v1/views/users/login_view.dart';
 import 'package:ps3_drops_v1/views/users/user_index.dart';
 import 'package:ps3_drops_v1/widgets/title_nabvar_menu.dart';
 import '../widgets/adaptive_scaffold.dart';
 
 class HomePage extends StatefulWidget {
-  const HomePage({super.key});
+  final int role;
+  const HomePage({super.key, required this.role});
 
   @override
   State<HomePage> createState() => _HomePageState();
@@ -17,6 +20,36 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   int _pageIndex = 0;
+
+  List<AdaptiveScaffoldDestination> get destinations {
+    if(widget.role == 1){
+      return const [
+        AdaptiveScaffoldDestination(title: 'Inicio', icon: Icons.home),
+        AdaptiveScaffoldDestination(title: 'Balanzas', icon: Icons.medical_services),
+        AdaptiveScaffoldDestination(title: 'Manillas', icon: Icons.watch),
+        AdaptiveScaffoldDestination(title: 'Usuarios', icon: Icons.people),
+        AdaptiveScaffoldDestination(title: 'Pacientes', icon: Icons.elderly),
+        AdaptiveScaffoldDestination(title: 'Terapias', icon: Icons.healing),
+        AdaptiveScaffoldDestination(title: 'Salir', icon: Icons.exit_to_app),
+      ];
+    } else if(widget.role == 2){
+      return const [
+        AdaptiveScaffoldDestination(title: 'Inicio', icon: Icons.home),
+        AdaptiveScaffoldDestination(title: 'Terapias Asignadas', icon: Icons.healing),
+        AdaptiveScaffoldDestination(title: 'Salir', icon: Icons.exit_to_app),
+      ];
+    } else if(widget.role == 3){
+      return const [
+        AdaptiveScaffoldDestination(title: 'Inicio', icon: Icons.home),
+        AdaptiveScaffoldDestination(title: 'Calibracion Balanza', icon: Icons.medical_services),
+        AdaptiveScaffoldDestination(title: 'Salir', icon: Icons.exit_to_app),
+      ];
+    } else {
+      return const [
+        AdaptiveScaffoldDestination(title: 'Salir', icon: Icons.exit_to_app),
+      ];
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -46,15 +79,7 @@ class _HomePageState extends State<HomePage> {
         ],
       ),
       currentIndex: _pageIndex,
-      destinations: const [
-        AdaptiveScaffoldDestination(title: 'Inicio', icon: Icons.home),
-        AdaptiveScaffoldDestination(title: 'Balanzas', icon: Icons.medical_services),
-        AdaptiveScaffoldDestination(title: 'Manillas', icon: Icons.watch),
-        AdaptiveScaffoldDestination(title: 'Usuarios', icon: Icons.people),
-        AdaptiveScaffoldDestination(title: 'Pacientes', icon: Icons.elderly),
-        AdaptiveScaffoldDestination(title: 'Terapias', icon: Icons.healing),
-        AdaptiveScaffoldDestination(title: 'Salir', icon: Icons.exit_to_app),
-      ],
+      destinations: destinations,
       body: _pageAtIndex(_pageIndex),
       onNavigationIndexChange: (newIndex) {
         setState(() {
@@ -64,15 +89,43 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  static Widget _pageAtIndex(int index) {
-    if (index == 0) return const Text("Pagina 1");
-    if (index == 1) return const BalanceIndex();
-    if (index == 2) return const SmartIndex();
-    if (index == 3) return const UserIndex();
-    if (index == 4) return const PatientIndex();
-    if (index == 5) return const TherapyIndex();
-    if (index == 6) SystemNavigator.pop();
+  Widget _pageAtIndex(int index) {
+    final filteredDestinations = destinations;
 
-    return const Center(child: Text('Opciones de pagina'));
+    if (index >= filteredDestinations.length) {
+      return const Center(child: Text('Página no disponible'));
+    }
+
+    final selectedDestination = filteredDestinations[index].title;
+
+    switch (selectedDestination) {
+      case 'Inicio':
+        return const Text("Pagina 1");
+      case 'Balanzas':
+        return const BalanceIndex();
+      case 'Manillas':
+        return const SmartIndex();
+      case 'Usuarios':
+        return const UserIndex();
+      case 'Pacientes':
+        return const PatientIndex();
+      case 'Terapias':
+        return const TherapyIndex();
+      case 'Terapias Asignadas':
+        return TherapyMonitoring();
+      case 'Calibracion Balanza':
+        return const BalanceCalibration();
+      case 'Salir':
+        // Reemplaza la página actual con LoginView
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (context) => const LoginView()),
+          );
+        });
+        return const SizedBox.shrink(); // Página vacía mientras se realiza la navegación
+      default:
+        return const Center(child: Text('Opciones de página no disponible'));
+    }
   }
 }

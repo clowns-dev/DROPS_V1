@@ -1,27 +1,34 @@
 import 'package:flutter/foundation.dart';
-import 'package:ps3_drops_v1/models/therapy.dart';
+import 'package:ps3_drops_v1/models/patient.dart' as PatientModel;
+import 'package:ps3_drops_v1/models/nurse.dart' as NurseModel;
+import 'package:ps3_drops_v1/models/balance.dart' as BalanceModel;
+import 'package:ps3_drops_v1/models/therapy.dart' as TherapyModel;
 import 'package:ps3_drops_v1/services/api_service_therapy.dart';
 
 class TherapyViewModel extends ChangeNotifier {
-  ApiServiceTherapy apiServiceTherapy = ApiServiceTherapy();
-  List<Therapy> listTherapies = [];
-  List<Therapy> filteredTherapies = [];
-  InfoTherapy? infoTherapy;
+  final ApiServiceTherapy apiServiceTherapy = ApiServiceTherapy();
+
+  List<TherapyModel.Therapy> listTherapies = [];
+  List<TherapyModel.Therapy> filteredTherapies = [];
+  TherapyModel.InfoTherapy? infoTherapy;
   int? selectedTherapyId;
 
-  List<Patient> listPatients = [];
-  int? selectedPatientId; 
+  List<PatientModel.Patient> listPatients = [];
+  int? selectedPatientId;
 
-  List<Nurse> listNurses = [];
-  int? selectedNurseId; 
+  List<NurseModel.Nurse> listNurses = [];
+  int? selectedNurseId;
 
-  List<Balance> listBalances = [];
-  int? selectedBalanceId; 
+  List<BalanceModel.Balance> listBalances = [];
+  int? selectedBalanceId;
 
   bool isLoading = false;
-  bool hasMatches = true;
 
   TherapyViewModel() {
+    fetchAllData();
+  }
+
+  void fetchAllData() {
     fetchTherapies();
     fetchTherapyPatients();
     fetchTherapyNurses();
@@ -29,140 +36,78 @@ class TherapyViewModel extends ChangeNotifier {
   }
 
   Future<void> fetchTherapies() async {
-    isLoading = true;
-    notifyListeners();
+    _setLoading(true);
     try {
       listTherapies = await apiServiceTherapy.fetchTherapies();
-      filteredTherapies = List.from(listTherapies); 
-      if (kDebugMode) {
-        print('Terapias cargadas: ${listTherapies.length}');
-      }
+      filteredTherapies = List.from(listTherapies);
     } catch (e) {
-      if (kDebugMode) {
-        print('Error al obtener los registros de Terapias: $e');
-      }
+      print('Error al obtener los registros de Terapias: $e');
     } finally {
-      isLoading = false;
-      notifyListeners();
-    }
-  }
-
-  Future<void> createNewTherapy(String stretcherNumber, int userId) async {
-    try {
-      if (selectedPatientId != null && selectedNurseId != null && selectedBalanceId != null) {
-        await apiServiceTherapy.createTherapy(
-          selectedPatientId!,
-          selectedNurseId!,
-          selectedBalanceId!,
-          stretcherNumber,
-          userId,
-        );
-        if (kDebugMode) {
-          print("Terapia creada exitosamente.");
-        }
-      } else {
-        if (kDebugMode) {
-          print("Error: Faltan datos de selección.");
-        }
-      }
-    } catch (e) {
-      if (kDebugMode) {
-        print("Error: No se pudo crear la terapia. Detalles: $e");
-      }
+      _setLoading(false);
     }
   }
 
   Future<void> fetchTherapyPatients() async {
-    isLoading = true;
-    notifyListeners();
+    _setLoading(true);
     try {
       listPatients = await apiServiceTherapy.fetchTherapyPatients();
-      if (kDebugMode) {
-        print('Pacientes cargados: ${listPatients.length}');
-      }
     } catch (e) {
-      if (kDebugMode) {
-        print('Error: Fallo al obtener los registros de Pacientes.');
-      }
+      print('Error al obtener los registros de Pacientes: $e');
     } finally {
-      isLoading = false;
-      notifyListeners();
+      _setLoading(false);
     }
   }
 
   Future<void> fetchTherapyNurses() async {
-    isLoading = true;
-    notifyListeners();
+    _setLoading(true);
     try {
       listNurses = await apiServiceTherapy.fetchTherapyNurses();
-      if (kDebugMode) {
-        print('Enfermeros cargados: ${listPatients.length}');
-      }
     } catch (e) {
-      if (kDebugMode) {
-        print('Error: Fallo al obtener los registros de Enfermeros.');
-      }
+      print('Error al obtener los registros de Enfermeros: $e');
     } finally {
-      isLoading = false;
-      notifyListeners();
+      _setLoading(false);
     }
   }
 
   Future<void> fetchTherapyBalances() async {
-    isLoading = true;
-    notifyListeners();
+    _setLoading(true);
     try {
       listBalances = await apiServiceTherapy.fetchTherapyBalances();
-      if (kDebugMode) {
-        print('Balanzas cargados: ${listPatients.length}');
-      }
     } catch (e) {
-      if (kDebugMode) {
-        print('Error: Fallo al obtener los registros de Balanzas.');
-      }
+      print('Error al obtener los registros de Balanzas: $e');
     } finally {
-      isLoading = false;
-      notifyListeners();
+      _setLoading(false);
     }
   }
 
   Future<void> fetchInfoTherapy(int therapyId) async {
-    isLoading = true;
-    selectedTherapyId = therapyId;
-    notifyListeners();
+    _setLoading(true);
     try {
-      if (kDebugMode) {
-        print('Cargando información para terapia ID: $selectedTherapyId');
-      }
-
-      infoTherapy = await apiServiceTherapy.fetchInfoTherapy(selectedTherapyId!);
-
-      if (kDebugMode) {
-        print('Información de Terapia Cargada: ${infoTherapy?.idTherapy}');
-      }
+      infoTherapy = await apiServiceTherapy.fetchInfoTherapy(therapyId);
     } catch (e) {
-      if (kDebugMode) {
-        print("Error: Fallo al obtener la información de la Terapia: $e");
-      }
+      print("Error al obtener la información de la Terapia: $e");
     } finally {
-      isLoading = false;
-      notifyListeners();
+      _setLoading(false);
     }
   }
 
-
   void updateSelectedPatientId(int id) {
     selectedPatientId = id;
-    notifyListeners(); 
+    notifyListeners();
   }
 
   void updateSelectedNurseId(int id) {
     selectedNurseId = id;
-    notifyListeners(); 
+    notifyListeners();
   }
 
   void updateSelectedBalanceId(int id) {
     selectedBalanceId = id;
-    notifyListeners(); 
+    notifyListeners();
+  }
+
+  void _setLoading(bool value) {
+    isLoading = value;
+    notifyListeners();
   }
 }

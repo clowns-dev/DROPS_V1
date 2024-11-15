@@ -4,17 +4,17 @@ import 'package:flutter/services.dart' show rootBundle;
 import 'package:ps3_drops_v1/models/smart.dart';
 
 class ApiServiceSmart {
-  Future<List<Therapy>> fetchSmarts() async{
-    try{
-      String jsonContent = await rootBundle.loadString('../assets/data/smart.json');
-      if(kDebugMode){
+  Future<List<Therapy>> fetchSmarts() async {
+    try {
+      String jsonContent =
+          await rootBundle.loadString('assets/data/smart.json'); // Sin '../'
+      if (kDebugMode) {
         print('Contenido JSON: $jsonContent');
       }
       List<dynamic> jsonResponse = json.decode(jsonContent);
       return jsonResponse.map((data) => Therapy.fromJson(data)).toList();
-
-    } catch (e){
-      if(kDebugMode){
+    } catch (e) {
+      if (kDebugMode) {
         print("Error al cargar los datos: $e");
       }
       throw Exception('Error al cargar los datos: $e');
@@ -22,7 +22,8 @@ class ApiServiceSmart {
   }
 
   Future<List<Map<String, dynamic>>> loadSmartData() async {
-    String jsonString = await rootBundle.loadString('../assets/data/smart.json');
+    String jsonString =
+        await rootBundle.loadString('assets/data/smart.json'); // Sin '../'
     final List<dynamic> jsonData = json.decode(jsonString);
     return List<Map<String, dynamic>>.from(jsonData);
   }

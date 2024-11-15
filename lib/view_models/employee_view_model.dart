@@ -9,19 +9,16 @@ class EmployeeViewModel extends ChangeNotifier {
   bool isLoading = false;
   bool hasMatches = true;
 
-
   EmployeeViewModel() {
     fetchEmployees();
-    
   }
-
 
   Future<void> fetchEmployees() async {
     isLoading = true;
     notifyListeners();
     try {
       listEmployees = await apiServiceEmployee.fetchEmployees();
-      filteredEmployees = List.from(listEmployees); 
+      filteredEmployees = List.from(listEmployees);
       if (kDebugMode) {
         print('Usuarios cargados: ${listEmployees.length}');
       }

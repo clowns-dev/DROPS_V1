@@ -3,10 +3,9 @@ import 'package:flutter/services.dart';
 import 'package:ps3_drops_v1/views/balance/balance_index.dart';
 import 'package:ps3_drops_v1/views/patient/patient_index.dart';
 import 'package:ps3_drops_v1/views/smart/smart_index.dart';
-import 'package:ps3_drops_v1/views/therapy/therapy_index.dart';
+import 'package:ps3_drops_v1/views/therapy/therapy_records_view.dart'; // Asegúrate de importar therapy_records_view.dart
 import 'package:ps3_drops_v1/views/users/user_index.dart';
 import 'package:ps3_drops_v1/widgets/title_nabvar_menu.dart';
-
 import '../widgets/adaptive_scaffold.dart';
 
 class HomePage extends StatefulWidget {
@@ -18,6 +17,7 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   int _pageIndex = 0;
+
   @override
   Widget build(BuildContext context) {
     return AdaptiveScaffold(
@@ -26,18 +26,18 @@ class _HomePageState extends State<HomePage> {
         children: [
           CircleAvatar(
             radius: 38.5,
-            backgroundImage: NetworkImage('https://cdn.builder.io/api/v1/image/assets/TEMP/1142fcff92d25dcb717e3a64262ae9d27f8f226e327e4a1eb7d99f9e8a18f069?placeholderIfAbsent=true&apiKey=18be90e047eb4a8186c0c0147fe2e633'),
+            backgroundImage: NetworkImage(
+                'https://cdn.builder.io/api/v1/image/assets/TEMP/1142fcff92d25dcb717e3a64262ae9d27f8f226e327e4a1eb7d99f9e8a18f069?placeholderIfAbsent=true&apiKey=18be90e047eb4a8186c0c0147fe2e633'),
           ),
-
-          SizedBox(width: 4,),
-
+          SizedBox(width: 4),
           TitleNabvarMenu(text: 'DROPS')
         ],
       ),
       currentIndex: _pageIndex,
       destinations: const [
         AdaptiveScaffoldDestination(title: 'Inicio', icon: Icons.home),
-        AdaptiveScaffoldDestination(title: 'Balanzas', icon: Icons.medical_services),
+        AdaptiveScaffoldDestination(
+            title: 'Balanzas', icon: Icons.medical_services),
         AdaptiveScaffoldDestination(title: 'Manillas', icon: Icons.watch),
         AdaptiveScaffoldDestination(title: 'Usuarios', icon: Icons.people),
         AdaptiveScaffoldDestination(title: 'Pacientes', icon: Icons.elderly),
@@ -50,71 +50,32 @@ class _HomePageState extends State<HomePage> {
           _pageIndex = newIndex;
         });
       },
-      //floatingActionButton: _hasFloatingActionButton ? _buildFab(context) : null,
     );
   }
 
-  bool get _hasFloatingActionButton{
-      if (_pageIndex == 2) return false;
-    return true;
-  }
-
-  FloatingActionButton _buildFab(BuildContext context){
-    return FloatingActionButton(
-      child: const Icon(Icons.add),
-      onPressed: () => {},
-    );
-  }
-/*
-  void _handleFabPressed(){
-    if(_pageIndex == 0){
-      showDialog<NewCategoryDialog>(
-        context: context,
-        builder: (context) => const NewCategoryDialog(),
-      );
-      return;
+  static Widget _pageAtIndex(int index) {
+    if (index == 0) {
+      return const Text("Página de Inicio");
     }
-
-    if(_pageIndex == 0){
-      showDialog<NewEntryDialog>(
-        context: context,
-        builder: (context) => const NewEntryDialog(),
-      );
-      return;
-    }
-  }
-  */
-  static Widget _pageAtIndex(int index){
-    
-    if(index == 0){
-      return const Text("Pagina 1");
-    }
-
-    if(index == 1){
+    if (index == 1) {
       return const BalanceIndex();
     }
-
-    if(index == 2){
+    if (index == 2) {
       return const SmartIndex();
     }
-
-    if(index == 3){
-    
+    if (index == 3) {
       return const UserIndex();
     }
-
-    if(index == 4){
+    if (index == 4) {
       return const PatientIndex();
     }
-
-    if(index == 5){
-      return const TherapyIndex();
+    if (index == 5) {
+      return TherapyRecordsView(); // Elimina el `const` aquí
     }
-
-    if(index == 6){
+    if (index == 6) {
       SystemNavigator.pop();
     }
 
-    return const Center(child: Text('Opciones de pagina'));
+    return const Center(child: Text('Opciones de página'));
   }
 }

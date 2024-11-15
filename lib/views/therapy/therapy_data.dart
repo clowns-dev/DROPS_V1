@@ -22,6 +22,7 @@ class TherapyDataTable extends StatefulWidget {
 class _TherapyDataTableState extends State<TherapyDataTable> {
   late TherapyDataSource _therapyDataSource;
   int rowsPerPage = 5;
+
   @override
   void initState() {
     super.initState();
@@ -45,10 +46,11 @@ class _TherapyDataTableState extends State<TherapyDataTable> {
             rowHeight: 50,
             columns: <GridColumn>[
               buildGridColumn('ID\nTerapia', 'ID\nTerapia'),
-              buildGridColumn('CI\nEnfermer@', 'CI\nEnfermer@'),
-              buildGridColumn('CI\nPaciente', 'CI\nPaciente'),
+              buildGridColumn('ID\nEnfermer@', 'ID\nEnfermer@'),
+              buildGridColumn('ID\nPaciente', 'ID\nPaciente'),
               buildGridColumn('Nro.\nCama', 'Nro.\nCama'),
-              buildGridColumn('Fecha Inicio\nAsignacion', 'Fecha Inicio\nAsignacion'),
+              buildGridColumn(
+                  'Fecha Inicio\nAsignacion', 'Fecha Inicio\nAsignacion'),
               buildGridColumn('Fecha Fin\nAsignacion', 'Fecha Fin\nAsignacion'),
               GridColumn(
                 columnName: 'Acciones',
@@ -67,7 +69,9 @@ class _TherapyDataTableState extends State<TherapyDataTable> {
         SfDataPager(
           delegate: _therapyDataSource,
           availableRowsPerPage: const <int>[5, 10],
-          pageCount: (widget.therapies.length / _therapyDataSource.rowsPerPage).ceil().toDouble(),
+          pageCount: (widget.therapies.length / _therapyDataSource.rowsPerPage)
+              .ceil()
+              .toDouble(),
           onRowsPerPageChanged: (int? rowsPerPage) {
             setState(() {
               _therapyDataSource.updateRowsPerPage(rowsPerPage!);
@@ -75,7 +79,8 @@ class _TherapyDataTableState extends State<TherapyDataTable> {
           },
           onPageNavigationEnd: (int pageIndex) {
             setState(() {
-              _therapyDataSource.updatePage(pageIndex, _therapyDataSource.rowsPerPage);
+              _therapyDataSource.updatePage(
+                  pageIndex, _therapyDataSource.rowsPerPage);
             });
           },
         ),
@@ -85,18 +90,17 @@ class _TherapyDataTableState extends State<TherapyDataTable> {
 }
 
 class TherapyDataSource extends DataGridSource {
-  int rowsPerPage = 5; 
-  int currentPageIndex = 0; 
-  
-  List<DataGridRow> _therapies = []; 
-  
-  final void Function(int id) onView; 
+  int rowsPerPage = 5;
+  int currentPageIndex = 0;
+
+  List<DataGridRow> _therapies = [];
+
+  final void Function(int id) onView;
 
   TherapyDataSource({
     required List<Therapy> therapies,
     required this.onView,
   }) {
-    
     _therapies = therapies.map<DataGridRow>((therapy) {
       final formattedStartDate = therapy.startDate != null
           ? DateFormat('yyyy-MM-dd').format(therapy.startDate!)
@@ -107,11 +111,18 @@ class TherapyDataSource extends DataGridSource {
 
       return DataGridRow(cells: [
         DataGridCell<int>(columnName: 'ID\nTerapia', value: therapy.idTherapy),
-        DataGridCell<String>(columnName: 'CI\nEnfermer@', value: therapy.ciNurse ?? 'N/A'),
-        DataGridCell<String>(columnName: 'CI\nPaciente', value: therapy.ciPatient ?? 'N/A'),
-        DataGridCell<String>(columnName: 'Nro.\nCama', value: therapy.stretcherNumber ?? 'N/A'),
-        DataGridCell<String>(columnName: 'Fecha Inicio\nAsignacion', value: formattedStartDate),
-        DataGridCell<String>(columnName: 'Fecha Fin\nAsignacion', value: formattedFinishDate),
+        DataGridCell<int>(
+            columnName: 'ID\nEnfermer@',
+            value:
+                therapy.idNurse), // Asegúrate de que idNurse existe en Therapy
+        DataGridCell<int>(
+            columnName: 'ID\nPaciente',
+            value: therapy
+                .idPatient), // Asegúrate de que idPatient existe en Therapy
+        DataGridCell<String>(
+            columnName: 'Fecha Inicio\nAsignacion', value: formattedStartDate),
+        DataGridCell<String>(
+            columnName: 'Fecha Fin\nAsignacion', value: formattedFinishDate),
         DataGridCell<Widget>(
           columnName: 'Acciones',
           value: Row(
@@ -125,20 +136,17 @@ class TherapyDataSource extends DataGridSource {
     }).toList();
   }
 
-
   void updatePage(int pageIndex, int rowsPerPage) {
     currentPageIndex = pageIndex;
-    this.rowsPerPage = rowsPerPage;  
-    notifyListeners();  
+    this.rowsPerPage = rowsPerPage;
+    notifyListeners();
   }
-
 
   void updateRowsPerPage(int rowsPerPage) {
     this.rowsPerPage = rowsPerPage;
-    currentPageIndex = 0; 
-    notifyListeners(); 
+    currentPageIndex = 0;
+    notifyListeners();
   }
-
 
   @override
   List<DataGridRow> get rows {
@@ -147,7 +155,6 @@ class TherapyDataSource extends DataGridSource {
     endIndex = endIndex > _therapies.length ? _therapies.length : endIndex;
     return _therapies.sublist(startIndex, endIndex);
   }
-
 
   @override
   DataGridRowAdapter buildRow(DataGridRow row) {
@@ -165,7 +172,8 @@ class TherapyDataSource extends DataGridSource {
                     color: const Color(0xFFFFE4E1),
                     borderRadius: BorderRadius.circular(8.0),
                   ),
-                  padding: const EdgeInsets.symmetric(vertical: 6.0, horizontal: 8.0),
+                  padding: const EdgeInsets.symmetric(
+                      vertical: 6.0, horizontal: 8.0),
                   child: Text(
                     dataGridCell.value.toString(),
                     style: const TextStyle(

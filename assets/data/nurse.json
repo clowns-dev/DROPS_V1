@@ -1,0 +1,53 @@
+[
+    {
+      "idNurse": 201,
+      "fullName": "Ana Martínez",
+      "role": "Enfermera Jefe"
+    },
+    {
+      "idNurse": 202,
+      "fullName": "Luis García",
+      "role": "Enfermero"
+    },
+    {
+      "idNurse": 203,
+      "fullName": "Sofía López",
+      "role": "Enfermera Asistente"
+    },
+    {
+      "idNurse": 204,
+      "fullName": "Carlos Fernández",
+      "role": "Enfermero"
+    },
+    {
+      "idNurse": 205,
+      "fullName": "Marta Sánchez",
+      "role": "Enfermera Jefe"
+    },
+    {
+      "idNurse": 206,
+      "fullName": "Pedro Jiménez",
+      "role": "Enfermero"
+    },
+    {
+      "idNurse": 207,
+      "fullName": "Lucía Vargas",
+      "role": "Enfermera"
+    },
+    {
+      "idNurse": 208,
+      "fullName": "Jorge Rivera",
+      "role": "Enfermero"
+    },
+    {
+      "idNurse": 209,
+      "fullName": "Elena Gómez",
+      "role": "Enfermera Asistente"
+    },
+    {
+      "idNurse": 210,
+      "fullName": "Ricardo Peña",
+      "role": "Enfermero Jefe"
+    }
+  ]
+  

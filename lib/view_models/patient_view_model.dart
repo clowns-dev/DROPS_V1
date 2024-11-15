@@ -12,7 +12,6 @@ class PatientViewModel extends ChangeNotifier {
 
   PatientViewModel() {
     fetchPatients();
-    
   }
 
   Future<void> fetchPatients() async {

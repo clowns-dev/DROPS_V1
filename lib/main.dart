@@ -5,8 +5,8 @@ import 'package:ps3_drops_v1/view_models/balance_view_model.dart';
 import 'package:ps3_drops_v1/view_models/user_view_model.dart';
 import 'package:ps3_drops_v1/view_models/smart_view_model.dart';
 import 'package:ps3_drops_v1/view_models/therapy_view_model.dart';
-import 'package:ps3_drops_v1/views/home_view.dart';
 import 'package:ps3_drops_v1/view_models/patient_view_model.dart';
+import 'package:ps3_drops_v1/views/users/login_view.dart';
 void main() {
   runApp(
     MultiProvider(
@@ -40,7 +40,7 @@ class MyApp extends StatelessWidget {
       ],
 
       locale: Locale('es', 'ES'), 
-      home: HomePage(),
+      home: LoginView(),
     );
   }
 }

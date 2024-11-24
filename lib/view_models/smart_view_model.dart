@@ -1,47 +1,42 @@
 import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
 import 'package:ps3_drops_v1/models/smart.dart';
+import 'package:ps3_drops_v1/services/api_middleware.dart';
 import 'package:ps3_drops_v1/services/api_service_smart.dart';
 
 class SmartViewModel extends ChangeNotifier {
-  ApiServiceSmart apiServiceSmart = ApiServiceSmart();
+  final ApiMiddleware _apiMiddleware = ApiMiddleware();
+  late final ApiServiceSmart apiServiceSmart = ApiServiceSmart(_apiMiddleware);
   Smart? smart;
   List<Smart> listSmarts = [];  
   List<Smart> filteredSmarts = []; 
   bool isLoading = false;
   bool hasMatches = true;
 
-  SmartViewModel() {
-    fetchSmarts();
-  }
-
-  Future<void> fetchSmarts() async {
+  SmartViewModel();
+ 
+  Future<void> fetchSmarts(BuildContext context) async {
     isLoading = true;
     notifyListeners();
     
     try {
-      listSmarts = await apiServiceSmart.fetchSmarts();
+      listSmarts = await apiServiceSmart.fetchSmarts(context);
       filteredSmarts = List.from(listSmarts); 
       hasMatches = filteredSmarts.isNotEmpty;
-      if (kDebugMode) {
-        print('Manillas cargadas: ${listSmarts.length}');
-      }
     } catch (e) {
       if (kDebugMode) {
         print('Error al obtener los registros de Manillas: $e');
       }
     } finally {
-      isLoading = false;  // Asegúrate de que esto esté aquí
+      isLoading = false; 
       notifyListeners();
     }
   }
 
-
   void filterSmarts(String query, String field) {
     if (query.isEmpty || field == 'Buscar por:') {
-      // Si el campo de búsqueda está vacío o se selecciona la opción por defecto, mostrar todos los registros
       filteredSmarts = List.from(listSmarts);
     } else {
-      // Filtra la lista según el campo seleccionado
       switch (field) {
         case 'Codigo':
           filteredSmarts = listSmarts
@@ -62,14 +57,11 @@ class SmartViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<Smart?> fetchBalanceById(int id) async {
+  Future<Smart?> fetchBalanceById(BuildContext context, int id) async {
     isLoading = true;
     Smart? smart;
     try {
-      smart = await apiServiceSmart.fetchSmartById(id); 
-      if (kDebugMode) {
-        print('Balanza cargada: ${smart.codeRFID}');
-      }
+      smart = await apiServiceSmart.fetchSmartById(context, id); 
     } catch (e) {
       if (kDebugMode) {
         print('Error al obtener el registro de Balanza: $e');
@@ -81,9 +73,9 @@ class SmartViewModel extends ChangeNotifier {
     return smart;
   }
 
-  Future<bool> isCodeRegistered(String codeRFID) async {
+  Future<bool> isCodeRegistered(BuildContext context, String codeRFID) async {
     try{
-      return await apiServiceSmart.verifyExistCodeRFID(codeRFID);
+      return await apiServiceSmart.verifyExistCodeRFID(context, codeRFID);
     }catch(e){
       if (kDebugMode) {
         print('Error al verificar si el codeRFID está registrado: $e');
@@ -92,18 +84,10 @@ class SmartViewModel extends ChangeNotifier {
     }
   }
 
-  Future<void> createNewSmart(Smart newSmart) async {
+  Future<void> createNewSmart(BuildContext context, Smart newSmart) async {
     try {
       if(newSmart.codeRFID != null){
-        await apiServiceSmart.createSmart(newSmart);
-        await fetchSmarts(); // Actualiza la lista después de crear
-        if(kDebugMode){
-          print("Manilla creada Exitosamente!");
-        } else {
-          if(kDebugMode){
-            print("Error: Faltan datos para la creacion.");
-          }
-        }
+        await apiServiceSmart.createSmart(context, newSmart); 
       }
     } catch (e){
       if (kDebugMode){
@@ -112,18 +96,14 @@ class SmartViewModel extends ChangeNotifier {
     }
   }
 
-  Future<void> editSmart(Smart modifySmart) async {
+  Future<void> editSmart(BuildContext context, Smart modifySmart) async {
     try {
       if (modifySmart.idSmart != null &&
           modifySmart.codeRFID != null &&
           modifySmart.available != null &&
           modifySmart.idUser != null) {
           
-        await apiServiceSmart.updateSmart(modifySmart); 
-        if (kDebugMode) {
-          print("Manilla Editada Exitosamente!");
-        }
-        
+        await apiServiceSmart.updateSmart(context, modifySmart); 
       } else {
         if (kDebugMode) {
           print("Error: Faltan datos para la Edición.");
@@ -136,18 +116,10 @@ class SmartViewModel extends ChangeNotifier {
     }
   }
 
-  Future<void> removeSmart(int? idSmart) async {
+  Future<void> removeSmart(BuildContext context, int? idSmart) async {
     try {
       if(idSmart != null && idSmart > 0){
-        await apiServiceSmart.deleteSmart(idSmart);
-        await fetchSmarts();
-        if(kDebugMode){
-          print("Manilla Eliminada Exitosamente!");
-        } else {
-          if(kDebugMode){
-            print("Error: Faltan datos para la eliminacion.");
-          }
-        }
+        await apiServiceSmart.deleteSmart(context, idSmart);
       }
     } catch (e){
       if (kDebugMode){

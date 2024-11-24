@@ -1,4 +1,5 @@
 import 'package:flutter/services.dart';
+import 'package:ps3_drops_v1/tools/session_manager.dart';
 import 'package:ps3_drops_v1/widgets/error_exist_dialog.dart';
 import 'package:ps3_drops_v1/widgets/error_form_dialog.dart';
 import 'package:syncfusion_flutter_datepicker/datepicker.dart';
@@ -23,7 +24,6 @@ class PatientIndex extends StatefulWidget {
   @override
   State<PatientIndex> createState() => _PatientIndexState();
 }
-
 class _PatientIndexState extends State<PatientIndex> {
   String _selectedFilter = 'Buscar por:';
   final List<String> _filterOptions = ['Buscar por:','Nombre', 'CI', 'Apellido'];
@@ -69,6 +69,14 @@ class _PatientIndexState extends State<PatientIndex> {
   void initState() {
     super.initState();
   }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final patientViewModel = context.read<PatientViewModel>();
+    patientViewModel.fetchPatients(context);
+  }
+
 
   @override
   void dispose() {
@@ -267,8 +275,9 @@ class _PatientIndexState extends State<PatientIndex> {
           onConfirmDelete: () {
             final patientViewModel = context.read<PatientViewModel>();
             if(patientId != null){
-              patientViewModel.removePatient(patientId, 1).then((_){
-                patientViewModel.fetchPatients();
+              patientViewModel.removePatient(context, patientId, sessionManager.idUser).then((_){
+                // ignore: use_build_context_synchronously
+                patientViewModel.fetchPatients(context);
               });
             }
           },
@@ -299,13 +308,13 @@ class _PatientIndexState extends State<PatientIndex> {
       _fieldErrors['genre'] = (_valueRadioButtonGenre == null);
     });
 
-     if (_fieldErrors.containsValue(true)) {
+    if (_fieldErrors.containsValue(true)) {
       _showErrorFormDialog(context, _editingPatient != null);
       return;
     }
 
     final patientViewModel = context.read<PatientViewModel>();
-    bool isCiRegistered = await patientViewModel.isCiRegistered(_patientCI.text.trim());
+    bool isCiRegistered = await patientViewModel.isCiRegistered(context,_patientCI.text.trim());
 
     if(isCiRegistered && _editingPatient == null){
       _showErrorExistsDialog();
@@ -321,11 +330,13 @@ class _PatientIndexState extends State<PatientIndex> {
         birthDate: DateFormat('dd/MM/yyyy').parse(_patientBirthDate.text), 
         ci: _patientCI.text,
         genre: (_valueRadioButtonGenre == 0) ? "M" : "F",
-        userID: 29 // cambiar luego por el ID del usuario que se captura cuando el usuario se loguea.
+        userID: sessionManager.idUser 
       );
 
-      patientViewModel.editPatient(patient!).then((_) {
-        patientViewModel.fetchPatients();
+      // ignore: use_build_context_synchronously
+      patientViewModel.editPatient(context,patient!).then((_) {
+        // ignore: use_build_context_synchronously
+        patientViewModel.fetchPatients(context);
         _clearSearch();
         _resetForm();
         if(mounted){
@@ -340,11 +351,13 @@ class _PatientIndexState extends State<PatientIndex> {
         birthDate: DateFormat('dd/MM/yyyy').parse(_patientBirthDate.text), 
         ci: _patientCI.text,
         genre: (_valueRadioButtonGenre == 0) ? "M" : "F",
-        userID: 29 // cambiar luego por el ID del usuario que se captura cuando el usuario se loguea.
+        userID: sessionManager.idUser 
       );
 
-      patientViewModel.createNewPatient(patient!).then((_) {
-        patientViewModel.fetchPatients();
+      // ignore: use_build_context_synchronously
+      patientViewModel.createNewPatient(context, patient!).then((_) {
+        // ignore: use_build_context_synchronously
+        patientViewModel.fetchPatients(context);
         _clearSearch();
         _resetForm();
         if(mounted){
@@ -438,7 +451,7 @@ class _PatientIndexState extends State<PatientIndex> {
                           setState(() {
                             _selectedFilter = newValue as String;
                           });
-                          if(_selectedFilter == 'Buscar por:'){
+                          if (_selectedFilter == 'Buscar por:') {
                             _filteredPatientList('');
                           }
                         },
@@ -447,7 +460,7 @@ class _PatientIndexState extends State<PatientIndex> {
                       SearchField(
                         controller: _searchController,
                         fullWidth: false,
-                        onChanged: (query){
+                        onChanged: (query) {
                           _filteredPatientList(query);
                         },
                       ),
@@ -556,9 +569,9 @@ class _PatientIndexState extends State<PatientIndex> {
                 decoration: InputDecoration(
                   hintText: 'Ingrese el apellido paterno',
                   border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12.0),
-                  borderSide: BorderSide(color: _fieldErrors['lastName']! ? Colors.red : Colors.grey),
-                ),
+                    borderRadius: BorderRadius.circular(12.0),
+                    borderSide: BorderSide(color: _fieldErrors['lastName']! ? Colors.red : Colors.grey),
+                  ),
                 errorText: _fieldErrors['lastName']! ? 'Campo obligatorio' : _fieldErrors['lastNameInvalid']! ? 'Apellido invalido' : null,
               ),
             ),
@@ -697,7 +710,7 @@ class _PatientIndexState extends State<PatientIndex> {
             patients: patientViewModel.filteredPatients,
             onEdit: (id) async {
               
-              Patient? patient = await patientViewModel.fetchPatientById(id);
+              Patient? patient = await patientViewModel.fetchPatientById(context,id);
 
               if (patient != null) {
                 setState(() {

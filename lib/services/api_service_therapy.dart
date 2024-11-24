@@ -1,14 +1,25 @@
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:ps3_drops_v1/models/therapy.dart';
+import 'package:ps3_drops_v1/services/api_headers.dart';
+import 'package:ps3_drops_v1/services/api_middleware.dart';
+import 'package:ps3_drops_v1/tools/base_url_service.dart';
 
 class ApiServiceTherapy {
-  final String baseUrl = 'http://127.0.0.1:5000/api/v1';
+  final ApiMiddleware _apiMiddleware;
+  ApiServiceTherapy(this._apiMiddleware);
 
-  Future<List<Therapy>> fetchTherapies() async {
+  Future<List<Therapy>> fetchTherapies(BuildContext context) async {
     try {
-      final response = await http.get(Uri.parse('$baseUrl/therapies'));
+      final response = await _apiMiddleware.makeRequest(
+        context,
+        () => http.get(
+          Uri.parse('${BaseUrlService.baseUrl}/therapies'),
+          headers: ApiHeaders.instance.buildHeaders(),
+        ),
+      );
 
       if (response.statusCode == 200) {
         List<dynamic> jsonResponse = json.decode(response.body);
@@ -26,9 +37,15 @@ class ApiServiceTherapy {
     }
   }
 
-  Future<List<Patient>> fetchTherapyPatients() async {
+  Future<List<Patient>> fetchTherapyPatients(BuildContext context) async {
     try{
-      final response = await http.get(Uri.parse('$baseUrl/therapy/patients'));
+      final response = await _apiMiddleware.makeRequest(
+        context,
+        () => http.get(
+          Uri.parse('${BaseUrlService.baseUrl}/therapy/patients'),
+          headers: ApiHeaders.instance.buildHeaders(),
+        ),
+      );
 
       if(response.statusCode == 200){
         List<dynamic> jsonResponse = json.decode(response.body);
@@ -44,9 +61,15 @@ class ApiServiceTherapy {
     }
   }
 
-  Future<List<Nurse>> fetchTherapyNurses() async {
+  Future<List<Nurse>> fetchTherapyNurses(BuildContext context) async {
     try{
-      final response = await http.get(Uri.parse('$baseUrl/therapy/nurses'));
+      final response = await _apiMiddleware.makeRequest(
+        context,
+        () => http.get(
+          Uri.parse('${BaseUrlService.baseUrl}/therapy/nurses'),
+          headers: ApiHeaders.instance.buildHeaders(),
+        ),
+      );
 
       if(response.statusCode == 200){
         List<dynamic> jsonResponse = json.decode(response.body);
@@ -62,9 +85,15 @@ class ApiServiceTherapy {
     }
   }
 
-  Future<List<Balance>> fetchTherapyBalances() async {
+  Future<List<Balance>> fetchTherapyBalances(BuildContext context) async {
     try{
-      final response = await http.get(Uri.parse('$baseUrl/therapy/balances'));
+      final response = await _apiMiddleware.makeRequest(
+        context,
+        () => http.get(
+          Uri.parse('${BaseUrlService.baseUrl}/therapy/balances'),
+          headers: ApiHeaders.instance.buildHeaders(),
+        ),
+      );
 
       if(response.statusCode == 200){
         List<dynamic> jsonResponse = json.decode(response.body);
@@ -80,9 +109,15 @@ class ApiServiceTherapy {
     }
   }
 
-  Future<InfoTherapy> fetchInfoTherapy(int therapyId) async {
+  Future<InfoTherapy> fetchInfoTherapy(BuildContext context, therapyId) async {
     try {
-      final response = await http.get(Uri.parse('$baseUrl/therapy/info/$therapyId'));
+      final response = await _apiMiddleware.makeRequest(
+        context,
+        () => http.get(
+          Uri.parse('${BaseUrlService.baseUrl}/therapy/info/$therapyId'),
+          headers: ApiHeaders.instance.buildHeaders(),
+        ),
+      );
 
       if (response.statusCode == 200) {
         dynamic jsonResponse = json.decode(response.body);
@@ -101,7 +136,7 @@ class ApiServiceTherapy {
     }
   }
 
-  Future<Therapy> createTherapy(Therapy insertTherapy) async {
+  Future<Therapy> createTherapy(BuildContext context, insertTherapy) async {
     try {
       final body = jsonEncode({
         'stretcher_number': insertTherapy.stretcherNumber,
@@ -111,10 +146,13 @@ class ApiServiceTherapy {
         'user_id': insertTherapy.userID,
       });
 
-      final response = await http.post(
-        Uri.parse('$baseUrl/therapy/create'),
-        headers: {'Content-Type': 'application/json'},
-        body: body,
+      final response = await _apiMiddleware.makeRequest(
+        context,
+        () => http.post(
+          Uri.parse('${BaseUrlService.baseUrl}/therapy/create'),
+          headers: ApiHeaders.instance.buildHeaders(),
+          body: body
+        ),
       );
 
       if (response.statusCode == 201) {

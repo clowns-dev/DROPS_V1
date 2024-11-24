@@ -1,25 +1,27 @@
 import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
 import 'package:ps3_drops_v1/models/user.dart';
 import 'package:ps3_drops_v1/services/api_service_user.dart';
+import 'package:ps3_drops_v1/services/api_middleware.dart';
 
 class UserViewModel extends ChangeNotifier {
-  ApiServiceUser apiServiceUser = ApiServiceUser();
+  final ApiMiddleware _apiMiddleware = ApiMiddleware();
+  late final ApiServiceUser apiServiceUser = ApiServiceUser(_apiMiddleware);
   User? user;
   List<User> listUsers = [];  
   List<User> filteredUsers = []; 
   bool isLoading = false;
   bool hasMatches = true;
 
-  UserViewModel() {
-    fetchUsers();
-  }
+  UserViewModel();
+   
 
-  Future<void> fetchUsers() async {
+  Future<void> fetchUsers(BuildContext context) async {
     isLoading = true;
     notifyListeners();
     
     try {
-      listUsers = await apiServiceUser.fetchUsers();
+      listUsers = await apiServiceUser.fetchUsers(context);
       filteredUsers = List.from(listUsers); 
       hasMatches = filteredUsers.isNotEmpty;
     } catch (e) {
@@ -64,11 +66,11 @@ class UserViewModel extends ChangeNotifier {
 
 
 
-  Future<User?> fetchUserById(int id) async {
+  Future<User?> fetchUserById(BuildContext context,int id) async {
     isLoading = true;
     User? user;
     try {
-      user = await apiServiceUser.fetchUserById(id); 
+      user = await apiServiceUser.fetchUserById(context, id); 
       if (kDebugMode) {
         print('Usuario cargado: ${user.idUser}');
       }
@@ -83,9 +85,9 @@ class UserViewModel extends ChangeNotifier {
     return user;
   }
 
-  Future<bool> isCiRegistered(String ci) async {
+  Future<bool> isCiRegistered(BuildContext context,String ci) async {
     try {
-      return await apiServiceUser.verifyExistUser(ci);
+      return await apiServiceUser.verifyExistUser(context, ci);
     } catch (e) {
       if (kDebugMode) {
         print('Error al verificar si el CI está registrado: $e');
@@ -95,10 +97,10 @@ class UserViewModel extends ChangeNotifier {
   }
 
 
-  Future<void> createNewUser(User? newUser) async {
+  Future<void> createNewUser(BuildContext context, User? newUser) async {
     try {
       if(newUser != null){
-        await apiServiceUser.createUser(newUser);
+        await apiServiceUser.createUser(context, newUser);
 
         if(kDebugMode){
           print("Usuario creada Exitosamente!");
@@ -115,12 +117,11 @@ class UserViewModel extends ChangeNotifier {
     }
   }
 
-  Future<void> editUser(User? modifyUser) async {
+  Future<void> editUser(BuildContext context, User? modifyUser) async {
     try {
       if (modifyUser != null) {
           
-        await apiServiceUser.updateUser(modifyUser);
-        await fetchUsers(); // Actualiza la lista después de editar
+        await apiServiceUser.updateUser(context, modifyUser);
         if (kDebugMode) {
           print("Usuario Editada Exitosamente!");
         }
@@ -137,11 +138,10 @@ class UserViewModel extends ChangeNotifier {
     }
   }
 
-  Future<void> removeUser(int? idUser) async {
+  Future<void> removeUser(BuildContext context, int? idUser) async {
     try {
       if(idUser != null && idUser > 0){
-        await apiServiceUser.deleteUser(idUser);
-        await fetchUsers();
+        await apiServiceUser.deleteUser(context, idUser);
         if(kDebugMode){
           print("Usuario Eliminada Exitosamente!");
         } else {

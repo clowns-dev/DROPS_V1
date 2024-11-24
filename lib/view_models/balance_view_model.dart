@@ -1,9 +1,12 @@
 import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
 import 'package:ps3_drops_v1/models/balance.dart';
+import 'package:ps3_drops_v1/services/api_middleware.dart';
 import 'package:ps3_drops_v1/services/api_service_balance.dart';
 
 class BalanceViewModel extends ChangeNotifier {
-  ApiServiceBalance apiServiceBalance = ApiServiceBalance();
+  final ApiMiddleware _apiMiddleware = ApiMiddleware();
+  late final ApiServiceBalance apiServiceBalance = ApiServiceBalance(_apiMiddleware);
   List<Balance> listBalances = [];
   Balance? balance;
   List<Balance> filteredBalances = [];
@@ -11,19 +14,15 @@ class BalanceViewModel extends ChangeNotifier {
   bool hasMatches = true;
 
 
-  BalanceViewModel() {
-    fetchBalances();
-  }
+  BalanceViewModel();
 
-  Future<void> fetchBalances() async {
+
+  Future<void> fetchBalances(BuildContext context) async {
     isLoading = true;
     notifyListeners();
     try {
-      listBalances = await apiServiceBalance.fetchBalances();
+      listBalances = await apiServiceBalance.fetchBalances(context);
       filteredBalances = List.from(listBalances); 
-      if (kDebugMode) {
-        print('Balanzas cargadas: ${listBalances.length}');
-      }
     } catch (e) {
       if (kDebugMode) {
         print('Error al obtener los registros de Balanzas: $e');
@@ -34,15 +33,12 @@ class BalanceViewModel extends ChangeNotifier {
     }
   }
 
-  Future<Balance?> fetchBalanceById(int id) async {
+  Future<Balance?> fetchBalanceById(BuildContext context, int id) async {
     isLoading = true;
     
     Balance? balance;
     try {
-      balance = await apiServiceBalance.fetchBalanceById(id); 
-      if (kDebugMode) {
-        print('Balanza cargada: ${balance.balanceCode}');
-      }
+      balance = await apiServiceBalance.fetchBalanceById(context, id); 
     } catch (e) {
       if (kDebugMode) {
         print('Error al obtener el registro de Balanza: $e');
@@ -51,12 +47,12 @@ class BalanceViewModel extends ChangeNotifier {
       isLoading = false;
       notifyListeners();
     }
-    return balance; // Retorna el objeto Balance recuperado
+    return balance; 
   }
 
-  Future<bool> isCodeRegistered(String code) async {
+  Future<bool> isCodeRegistered(BuildContext context, String code) async {
     try {
-      return await apiServiceBalance.verifyExistBalance(code);
+      return await apiServiceBalance.verifyExistBalance(context, code);
     } catch (e) {
       if (kDebugMode) {
         print('Error al verificar si la balanza está registrada: $e');
@@ -84,18 +80,10 @@ class BalanceViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> createNewBalance(Balance newBalance) async {
+  Future<void> createNewBalance(BuildContext context, Balance newBalance) async {
     try {
       if(newBalance.balanceCode != null && newBalance.userID != null){
-        await apiServiceBalance.createBalance(newBalance);
-
-        if(kDebugMode){
-          print("Balanza creada Exitosamente!");
-        } else {
-          if(kDebugMode){
-            print("Error: Faltan datos para la creacion.");
-          }
-        }
+        await apiServiceBalance.createBalance(context, newBalance);
       }
     } catch (e){
       if (kDebugMode){
@@ -104,18 +92,10 @@ class BalanceViewModel extends ChangeNotifier {
     }
   }
 
-  Future<void> editBalance(Balance updateBalance) async {
+  Future<void> editBalance(BuildContext context, Balance updateBalance) async {
     try {
       if(updateBalance.idBalance != null && updateBalance.balanceCode != null && updateBalance.userID != null){
-        await apiServiceBalance.updateBalance(updateBalance);
-
-        if(kDebugMode){
-          print("Balanza Editada Exitosamente!");
-        } else {
-          if(kDebugMode){
-            print("Error: Faltan datos para la Edicion.");
-          }
-        }
+        await apiServiceBalance.updateBalance(context, updateBalance);
       }
     } catch (e){
       if (kDebugMode){
@@ -124,18 +104,10 @@ class BalanceViewModel extends ChangeNotifier {
     }
   }
 
-  Future<void> removeBalance(int? idBalance, int? userId) async {
+  Future<void> removeBalance(BuildContext context, int? idBalance, int? userId) async {
     try {
       if(idBalance != null && userId != null){
-        await apiServiceBalance.deleteBalance(idBalance, userId);
-
-        if(kDebugMode){
-          print("Balanza Eliminada Exitosamente!");
-        } else {
-          if(kDebugMode){
-            print("Error: Faltan datos para la eliminacion.");
-          }
-        }
+        await apiServiceBalance.deleteBalance(context, idBalance, userId);
       }
     } catch (e){
       if (kDebugMode){

@@ -7,7 +7,7 @@ class Balance {
   final String? factor;
   final int? available;
   final DateTime? registerDate;
-  final DateTime? lastUpdate;
+  final DateTime? updateRegister;
   final int? status;
   final int? userID;
 
@@ -17,7 +17,7 @@ class Balance {
     this.factor,
     this.available,
     this.registerDate,
-    this.lastUpdate,
+    this.updateRegister,
     this.status,
     this.userID
   });
@@ -48,8 +48,8 @@ class Balance {
       factor: json['factor'],
       available: json['available'],
       registerDate: parseDate(json['registerDate']),
-      lastUpdate: json['lastUpdate'] != null && json['lastUpdate'] != "Sin Cambios"
-                  ? parseDate(json['lastUpdate'])
+      updateRegister: json['updateRegister'] != null && json['updateRegister'] != "Sin Cambios"
+                  ? parseDate(json['updateRegister'])
                   : null,
       status: json['status'],
       userID: json['userID']

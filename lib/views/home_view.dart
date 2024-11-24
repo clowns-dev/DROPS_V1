@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:ps3_drops_v1/tools/session_manager.dart';
 import 'package:ps3_drops_v1/views/balance/balance_calibration.dart';
 import 'package:ps3_drops_v1/views/balance/balance_index.dart';
 import 'package:ps3_drops_v1/views/patient/patient_index.dart';
@@ -34,13 +35,11 @@ class _HomePageState extends State<HomePage> {
       ];
     } else if(widget.role == 2){
       return const [
-        AdaptiveScaffoldDestination(title: 'Inicio', icon: Icons.home),
         AdaptiveScaffoldDestination(title: 'Terapias Asignadas', icon: Icons.healing),
         AdaptiveScaffoldDestination(title: 'Salir', icon: Icons.exit_to_app),
       ];
     } else if(widget.role == 3){
       return const [
-        AdaptiveScaffoldDestination(title: 'Inicio', icon: Icons.home),
         AdaptiveScaffoldDestination(title: 'Calibracion Balanza', icon: Icons.medical_services),
         AdaptiveScaffoldDestination(title: 'Salir', icon: Icons.exit_to_app),
       ];
@@ -116,14 +115,14 @@ class _HomePageState extends State<HomePage> {
       case 'Calibracion Balanza':
         return const BalanceCalibration();
       case 'Salir':
-        // Reemplaza la página actual con LoginView
+        sessionManager.token = null;
         WidgetsBinding.instance.addPostFrameCallback((_) {
           Navigator.pushReplacement(
             context,
             MaterialPageRoute(builder: (context) => const LoginView()),
           );
         });
-        return const SizedBox.shrink(); // Página vacía mientras se realiza la navegación
+        return const SizedBox.shrink();
       default:
         return const Center(child: Text('Opciones de página no disponible'));
     }

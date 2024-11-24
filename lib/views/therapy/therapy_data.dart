@@ -110,10 +110,10 @@ class TherapyDataSource extends DataGridSource {
   void _buildDataGridRows(List<Therapy> therapies){
     _therapies = therapies.map<DataGridRow>((therapy) {
       final formattedStartDate = therapy.startDate != null
-          ? DateFormat('yyyy-MM-dd').format(therapy.startDate!)
+          ? DateFormat('yyyy-MM-dd HH:mm:ss').format(therapy.startDate!)
           : 'No Iniciado';
       final formattedFinishDate = therapy.finishDate != null
-          ? DateFormat('yyyy-MM-dd').format(therapy.finishDate!)
+          ? DateFormat('yyyy-MM-dd HH:mm:ss').format(therapy.finishDate!)
           : 'Sin fecha de Fin';
 
       return DataGridRow(cells: [

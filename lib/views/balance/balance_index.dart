@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:ps3_drops_v1/models/balance.dart';
+import 'package:ps3_drops_v1/tools/session_manager.dart';
 import 'package:ps3_drops_v1/view_models/balance_view_model.dart';
 import 'package:ps3_drops_v1/views/balance/balance_data.dart';
 import 'package:ps3_drops_v1/widgets/text_label.dart';
@@ -58,7 +59,7 @@ class _BalanceIndexState extends State<BalanceIndex> {
     if(_debounce?.isActive ?? false) _debounce!.cancel();
     _debounce = Timer(const Duration(milliseconds: 500), () async {
       final balanceViewModel = context.read<BalanceViewModel>();
-      bool isCodeRegistered = await balanceViewModel.isCodeRegistered(code.trim());
+      bool isCodeRegistered = await balanceViewModel.isCodeRegistered(context, code.trim());
       setState(() {
         _fieldErrors['balanceCode'] = code.trim().isEmpty;
         _fieldErrors['balanceCodeInvalid'] = !RegExp(r'^[a-zA-Z0-9\s\-_/\\]+$').hasMatch(code.trim());
@@ -98,8 +99,9 @@ class _BalanceIndexState extends State<BalanceIndex> {
             final balanceViewModel = context.read<BalanceViewModel>();
 
             if(balanceId != null){
-              balanceViewModel.removeBalance(balanceId, 1).then((_){
-                balanceViewModel.fetchBalances();
+              balanceViewModel.removeBalance(context, balanceId, sessionManager.idUser).then((_){
+                // ignore: use_build_context_synchronously
+                balanceViewModel.fetchBalances(context);
                 _clearSearch();
               });
             }
@@ -112,7 +114,7 @@ class _BalanceIndexState extends State<BalanceIndex> {
 
   Future<void> _validateAndSubmit(BuildContext formDialogContext) async {
     final balanceViewModel = context.read<BalanceViewModel>();
-    bool isCodeRegistered = await balanceViewModel.isCodeRegistered(_balaceCodeController.text.trim());
+    bool isCodeRegistered = await balanceViewModel.isCodeRegistered(context, _balaceCodeController.text.trim());
 
     setState(() {
       _fieldErrors['balanceCode'] = _balaceCodeController.text.trim().isEmpty;
@@ -135,11 +137,13 @@ class _BalanceIndexState extends State<BalanceIndex> {
       balance = Balance(
         idBalance: _editingBalance!.idBalance,
         balanceCode: _balaceCodeController.text.trim(),
-        userID: idUser // ! Cambiarlo por el ID del usuario logueado en el sistema.
+        userID: sessionManager.idUser
       );
 
-      await balanceViewModel.editBalance(balance!);
-      balanceViewModel.fetchBalances();
+      // ignore: use_build_context_synchronously
+      await balanceViewModel.editBalance(context, balance!);
+      // ignore: use_build_context_synchronously
+      balanceViewModel.fetchBalances(context);
       _clearSearch();
       _resetForm();
       // ignore: use_build_context_synchronously
@@ -147,11 +151,13 @@ class _BalanceIndexState extends State<BalanceIndex> {
     } else {
       balance = Balance(
         balanceCode: _balaceCodeController.text.trim(),
-        userID: idUser // ! Cambiar por el ID del usuario logueado en el sistema.
+        userID: sessionManager.idUser
       );
 
-      await balanceViewModel.createNewBalance(balance!);
-      balanceViewModel.fetchBalances();
+      // ignore: use_build_context_synchronously
+      await balanceViewModel.createNewBalance(context, balance!);
+      // ignore: use_build_context_synchronously
+      balanceViewModel.fetchBalances(context);
       _clearSearch();
       _resetForm();
       // ignore: use_build_context_synchronously
@@ -163,6 +169,13 @@ class _BalanceIndexState extends State<BalanceIndex> {
   @override
   void initState() {
     super.initState();
+  }
+
+  @override
+  void didChangeDependencies(){
+    super.didChangeDependencies();
+    final balanceViewModel = context.read<BalanceViewModel>();
+    balanceViewModel.fetchBalances(context);
   }
 
   @override
@@ -469,7 +482,7 @@ class _BalanceIndexState extends State<BalanceIndex> {
           return BalanceDataTable(
             balances: balanceViewModel.filteredBalances,
             onEdit: (id) async {
-              Balance? balance = await balanceViewModel.fetchBalanceById(id);
+              Balance? balance = await balanceViewModel.fetchBalanceById(context, id);
               if (balance != null) {
                 setState(() {
                   _editingBalance = balance;

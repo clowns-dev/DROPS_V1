@@ -1,5 +1,7 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:ps3_drops_v1/tools/session_manager.dart';
 import 'package:ps3_drops_v1/views/home_view.dart';
 import 'dart:convert';
 
@@ -38,14 +40,22 @@ class LoginViewState extends State<LoginView> {
 
     if (response.statusCode == 200) {
       final data = json.decode(response.body);
-      final role = data['role_id'];
+      if(kDebugMode){
+        print(data);
+      }
+
+      sessionManager.idRole = data['role_id'];
+      sessionManager.token = data['access_token'];
+      sessionManager.idUser = data['user_id'];
 
       Navigator.pushReplacement(
+        // ignore: use_build_context_synchronously
         context,
-        MaterialPageRoute(builder: (context) => HomePage(role: role)),
+        MaterialPageRoute(builder: (context) => HomePage(role: sessionManager.idRole!)),
       );
     } else if (response.statusCode == 404) {
       showDialog(
+        // ignore: use_build_context_synchronously
         context: context,
         builder: (context) => AlertDialog(
           title: const Text('Error de autenticación'),

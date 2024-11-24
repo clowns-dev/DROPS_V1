@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:ps3_drops_v1/models/therapy.dart';
+import 'package:ps3_drops_v1/tools/session_manager.dart';
 import 'package:ps3_drops_v1/view_models/therapy_view_model.dart';
 import 'package:ps3_drops_v1/views/therapy/therapy_balances_data.dart';
 import 'package:ps3_drops_v1/views/therapy/therapy_data.dart';
@@ -60,6 +61,17 @@ class _TherapyIndexState extends State<TherapyIndex> {
   @override
   void initState() {
     super.initState();
+    final therapyViewModel = context.read<TherapyViewModel>();
+    therapyViewModel.fetchTherapies(context);
+    therapyViewModel.fetchTherapyBalances(context);
+    therapyViewModel.fetchTherapyNurses(context);
+    therapyViewModel.fetchTherapyPatients(context);
+  }
+
+  @override
+  void didChangeDependencies(){
+    super.didChangeDependencies();
+    
   }
 
   @override
@@ -103,9 +115,9 @@ class _TherapyIndexState extends State<TherapyIndex> {
     });
   }
 
-  void _onViewTherapy(int id) async {
+  void _onViewTherapy(BuildContext context, int id) async {
     final therapyViewModel = context.read<TherapyViewModel>();
-    await therapyViewModel.fetchInfoTherapy(id);
+    await therapyViewModel.fetchInfoTherapy(context, id);
     if (mounted) {
       setState(() {
         _selectedInfoTherapy = therapyViewModel.infoTherapy;
@@ -190,11 +202,12 @@ class _TherapyIndexState extends State<TherapyIndex> {
         idNurse: idNurse,
         idBalance: idBalance,
         idPerson: idPatient,
-        userID: 29 /**  * ! Cambiar por el di capturado del usuario cuando se loguea. */ 
+        userID: sessionManager.idUser 
       );
 
-      therapyViewModel.createNewTherapy(therapy!).then((_) {
-        therapyViewModel.fetchTherapies();
+      therapyViewModel.createNewTherapy(context, therapy!).then((_) {
+        // ignore: use_build_context_synchronously
+        therapyViewModel.fetchTherapies(context);
         _clearSearch();
         _resetForm();
         if(mounted){
@@ -361,7 +374,7 @@ class _TherapyIndexState extends State<TherapyIndex> {
           return TherapyDataTable(
             therapies: therapyViewModel.filteredTherapies,
             onView: (id) {
-              _onViewTherapy(id);
+              _onViewTherapy(context, id);
             },
           );
         }

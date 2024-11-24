@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:ps3_drops_v1/models/smart.dart';
+import 'package:ps3_drops_v1/models/therapy.dart';
 import 'package:ps3_drops_v1/services/api_middleware.dart';
 import 'package:ps3_drops_v1/services/api_service_smart.dart';
 
@@ -8,10 +9,14 @@ class SmartViewModel extends ChangeNotifier {
   final ApiMiddleware _apiMiddleware = ApiMiddleware();
   late final ApiServiceSmart apiServiceSmart = ApiServiceSmart(_apiMiddleware);
   Smart? smart;
-  List<Smart> listSmarts = [];  
+  List<Smart> listSmarts = []; 
   List<Smart> filteredSmarts = []; 
+   List<Nurse> listNursesWithoutSmarts = [];
+  List<Nurse> filteredNursesWhithoutSmarts = [];
   bool isLoading = false;
   bool hasMatches = true;
+  bool hastMatchesNurses = true;
+   int? selectedNurseId; 
 
   SmartViewModel();
  
@@ -31,6 +36,36 @@ class SmartViewModel extends ChangeNotifier {
       isLoading = false; 
       notifyListeners();
     }
+  }
+  
+
+  Future<void> fetchSmartNurses(BuildContext context) async {
+     isLoading = true;
+    notifyListeners();
+    try {
+      listNursesWithoutSmarts = await apiServiceSmart.fetchSmartNurses(context);
+      filteredNursesWhithoutSmarts = List.from(listNursesWithoutSmarts);
+    } catch (e) {
+      if (kDebugMode) {
+        print('Error: Fallo al obtener los registros de Enfermeros.');
+      }
+    } finally {
+      isLoading = false;
+      notifyListeners();
+    }
+  }
+
+  void filterNurses(String query) {
+    if (query.isEmpty) {
+      filteredNursesWhithoutSmarts = List.from(listNursesWithoutSmarts);
+    } else {
+      filteredNursesWhithoutSmarts = listNursesWithoutSmarts.where((nurse) {
+        return nurse.fullName?.toLowerCase().contains(query.toLowerCase()) ?? false;
+      }).toList();
+    }
+ 
+    hastMatchesNurses = filteredNursesWhithoutSmarts.isNotEmpty;
+    notifyListeners();
   }
 
   void filterSmarts(String query, String field) {
@@ -116,6 +151,23 @@ class SmartViewModel extends ChangeNotifier {
     }
   }
 
+  Future<void> asignSmart(BuildContext context, Smart asignSmart) async {
+    try{
+      if(asignSmart.idSmart != null && asignSmart.idUser != null){
+        await apiServiceSmart.assignmentSmart(context, asignSmart);
+        
+      } else {
+        if (kDebugMode) {
+          print("Error: Faltan datos para la asignacion.");
+        }
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        print("Error: No se pudo asignar la Manilla.\nDetalles: $e");
+      }
+    }
+  }
+
   Future<void> removeSmart(BuildContext context, int? idSmart) async {
     try {
       if(idSmart != null && idSmart > 0){
@@ -126,5 +178,11 @@ class SmartViewModel extends ChangeNotifier {
         print("Error: No se pudo eliminar la Manilla.\n Detalles: $e");
       }
     }
+  }
+
+  int? updateSelectedNurseId(int id) {
+    selectedNurseId = id;
+    notifyListeners(); 
+    return selectedNurseId;
   }
 }

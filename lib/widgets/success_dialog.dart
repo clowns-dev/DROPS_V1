@@ -21,7 +21,7 @@ class SuccessDialog extends StatelessWidget {
       child: Container(
         constraints: const BoxConstraints(
           maxWidth: 354,
-          maxHeight: 315,
+          maxHeight: 350,
         ),
         padding: const EdgeInsets.symmetric(horizontal: 71, vertical: 20),
         decoration: BoxDecoration(

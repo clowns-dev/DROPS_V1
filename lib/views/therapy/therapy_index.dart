@@ -567,7 +567,7 @@ class _TherapyIndexState extends State<TherapyIndex> {
             const SizedBox(height: 32.0),
             Expanded(
               child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start, // Cambiado a start para alinearlos en la parte superior
+                crossAxisAlignment: CrossAxisAlignment.start, 
                 children: [
                   Expanded(
                     child: Column(

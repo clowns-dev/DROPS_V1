@@ -141,7 +141,9 @@ class SmartDataSource extends DataGridSource {
           value: Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              AssignmentButton(onPressed: () => onAssignment(smart.idSmart!)),
+              smart.idUser != null && smart.idUser != 0
+                    ? const SizedBox.shrink()
+                    : AssignmentButton(onPressed: () => onAssignment(smart.idSmart!)),
               const SizedBox(width: 8),
               EditButton(onPressed: () => onEdit(smart.idSmart!)),
               const SizedBox(width: 8),

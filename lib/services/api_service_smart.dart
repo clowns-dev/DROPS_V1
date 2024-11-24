@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:ps3_drops_v1/models/smart.dart';
+import 'package:ps3_drops_v1/models/therapy.dart';
 import 'package:ps3_drops_v1/services/api_headers.dart';
 import 'package:ps3_drops_v1/services/api_middleware.dart';
 import 'package:ps3_drops_v1/tools/base_url_service.dart';
@@ -28,6 +29,30 @@ class ApiServiceSmart {
       }
     } catch (e) {
       throw Exception('Error al cargar los datos: $e');
+    }
+  }
+
+  Future<List<Nurse>> fetchSmartNurses(BuildContext context) async {
+    try{
+      final response = await _apiMiddleware.makeRequest(
+        context,
+        () => http.get(
+          Uri.parse('${BaseUrlService.baseUrl}/nurses/whithout/smarts'),
+          headers: ApiHeaders.instance.buildHeaders(),
+        ),
+      );
+
+      if(response.statusCode == 200){
+        List<dynamic> jsonResponse = json.decode(response.body);
+        return jsonResponse.map((data) => Nurse.fromJson(data)).toList();
+      } else {
+        throw Exception('Error: Fallo al cargar los Datos. Codigo de Estado: ${response.statusCode}');
+      }
+    } catch (e) {
+      if(kDebugMode){
+        print('Error: Fallo al cargar los Datos.');
+      }
+      throw Exception('Error: Fallo al cargar los datos: $e');
     }
   }
 

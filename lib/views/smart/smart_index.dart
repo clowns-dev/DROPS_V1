@@ -7,6 +7,8 @@ import 'package:ps3_drops_v1/models/smart.dart';
 import 'package:ps3_drops_v1/tools/session_manager.dart';
 import 'package:ps3_drops_v1/view_models/smart_view_model.dart';
 import 'package:ps3_drops_v1/views/smart/smart_data.dart';
+import 'package:ps3_drops_v1/views/smart/smart_nurses_data.dart';
+import 'package:ps3_drops_v1/widgets/error_form_dialog.dart';
 import 'package:ps3_drops_v1/widgets/text_label.dart';
 import 'package:ps3_drops_v1/widgets/title_container.dart';
 import 'package:ps3_drops_v1/widgets/history_title_container.dart';
@@ -29,15 +31,18 @@ class _SmartIndexState extends State<SmartIndex> {
   final List<String> _filterOptions = ['Buscar por:', 'Codigo', 'Enfermero'];
   Smart? _editingSmart, smart;
   final TextEditingController _searchController = TextEditingController();
+  final TextEditingController _searchNurseController = TextEditingController();
   final TextEditingController _smartCodeController = TextEditingController();
-  int?  _availabilityStatus;
+  int?  idNurse, idSmart,_availabilityStatus, availableAssignment;
 
   Map<String, bool> _fieldErrors = {
     'codeRfid': false,
     'codeRfidInvalid': false,
     'available': false,
+    'idNurse': false,
     'userId':false,
-    'codeRegistered':false
+    'codeRegistered':false,
+    'availableAssignment': false
   };
 
   void _resetFieldErrors(){
@@ -45,15 +50,24 @@ class _SmartIndexState extends State<SmartIndex> {
       _fieldErrors = {
         'codeRfid': false,
         'codeRfidInvalid': false,
+        'idNurse': false,
         'available': false,
         'userId': false,
-        'codeRegistered':false
+        'codeRegistered':false,
+        'availableAssignment': false
       };
     });
   }
 
   void _resetForm(){
+    final smartViewModel = context.read<SmartViewModel>();
+    idNurse = null;
+    availableAssignment = null;
+    _availabilityStatus = null;
     _smartCodeController.clear();
+    smartViewModel.updateSelectedNurseId(0);
+    _filterNurseList('');
+    _filterSmartList('');
     _resetFieldErrors();
   }
 
@@ -88,6 +102,22 @@ class _SmartIndexState extends State<SmartIndex> {
     );
   }
 
+  void _showSuccessDialogAssignment(BuildContext context, BuildContext formDialogContext) {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return SuccessDialog(
+          title: 'Asignacion Exitosa',
+          message: '¡Se asigno al enfermero correctamente!',
+          onBackPressed: () {
+            Navigator.of(context).pop(); 
+            Navigator.of(formDialogContext).pop(); 
+          },
+        );
+      },
+    );
+  }
+
   void _clearSearch() {
     _searchController.clear();
     _filterSmartList('');
@@ -113,6 +143,55 @@ class _SmartIndexState extends State<SmartIndex> {
     );
   }
 
+  void _showErrorFormDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return ErrorDialog(
+          title:'Advertencia',
+          message: '¡Seleccione un Enfermero!',
+          onBackPressed: () {
+            Navigator.of(context).pop(); 
+          },
+        );
+      },
+    );
+  }
+
+  Future<void> __validateAndSubmitToAssignment(BuildContext formDialogContext, int smartID) async {
+    setState(() {
+      _fieldErrors['idNurse'] = idNurse == null || idNurse == 0;
+    });
+
+    if(_fieldErrors.containsValue(true)){
+      _showErrorFormDialog(context);
+      return;
+    }
+
+    final smartViewModel = context.read<SmartViewModel>();
+
+    try{
+      smart = Smart(
+        idSmart: smartID,
+        idUser: idNurse,
+      );
+
+      await smartViewModel.asignSmart(context, smart!);
+
+      // ignore: use_build_context_synchronously
+      await smartViewModel.fetchSmarts(context);
+      // ignore: use_build_context_synchronously
+      await smartViewModel.fetchSmartNurses(context);
+      _clearSearch();
+      _resetForm();
+      // ignore: use_build_context_synchronously
+      _showSuccessDialogAssignment(context, formDialogContext);
+
+    } catch (e){
+      throw Exception("Error Index: $e");
+    }
+  }
+
   Future<void> _validateAndSubmit(BuildContext formDialogContext) async {
     final smartViewModel = context.read<SmartViewModel>();
     bool isCodeRegistered = await smartViewModel.isCodeRegistered(context, _smartCodeController.text.trim());
@@ -124,9 +203,11 @@ class _SmartIndexState extends State<SmartIndex> {
       _fieldErrors['codeRegistered'] = isCodeRegistered && _editingSmart == null;
 
       if (_editingSmart != null) {
-      _fieldErrors['available'] = _availabilityStatus == null;
+        _fieldErrors['available'] = _availabilityStatus == null;
+        _fieldErrors['availableAssignment'] = _availabilityStatus == null;
       } else {
-        _fieldErrors['available'] = false; 
+        _fieldErrors['available'] = false;
+        _fieldErrors['availableAssignment'] = false;  
       }
     });
 
@@ -140,17 +221,29 @@ class _SmartIndexState extends State<SmartIndex> {
     Navigator.of(formDialogContext).pop();
 
     if (_editingSmart != null) {
+
+      if(kDebugMode){
+        print("El id es: $availableAssignment");
+        print("El idUser es: ${_editingSmart!.idUser}}");
+      }
+
+      if(availableAssignment == 1){
+        availableAssignment = _editingSmart!.idUser;
+      }
+
       smart = Smart(
         idSmart: _editingSmart!.idSmart,
         codeRFID: _smartCodeController.text,
         available: _availabilityStatus,
-        idUser: sessionManager.idUser,
+        idUser: availableAssignment,
       );
 
       // ignore: use_build_context_synchronously
       await smartViewModel.editSmart(context, smart!);
       // ignore: use_build_context_synchronously
       smartViewModel.fetchSmarts(context);
+      // ignore: use_build_context_synchronously
+      smartViewModel.fetchSmartNurses(context);
       _clearSearch();
       _resetForm();
       // ignore: use_build_context_synchronously
@@ -158,7 +251,7 @@ class _SmartIndexState extends State<SmartIndex> {
     } else {
       smart = Smart(
         codeRFID: _smartCodeController.text,
-        idUser: sessionManager.idUser,
+        idUser: 0,
       );
 
       // ignore: use_build_context_synchronously
@@ -172,8 +265,6 @@ class _SmartIndexState extends State<SmartIndex> {
     }
   }
 
-
-
   @override
   void initState() {
     super.initState();
@@ -184,6 +275,7 @@ class _SmartIndexState extends State<SmartIndex> {
     super.didChangeDependencies();
     final smartViewModel = context.read<SmartViewModel>();
     smartViewModel.fetchSmarts(context);
+    smartViewModel.fetchSmartNurses(context);
   }
 
   @override
@@ -198,11 +290,18 @@ class _SmartIndexState extends State<SmartIndex> {
     smartViewModel.filterSmarts(query, _selectedFilter);
   }
 
+  void _filterNurseList(String query) {
+    final smartViewModal = context.read<SmartViewModel>();
+    smartViewModal.filterNurses(query);
+  }
+
   void _showFormModal(BuildContext context, [Smart? smart]) {
      _editingSmart = smart;
     if (_editingSmart != null) {
       _smartCodeController.text = _editingSmart!.codeRFID ?? ''; 
-      _availabilityStatus = _editingSmart!.available ?? 0; 
+      _availabilityStatus = _editingSmart!.available ?? 0;
+      idNurse = _editingSmart!.idUser ?? 0; 
+      //availableAssignment = _editingSmart!.idUser ?? 0;
     } else {
       _resetForm();
     }
@@ -217,7 +316,7 @@ class _SmartIndexState extends State<SmartIndex> {
           child: StatefulBuilder(
             builder: (BuildContext context, StateSetter setModalState) {
               return Container(
-                width: 800,
+                width: 1000,
                 decoration: BoxDecoration(
                   color: Colors.white,
                   borderRadius: BorderRadius.circular(16.0),
@@ -241,7 +340,7 @@ class _SmartIndexState extends State<SmartIndex> {
                         child: Image.asset(
                           '../assets/img/nurse2.png',
                           fit: BoxFit.cover,
-                          height: 400,
+                          height: 500,
                         ),
                       ),
                     ),
@@ -319,6 +418,38 @@ class _SmartIndexState extends State<SmartIndex> {
                                   ),
                                 ],
                               ),
+                              const SizedBox(height: 16.0),
+                              const TextLabel(content: 'Quitar Asignacion:'),
+                              const SizedBox(height: 8.0),
+                              Row(
+                                children: [
+                                  Expanded(
+                                    child: RadioListTile<int>(
+                                      title: const Text('Sí'),
+                                      value: 0, 
+                                      groupValue: availableAssignment, 
+                                      onChanged: (value) {
+                                        setModalState(() {
+                                          availableAssignment = value!; 
+                                        });
+                                      },
+                                    ),
+                                  ),
+                                  Expanded(
+                                    child: RadioListTile<int>(
+                                      title: const Text('No'),
+                                      value: 1, 
+                                      groupValue: availableAssignment, 
+                                      onChanged: (value) {
+                                        setModalState(() {
+                                          availableAssignment = value!; 
+                                        });
+                                      },
+                                    ),
+                                  ),
+                                ],
+                              ),
+
                             ],
                             Row(
                               mainAxisAlignment: MainAxisAlignment.center,
@@ -392,6 +523,134 @@ class _SmartIndexState extends State<SmartIndex> {
       },
     );
   }
+
+  void showNursesTableModal(BuildContext context, int? idS) {
+    _resetForm();
+    showDialog(
+      context: context,
+      barrierColor: Colors.black.withOpacity(0.5),
+      builder: (BuildContext dialogContext) {
+        return Center(
+          child: Container(
+            decoration: BoxDecoration(
+              color: Colors.white, 
+              borderRadius: BorderRadius.circular(12.0),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.2), 
+                  spreadRadius: 4,
+                  blurRadius: 12,
+                  offset: const Offset(0, 4),
+                ),
+              ],
+            ),
+            width: 1000, 
+            height: 650,
+            child: Dialog(
+              backgroundColor: Colors.white,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12.0), 
+              ),
+              insetPadding: const EdgeInsets.all(16.0), 
+              child: Padding(
+                padding: const EdgeInsets.all(16.0), 
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: Colors.white, 
+                    borderRadius: BorderRadius.circular(12.0),
+                  ),
+                  child: StatefulBuilder(
+                    builder: (BuildContext context, StateSetter setModalState) {
+                      return Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              const Text(
+                                'Enfermeros',
+                                style: TextStyle(fontSize: 20.0, fontWeight: FontWeight.bold),
+                              ),
+                              const SizedBox(width: 10.0),
+                              SearchField(
+                                controller: _searchNurseController,
+                                fullWidth: false,
+                                onChanged: (query) {
+                                  _filterNurseList(query);
+                                },
+                              ),
+                              const SizedBox(width: 24.0),
+                              ElevatedButton(
+                                onPressed: () {
+                                  setModalState(() {
+                                    __validateAndSubmitToAssignment(dialogContext, idS!);
+                                  });
+                                },
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: Colors.purple.shade300,
+                                  padding: const EdgeInsets.symmetric(
+                                    vertical: 16.0,
+                                    horizontal: 32.0,
+                                  ),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(12.0),
+                                  ),
+                                ),
+                                child: const Text(
+                                  'Asignar',
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 8.0),
+                          Expanded(
+                            child: _buildNursesTable(context), 
+                          ),
+                          const SizedBox(height: 16.0),
+                           Center( 
+                            child: ElevatedButton(
+                              onPressed: () {
+                                Navigator.of(dialogContext).pop(); 
+                              },
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: const Color(0xFFFF9494),
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 16.0,
+                                  horizontal: 32.0,
+                                ),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12.0),
+                                ),
+                              ),
+                              child: const Text(
+                                'Cerrar',
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      );
+                    },
+                  ),
+                ),
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+
+
+  
 
   @override
   Widget build(BuildContext context) {
@@ -469,7 +728,7 @@ class _SmartIndexState extends State<SmartIndex> {
                       fullWidth: false,
                       controller: _searchController,
                       onChanged: (query) {
-                        _filterSmartList(query); // Filtra según el campo seleccionado
+                        _filterSmartList(query);
                       },
                     ),
                   ],
@@ -521,7 +780,10 @@ class _SmartIndexState extends State<SmartIndex> {
         } else {
           return SmartDataTable(
             smarts: smartViewModel.filteredSmarts,
-            onAssignment: (id) async {},
+            onAssignment: (id) async {
+              _resetForm();
+              showNursesTableModal(context, id);
+            },
             onEdit: (id) async {
               Smart? smart = await smartViewModel.fetchBalanceById(context, id);
               // ignore: unnecessary_null_comparison
@@ -531,11 +793,40 @@ class _SmartIndexState extends State<SmartIndex> {
                   _editingSmart = smart;
                 });
                 // ignore: use_build_context_synchronously
-                _showFormModal(context, smart);
+                _showFormModal(context, _editingSmart);
               }
             },
             onDelete: (id) async {
               _showDeleteConfirmationDialog(context, id);
+            },
+          );
+        }
+      },
+    );
+  }
+
+  Widget _buildNursesTable(BuildContext context) {
+    return Consumer<SmartViewModel>(
+      builder: (context, smartViewModal, child) {
+        if (smartViewModal.isLoading) {
+          return const Center(child: CircularProgressIndicator());
+        } else if (!smartViewModal.hastMatchesNurses) {
+          return Center(
+            child: Text(
+              'Sin coincidencias',
+              style: TextStyle(
+                fontSize: 16.0,
+                fontWeight: FontWeight.bold,
+                color: Colors.grey.shade600,
+              ),
+            ),
+          );
+        } else {
+          return SmartNursesDataTable(
+            smartNurses: smartViewModal.filteredNursesWhithoutSmarts,
+            selectedId: smartViewModal.selectedNurseId,
+            onAssign: (int id) {
+              idNurse = smartViewModal.updateSelectedNurseId(id);
             },
           );
         }

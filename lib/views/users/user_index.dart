@@ -65,6 +65,13 @@ class _UserIndex extends State<UserIndex> {
   }
 
   @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final userViewModel = context.read<UserViewModel>();
+    userViewModel.fetchUsers(context);
+  }
+
+  @override
   void dispose() {
     _searchController.dispose();
     super.dispose();
@@ -264,8 +271,9 @@ class _UserIndex extends State<UserIndex> {
           onConfirmDelete: () {
             final userViewModel = context.read<UserViewModel>();
             if(userID != null){
-              userViewModel.removeUser(userID).then((_){
-                userViewModel.fetchUsers();
+              userViewModel.removeUser(context, userID).then((_){
+                // ignore: use_build_context_synchronously
+                userViewModel.fetchUsers(context);
               });
             }
           },
@@ -330,7 +338,7 @@ class _UserIndex extends State<UserIndex> {
     }
 
     final userViewModel = context.read<UserViewModel>();
-    bool isCiRegistered = await userViewModel.isCiRegistered(_ciController.text.trim());
+    bool isCiRegistered = await userViewModel.isCiRegistered(context, _ciController.text.trim());
 
     if(isCiRegistered && _editingUser == null){
       _showErrorExistsDialog();
@@ -352,8 +360,10 @@ class _UserIndex extends State<UserIndex> {
         idRole: _getRoleId(nameRoleController),
       );
 
-     userViewModel.editUser(user!).then((_) {
-      userViewModel.fetchUsers();
+     // ignore: use_build_context_synchronously
+     userViewModel.editUser(context, user!).then((_) {
+      // ignore: use_build_context_synchronously
+      userViewModel.fetchUsers(context);
       _clearSearch();
       _resetForm();
       if (mounted) {
@@ -374,8 +384,10 @@ class _UserIndex extends State<UserIndex> {
         idRole: _getRoleId(nameRoleController),
       );
 
-      userViewModel.createNewUser(user!).then((_) {
-        userViewModel.fetchUsers();
+      // ignore: use_build_context_synchronously
+      userViewModel.createNewUser(context, user!).then((_) {
+        // ignore: use_build_context_synchronously
+        userViewModel.fetchUsers(context);
         _clearSearch();
         _resetForm();
         if (mounted) {
@@ -860,7 +872,7 @@ class _UserIndex extends State<UserIndex> {
             users: userViewModel.filteredUsers,
             onEdit: (id) async {
 
-              User? user = await userViewModel.fetchUserById(id);
+              User? user = await userViewModel.fetchUserById(context, id);
 
               if (user != null) {
                 setState(() {

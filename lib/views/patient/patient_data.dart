@@ -81,7 +81,9 @@ class _PatientDataTableState extends State<PatientDataTable> {
         SfDataPager(
           delegate: _patientDataSource,
           availableRowsPerPage: const <int>[5, 10],
-          pageCount: (widget.patients.length / _patientDataSource.rowsPerPage).ceil().toDouble(),
+          pageCount: widget.patients.isNotEmpty
+              ? (widget.patients.length / _patientDataSource.rowsPerPage).ceil().toDouble()
+              : 1, // Establecer un valor mínimo de 1 para evitar el error
           onRowsPerPageChanged: (int? rowsPerPage) {
             setState(() {
               _patientDataSource.updateRowsPerPage(rowsPerPage!);
@@ -117,13 +119,13 @@ class PatientDataSource extends DataGridSource {
   void _buildDataGridRows(List<Patient> patients){
     _patients = patients.map<DataGridRow>((patient) {
       final formattedRegisterDate = patient.registerDate != null
-          ? DateFormat('yyyy-MM-dd').format(patient.registerDate!)
+          ? DateFormat('yyyy-MM-dd HH:mm:ss').format(patient.registerDate!)
           : 'Sin Registro';
       final formattedLastUpdate = patient.lastUpdate != null
-          ? DateFormat('yyyy-MM-dd').format(patient.lastUpdate!)
+          ? DateFormat('yyyy-MM-dd HH:mm:ss').format(patient.lastUpdate!)
           : 'Sin Cambios';
       final formattedBirthDate = patient.birthDate != null
-          ? DateFormat('yyyy-MM-dd').format(patient.birthDate!)
+          ? DateFormat('yyyy-MM-dd HH:mm:ss').format(patient.birthDate!)
           : 'Sin Cambios';
       final formattedGenre = patient.genre == 'M' ? "Masculino" : "Femenino";
       return DataGridRow(cells: [
@@ -172,11 +174,16 @@ class PatientDataSource extends DataGridSource {
 
   @override
   List<DataGridRow> get rows {
+    if (_patients.isEmpty) {
+      return []; // Devuelve una lista vacía si no hay pacientes
+    }
+
     int startIndex = currentPageIndex * rowsPerPage;
     int endIndex = startIndex + rowsPerPage;
     endIndex = endIndex > _patients.length ? _patients.length : endIndex;
     return _patients.sublist(startIndex, endIndex);
   }
+
 
   @override
   DataGridRowAdapter buildRow(DataGridRow row) {

@@ -1,15 +1,26 @@
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart';
+import 'package:ps3_drops_v1/services/api_headers.dart';
+import 'package:ps3_drops_v1/services/api_middleware.dart';
+import 'package:ps3_drops_v1/tools/base_url_service.dart';
 import '../models/user.dart';
 
 class ApiServiceUser {
-  final String baseUrl = 'http://127.0.0.1:5000/api/v1';
+  final ApiMiddleware _apiMiddleware;
+  ApiServiceUser(this._apiMiddleware);
 
-  Future<List<User>> fetchUsers() async {
+  Future<List<User>> fetchUsers(BuildContext context) async {
     try {
-      final response = await http.get(Uri.parse('$baseUrl/users'));
+      final response = await _apiMiddleware.makeRequest(
+        context, 
+        () => http.get(
+          Uri.parse('${BaseUrlService.baseUrl}/users'),
+          headers: ApiHeaders.instance.buildHeaders(),
+        ),
+      );
       
       if(response.statusCode == 200){
         List<dynamic> jsonResponse = json.decode(response.body);
@@ -25,9 +36,15 @@ class ApiServiceUser {
     }
   }
 
-  Future<User> fetchUserById(int id) async { 
+  Future<User> fetchUserById(BuildContext context,int id) async { 
     try {
-      final response = await http.get(Uri.parse('$baseUrl/user/byId/$id'));
+      final response = await _apiMiddleware.makeRequest(
+        context, 
+        () => http.get(
+          Uri.parse('${BaseUrlService.baseUrl}/user/byId/$id'),
+          headers: ApiHeaders.instance.buildHeaders(),
+        ),
+      );
 
       if (response.statusCode == 200) {
         dynamic jsonResponse = json.decode(response.body);
@@ -46,9 +63,16 @@ class ApiServiceUser {
     }
   }
 
-  Future<bool> verifyExistUser(String ci) async {
+  Future<bool> verifyExistUser(BuildContext context,String ci) async {
     try {
-      final response = await http.get(Uri.parse('$baseUrl/user/checkExist/$ci'));
+      final response = await _apiMiddleware.makeRequest(
+        context, 
+        () => http.get(
+          Uri.parse('${BaseUrlService.baseUrl}/user/checkExist/$ci'),
+          headers: ApiHeaders.instance.buildHeaders(), 
+        )
+      );
+      
       if (response.statusCode == 200) {
         final jsonResponse = json.decode(response.body);
         if (kDebugMode) {
@@ -68,7 +92,7 @@ class ApiServiceUser {
     }
   }
 
-  Future<User> createUser(User newUser) async {
+  Future<User> createUser(BuildContext context, newUser) async {
     try {
       String formattedBirthDate = DateFormat('yyyy-MM-dd').format(newUser.birthDate!);
 
@@ -85,15 +109,14 @@ class ApiServiceUser {
         'role_id': newUser.idRole
       });
 
-
-
-
-      final response = await http.post(
-        Uri.parse('$baseUrl/user/create'),
-        headers: {'Content-Type': 'application/json'},
-        body: body,
+      final response = await _apiMiddleware.makeRequest(
+        context, 
+        () => http.post(
+          Uri.parse('${BaseUrlService.baseUrl}/user/create'),
+          headers: ApiHeaders.instance.buildHeaders(), 
+          body: body
+        )
       );
-   
 
       if (response.statusCode == 201) {
         final jsonResponse = jsonDecode(response.body);
@@ -109,7 +132,7 @@ class ApiServiceUser {
     }
   }
 
-  Future<User> updateUser(User updateUser) async {
+  Future<User> updateUser(BuildContext context, updateUser) async {
     try {
       String formattedBirthDate = DateFormat('yyyy-MM-dd').format(updateUser.birthDate!);
 
@@ -127,10 +150,13 @@ class ApiServiceUser {
         'role_id': updateUser.idRole
       });
 
-      final response = await http.put(
-        Uri.parse('$baseUrl/user/update'),
-        headers: {'Content-Type': 'application/json'},
-        body: body,
+      final response = await _apiMiddleware.makeRequest(
+        context, 
+        () => http.put(
+          Uri.parse('${BaseUrlService.baseUrl}/user/update'),
+          headers: ApiHeaders.instance.buildHeaders(), 
+          body: body
+        )
       );
 
       if (response.statusCode == 200) {
@@ -147,9 +173,16 @@ class ApiServiceUser {
     }
   }
 
-  Future<User> deleteUser(int idUser) async {
+  Future<User> deleteUser(BuildContext context, idUser) async {
     try {
-      final response = await http.delete(Uri.parse('$baseUrl/user/delete/$idUser'));
+      final response = await _apiMiddleware.makeRequest(
+        context, 
+        () => http.delete(
+          Uri.parse('${BaseUrlService.baseUrl}/user/delete/$idUser'),
+          headers: ApiHeaders.instance.buildHeaders(), 
+        )
+      );
+
 
       if (response.statusCode == 200) {
         final jsonResponse = jsonDecode(response.body);

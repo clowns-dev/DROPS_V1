@@ -128,7 +128,7 @@ class UserDataSource extends DataGridSource {
   void _buildDataGridRows(List<User> users){
     _users = users.map<DataGridRow>((user) {
       final formattedDate = user.registerDate != null
-          ? DateFormat('yyyy-MM-dd').format(user.registerDate!)
+          ? DateFormat('yyyy-MM-dd HH:mm:ss').format(user.registerDate!)
           
           : 'No registrado';
       return DataGridRow(cells: [

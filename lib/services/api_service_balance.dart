@@ -1,86 +1,91 @@
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:ps3_drops_v1/models/balance.dart';
+import 'package:ps3_drops_v1/services/api_headers.dart';
+import 'package:ps3_drops_v1/services/api_middleware.dart';
+import 'package:ps3_drops_v1/tools/base_url_service.dart';
 
 class ApiServiceBalance {
-  final String baseUrl = 'http://127.0.0.1:5000/api/v1';
+  final ApiMiddleware _apiMiddleware;
+  ApiServiceBalance(this._apiMiddleware);
 
-  Future<List<Balance>> fetchBalances() async { 
+  Future<List<Balance>> fetchBalances(BuildContext context) async { 
     try {
-      final response = await http.get(Uri.parse('$baseUrl/balances'));
-
+      final response = await _apiMiddleware.makeRequest(
+        context,
+        () => http.get(
+          Uri.parse('${BaseUrlService.baseUrl}/balances'),
+          headers: ApiHeaders.instance.buildHeaders(),
+        ),
+      );
       if (response.statusCode == 200) {
         List<dynamic> jsonResponse = json.decode(response.body);
-        if (kDebugMode) {
-          print('Contenido JSON: $jsonResponse');
-        }
         return jsonResponse.map((data) => Balance.fromJson(data)).toList();
       } else {
         throw Exception('Error al obtener los registros de Balanzas: ${response.statusCode}');
       }
     } catch (e) {
-      if (kDebugMode) {
-        print('Error al cargar los datos: $e');
-      }
       throw Exception('Error al cargar los datos: $e');
     }
   }
 
-  Future<Balance> fetchBalanceById(int id) async { 
+  Future<Balance> fetchBalanceById(BuildContext context,int id) async { 
     try {
-      final response = await http.get(Uri.parse('$baseUrl/balance/byId/$id'));
-
+      final response = await _apiMiddleware.makeRequest(
+        context,
+        () => http.get(
+          Uri.parse('${BaseUrlService.baseUrl}/balance/byId/$id'),
+          headers: ApiHeaders.instance.buildHeaders(),
+        ),
+      );
       if (response.statusCode == 200) {
         dynamic jsonResponse = json.decode(response.body);
-        if (kDebugMode) {
-          print('Contenido JSON: $jsonResponse');
-        }
         return Balance.fromJson(jsonResponse);
       } else {
         throw Exception('Error al obtener el registro de la Balanza: ${response.statusCode}');
       }
     } catch (e) {
-      if (kDebugMode) {
-        print('Error al cargar los datos: $e');
-      }
       throw Exception('Error al cargar los datos: $e');
     }
   }
 
-  Future<bool> verifyExistBalance(String code) async {
+  Future<bool> verifyExistBalance(BuildContext context, String code) async {
     try {
-      final response = await http.get(Uri.parse('$baseUrl/balance/checkExist/$code'));
+      final response = await _apiMiddleware.makeRequest(
+        context,
+        () => http.get(
+          Uri.parse('${BaseUrlService.baseUrl}/balance/checkExist/$code'),
+          headers: ApiHeaders.instance.buildHeaders(),
+        ),
+      );
+
       if (response.statusCode == 200) {
         final jsonResponse = json.decode(response.body);
-        if (kDebugMode) {
-          print('Contenido JSON: $jsonResponse');
-        }
-        
         if (jsonResponse['balance_code'] != null && jsonResponse['balance_code'].isNotEmpty) {
           return true; 
         }
       }
       return false;
     } catch (e) {
-      if (kDebugMode) {
-        print('Error al verificar existencia.');
-      }
       throw Exception('Error al verificar existencia.');
     }
   } 
 
-  Future<Balance> createBalance(Balance newBalance) async {
+  Future<Balance> createBalance(BuildContext context, Balance newBalance) async {
     try {
       final body = jsonEncode({
         'balance_code': newBalance.balanceCode,
         'user_id': newBalance.userID,
       });
-
-      final response = await http.post(
-        Uri.parse('$baseUrl/balance/create'),
-        headers: {'Content-Type': 'application/json'},
-        body: body,
+      final response = await _apiMiddleware.makeRequest(
+        context,
+        () => http.post(
+          Uri.parse('${BaseUrlService.baseUrl}/balance/create'),
+          headers: ApiHeaders.instance.buildHeaders(),
+          body: body,
+        ),
       );
 
       if (response.statusCode == 201) {
@@ -90,25 +95,24 @@ class ApiServiceBalance {
         throw Exception("Error al crear la balanza: ${response.body}");
       }
     } catch (e) {
-      if (kDebugMode) {
-        print("Error: Fallo al crear la Balanza. Detalles: $e");
-      }
       throw Exception("Error: Fallo al crear la Balanza.");
     }
   }
 
-  Future<Balance> updateBalance(Balance modifyBalance) async {
+  Future<Balance> updateBalance(BuildContext context, Balance modifyBalance) async {
     try {
       final body = jsonEncode({
         'balance_id': modifyBalance.idBalance,
         'balance_code': modifyBalance.balanceCode,
         'user_id': modifyBalance.userID,
       });
-
-      final response = await http.put(
-        Uri.parse('$baseUrl/balance/update'),
-        headers: {'Content-Type': 'application/json'},
-        body: body,
+      final response = await _apiMiddleware.makeRequest(
+        context,
+        () => http.put(
+          Uri.parse('${BaseUrlService.baseUrl}/balance/update'),
+          headers: ApiHeaders.instance.buildHeaders(),
+          body: body,
+        ),
       );
 
       if (response.statusCode == 200) {
@@ -118,14 +122,11 @@ class ApiServiceBalance {
         throw Exception("Error al actualizar la balanza: ${response.body}");
       }
     } catch (e) {
-      if (kDebugMode) {
-        print("Error: Fallo al actualizar la Balanza. Detalles: $e");
-      }
       throw Exception("Error: Fallo al actualizar la Balanza.");
     }
   }
 
-  Future<Balance> deleteBalance(int idBalance, int userId) async {
+  Future<Balance> deleteBalance(BuildContext context ,int idBalance, int userId) async {
     try {
       if(kDebugMode){
         print("Balanza a eliminar: $idBalance");
@@ -136,10 +137,13 @@ class ApiServiceBalance {
         'user_id': userId,
       });
 
-      final response = await http.delete(
-        Uri.parse('$baseUrl/balance/delete'),
-        headers: {'Content-Type': 'application/json'},
-        body: body,
+      final response = await _apiMiddleware.makeRequest(
+        context,
+        () => http.delete(
+          Uri.parse('${BaseUrlService.baseUrl}/balance/delete'),
+          headers: ApiHeaders.instance.buildHeaders(),
+          body: body,
+        ),
       );
 
       if (response.statusCode == 200) {
@@ -149,9 +153,6 @@ class ApiServiceBalance {
         throw Exception("Error al eliminar la balanza: ${response.body}");
       }
     } catch (e) {
-      if (kDebugMode) {
-        print("Error: Fallo al eliminar la Balanza. Detalles: $e");
-      }
       throw Exception("Error: Fallo al eliminar la Balanza.");
     }
   }

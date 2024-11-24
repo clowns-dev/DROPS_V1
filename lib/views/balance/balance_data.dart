@@ -115,10 +115,10 @@ class BalanceDataSource extends DataGridSource {
   void _buildDataGridRows(List<Balance> balances){
     _balances = balances.map<DataGridRow>((balance) {
       final formattedRegisterDate = balance.registerDate != null
-          ? DateFormat('yyyy-MM-dd').format(balance.registerDate!)
+          ? DateFormat('yyyy-MM-dd HH:mm:ss').format(balance.registerDate!)
           : 'Sin Registro';
-      final formattedLastUpdate = balance.lastUpdate != null
-          ? DateFormat('yyyy-MM-dd').format(balance.lastUpdate!)
+      final formattedLastUpdate = balance.updateRegister != null
+          ? DateFormat('yyyy-MM-dd HH:mm:ss').format(balance.updateRegister!)
           : 'Sin Cambios';
 
       return DataGridRow(cells: [

@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:ps3_drops_v1/models/smart.dart';
+import 'package:ps3_drops_v1/tools/session_manager.dart';
 import 'package:ps3_drops_v1/view_models/smart_view_model.dart';
 import 'package:ps3_drops_v1/views/smart/smart_data.dart';
 import 'package:ps3_drops_v1/widgets/text_label.dart';
@@ -29,8 +30,7 @@ class _SmartIndexState extends State<SmartIndex> {
   Smart? _editingSmart, smart;
   final TextEditingController _searchController = TextEditingController();
   final TextEditingController _smartCodeController = TextEditingController();
-  // ignore: non_constant_identifier_names
-  int? user_id = 29, _availabilityStatus;
+  int?  _availabilityStatus;
 
   Map<String, bool> _fieldErrors = {
     'codeRfid': false,
@@ -61,7 +61,7 @@ class _SmartIndexState extends State<SmartIndex> {
     if (_debounce?.isActive ?? false) _debounce!.cancel();
     _debounce = Timer(const Duration(milliseconds: 500), () async {
       final smartViewModel = context.read<SmartViewModel>();
-      bool isCodeRegistered = await smartViewModel.isCodeRegistered(code.trim());
+      bool isCodeRegistered = await smartViewModel.isCodeRegistered(context, code.trim());
       setState(() {
         _fieldErrors['codeRfid'] = code.trim().isEmpty;
         _fieldErrors['codeRfidInvalid'] = !RegExp(r'^[a-zA-Z0-9\s\-_/\\]+$').hasMatch(code.trim());
@@ -101,8 +101,9 @@ class _SmartIndexState extends State<SmartIndex> {
           onConfirmDelete: () {
             final smartViewModel = context.read<SmartViewModel>();
             if(smartId != null){
-              smartViewModel.removeSmart(smartId).then((_) {
-                smartViewModel.fetchSmarts();
+              smartViewModel.removeSmart(context, smartId).then((_) {
+                // ignore: use_build_context_synchronously
+                smartViewModel.fetchSmarts(context);
                 _clearSearch();
               });
             }
@@ -114,12 +115,12 @@ class _SmartIndexState extends State<SmartIndex> {
 
   Future<void> _validateAndSubmit(BuildContext formDialogContext) async {
     final smartViewModel = context.read<SmartViewModel>();
-    bool isCodeRegistered = await smartViewModel.isCodeRegistered(_smartCodeController.text.trim());
+    bool isCodeRegistered = await smartViewModel.isCodeRegistered(context, _smartCodeController.text.trim());
 
     setState(() {
       _fieldErrors['codeRfid'] = _smartCodeController.text.trim().isEmpty;
       _fieldErrors['codeRfidInvalid'] = !RegExp(r'^[a-zA-Z0-9\s\-_/\\]+$').hasMatch(_smartCodeController.text.trim());
-      _fieldErrors['userId'] = user_id == null || user_id == 0;
+      _fieldErrors['userId'] = sessionManager.idUser == null || sessionManager.idUser == 0;
       _fieldErrors['codeRegistered'] = isCodeRegistered && _editingSmart == null;
 
       if (_editingSmart != null) {
@@ -143,11 +144,13 @@ class _SmartIndexState extends State<SmartIndex> {
         idSmart: _editingSmart!.idSmart,
         codeRFID: _smartCodeController.text,
         available: _availabilityStatus,
-        idUser: user_id,
+        idUser: sessionManager.idUser,
       );
 
-      await smartViewModel.editSmart(smart!);
-      smartViewModel.fetchSmarts();
+      // ignore: use_build_context_synchronously
+      await smartViewModel.editSmart(context, smart!);
+      // ignore: use_build_context_synchronously
+      smartViewModel.fetchSmarts(context);
       _clearSearch();
       _resetForm();
       // ignore: use_build_context_synchronously
@@ -155,11 +158,13 @@ class _SmartIndexState extends State<SmartIndex> {
     } else {
       smart = Smart(
         codeRFID: _smartCodeController.text,
-        idUser: user_id,
+        idUser: sessionManager.idUser,
       );
 
-      await smartViewModel.createNewSmart(smart!);
-      smartViewModel.fetchSmarts();
+      // ignore: use_build_context_synchronously
+      await smartViewModel.createNewSmart(context, smart!);
+      // ignore: use_build_context_synchronously
+      smartViewModel.fetchSmarts(context);
       _clearSearch();
       _resetForm();
       // ignore: use_build_context_synchronously
@@ -172,6 +177,13 @@ class _SmartIndexState extends State<SmartIndex> {
   @override
   void initState() {
     super.initState();
+  }
+
+  @override
+  void didChangeDependencies(){
+    super.didChangeDependencies();
+    final smartViewModel = context.read<SmartViewModel>();
+    smartViewModel.fetchSmarts(context);
   }
 
   @override
@@ -511,7 +523,7 @@ class _SmartIndexState extends State<SmartIndex> {
             smarts: smartViewModel.filteredSmarts,
             onAssignment: (id) async {},
             onEdit: (id) async {
-              Smart? smart = await smartViewModel.fetchBalanceById(id);
+              Smart? smart = await smartViewModel.fetchBalanceById(context, id);
               // ignore: unnecessary_null_comparison
               if (smart != null) {
                 setState(() {

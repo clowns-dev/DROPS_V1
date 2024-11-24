@@ -1,9 +1,12 @@
 import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
 import 'package:ps3_drops_v1/models/therapy.dart';
+import 'package:ps3_drops_v1/services/api_middleware.dart';
 import 'package:ps3_drops_v1/services/api_service_therapy.dart';
 
 class TherapyViewModel extends ChangeNotifier {
-  ApiServiceTherapy apiServiceTherapy = ApiServiceTherapy();
+  final ApiMiddleware _apiMiddleware = ApiMiddleware();
+  late final ApiServiceTherapy apiServiceTherapy = ApiServiceTherapy(_apiMiddleware);
   List<Therapy> listTherapies = [];
   List<Therapy> filteredTherapies = [];
   List<Nurse> filteredNurses = [];
@@ -27,18 +30,14 @@ class TherapyViewModel extends ChangeNotifier {
   bool hasMatchesNurses = true;
   bool hasMatchesBalances = true;
 
-  TherapyViewModel() {
-    fetchTherapies();
-    fetchTherapyPatients();
-    fetchTherapyNurses();
-    fetchTherapyBalances();
-  }
+  TherapyViewModel();
+    
 
-  Future<void> fetchTherapies() async {
+  Future<void> fetchTherapies(BuildContext context) async {
     isLoading = true;
     notifyListeners();
     try {
-      listTherapies = await apiServiceTherapy.fetchTherapies();
+      listTherapies = await apiServiceTherapy.fetchTherapies(context);
       filteredTherapies = List.from(listTherapies); 
     } catch (e) {
       if (kDebugMode) {
@@ -78,10 +77,10 @@ class TherapyViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> createNewTherapy(Therapy newTherapy) async {
+  Future<void> createNewTherapy(BuildContext context, Therapy newTherapy) async {
     try {
       if (newTherapy.idPerson != null && newTherapy.idNurse != null && newTherapy.idBalance != null && newTherapy.stretcherNumber != null) {
-        await apiServiceTherapy.createTherapy(newTherapy);
+        await apiServiceTherapy.createTherapy(context, newTherapy);
         selectedPatientId = null;
         selectedNurseId = null;
         selectedBalanceId = null;
@@ -97,11 +96,11 @@ class TherapyViewModel extends ChangeNotifier {
     }
   }
 
-  Future<void> fetchTherapyPatients() async {
+  Future<void> fetchTherapyPatients(BuildContext context) async {
     isLoading = true;
     notifyListeners();
     try {
-      listPatients = await apiServiceTherapy.fetchTherapyPatients();
+      listPatients = await apiServiceTherapy.fetchTherapyPatients(context);
       filteredPatients = List.from(listPatients);
     } catch (e) {
       if (kDebugMode) {
@@ -126,11 +125,11 @@ class TherapyViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> fetchTherapyNurses() async {
+  Future<void> fetchTherapyNurses(BuildContext context) async {
     isLoading = true;
     notifyListeners();
     try {
-      listNurses = await apiServiceTherapy.fetchTherapyNurses();
+      listNurses = await apiServiceTherapy.fetchTherapyNurses(context);
       filteredNurses = List.from(listNurses);
     } catch (e) {
       if (kDebugMode) {
@@ -155,11 +154,11 @@ class TherapyViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> fetchTherapyBalances() async {
+  Future<void> fetchTherapyBalances(BuildContext context) async {
     isLoading = true;
     notifyListeners();
     try {
-      listBalances = await apiServiceTherapy.fetchTherapyBalances();
+      listBalances = await apiServiceTherapy.fetchTherapyBalances(context);
       filteredBalances = List.from(listBalances);
     } catch (e) {
       if (kDebugMode) {
@@ -184,12 +183,12 @@ class TherapyViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> fetchInfoTherapy(int therapyId) async {
+  Future<void> fetchInfoTherapy(BuildContext context, int therapyId) async {
     isLoading = true;
     selectedTherapyId = therapyId;
     notifyListeners();
     try {
-      infoTherapy = await apiServiceTherapy.fetchInfoTherapy(selectedTherapyId!);
+      infoTherapy = await apiServiceTherapy.fetchInfoTherapy(context, selectedTherapyId!);
 
     } catch (e) {
       if (kDebugMode) {

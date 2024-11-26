@@ -5,23 +5,22 @@ import 'package:mqtt_client/mqtt_browser_client.dart';
 class MqttService {
   late final MqttBrowserClient client;
   bool isConnected = false;
+  String server = "ws://192.168.0.13";
+  String clienID = "paginaDeCalibracion-${DateTime.now().millisecondsSinceEpoch}";
 
   MqttService() {
-    client = MqttBrowserClient(
-      'ws://192.168.0.13:9001/mqtt',
-      'paginaDeCalibracion-${DateTime.now().millisecondsSinceEpoch}',
-    );
+    client = MqttBrowserClient(server, clienID);
 
-    client.logging(on: true);
+    client.port = 9001;
+    client.logging(on: false);
     client.keepAlivePeriod = 60;
     client.setProtocolV311();
-    client.autoReconnect = true;
+    client.autoReconnect = false;
 
     client.onDisconnected = _onDisconnected;
     client.onConnected = _onConnected;
     client.onSubscribed = _onSubscribed;
     client.onSubscribeFail = _onSubscribeFail;
-    client.pongCallback = _pong;
   }
 
   Future<void> connect() async {
@@ -53,12 +52,11 @@ class MqttService {
     }
   }
 
-
   void publish(String topic, String message) {
     if (isConnected) {
       final payload = MqttClientPayloadBuilder();
       payload.addString(message);
-      client.publishMessage(topic, MqttQos.atLeastOnce, payload.payload!);
+      client.publishMessage(topic, MqttQos.atLeastOnce, payload.payload!, retain: false);
       debugPrint('Mensaje publicado: $topic -> $message');
     } else {
       debugPrint('Error: Cliente desconectado, no se puede publicar.');
@@ -95,5 +93,4 @@ class MqttService {
   void _onDisconnected() => debugPrint('Conexión perdida con el broker MQTT');
   void _onSubscribed(String topic) => debugPrint('Suscripción exitosa al tópico: $topic');
   void _onSubscribeFail(String topic) => debugPrint('Error al suscribirse al tópico: $topic');
-  void _pong() => debugPrint('Pong recibido del broker MQTT');
 }

@@ -1,14 +1,25 @@
 import 'dart:convert';
+import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter/foundation.dart';
 import 'package:ps3_drops_v1/models/maintenance.dart';
+import 'package:ps3_drops_v1/services/api_headers.dart';
+import 'package:ps3_drops_v1/services/api_middleware.dart';
+import 'package:ps3_drops_v1/tools/base_url_service.dart';
 
 class ApiServiceMaintenance {
-  final String baseUrl = 'http://127.0.0.1:5000/api/v1';
+  final ApiMiddleware _apiMiddleware;
+  ApiServiceMaintenance(this._apiMiddleware);
 
-  Future<Maintenance> fetchBalanceIdByCode(String balaceCode) async {
+  Future<Maintenance> fetchBalanceIdByCode(BuildContext context,String balaceCode) async {
     try {
-      final response = await http.get(Uri.parse('$baseUrl/maintenance/getBalance/$balaceCode'));
+       final response = await _apiMiddleware.makeRequest(
+        context,
+        () => http.get(
+          Uri.parse('${BaseUrlService.baseUrl}/maintenance/getBalance/$balaceCode'),
+          headers: ApiHeaders.instance.buildHeaders(),
+        ),
+      );
 
       if (response.statusCode == 200) {
         dynamic jsonResponse = json.decode(response.body);
@@ -27,12 +38,15 @@ class ApiServiceMaintenance {
     }
   }
 
-  Future<Maintenance> registerMaintenance(Maintenance newMaintenance) async {
+  Future<Maintenance> registerMaintenance(BuildContext context ,Maintenance newMaintenance) async {
     try {
-      final response = await http.post(
-        Uri.parse('$baseUrl/maintenance/create'),
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode(newMaintenance.toJsonInsert()),
+       final response = await _apiMiddleware.makeRequest(
+        context,
+        () => http.post(
+          Uri.parse('${BaseUrlService.baseUrl}/maintenance/create'),
+          headers: ApiHeaders.instance.buildHeaders(),
+          body: jsonEncode(newMaintenance.toJsonInsert()),
+        ),
       );
 
       if (response.statusCode == 201) {

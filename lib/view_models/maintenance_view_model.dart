@@ -1,10 +1,13 @@
 import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
 import 'package:ps3_drops_v1/models/maintenance.dart';
+import 'package:ps3_drops_v1/services/api_middleware.dart';
 import 'package:ps3_drops_v1/services/api_service_maintenance.dart';
 import 'package:ps3_drops_v1/services/mqtt_service.dart';
 
 class MaintenanceViewModel extends ChangeNotifier {
-  final ApiServiceMaintenance apiServiceMaintenance = ApiServiceMaintenance();
+  final ApiMiddleware _apiMiddleware = ApiMiddleware();
+  late final ApiServiceMaintenance apiServiceMaintenance = ApiServiceMaintenance(_apiMiddleware);
   final MqttService mqttService = MqttService();
 
   String _receivedPeso = 'Esperando valores...';
@@ -15,7 +18,7 @@ class MaintenanceViewModel extends ChangeNotifier {
   String get receivedFactor => _receivedFactor;
   bool get isConnected => _isConnected;
 
-  MaintenanceViewModel() {
+  MaintenanceViewModel(){
     _initializeMqtt();
   }
 
@@ -25,14 +28,16 @@ class MaintenanceViewModel extends ChangeNotifier {
     notifyListeners();
 
     mqttService.listenToMessages((topic, payload) {
-      if (topic.contains('parametros')) {
-        final data = payload.split(',');
-        _receivedPeso = data[0];
-        _receivedFactor = data[1];
-        notifyListeners();
-      }
-    });
+        if(topic.contains('parametros')){
+          final data = payload.split(',');
+          _receivedPeso = data[0];
+          _receivedFactor = data[1];
+          notifyListeners();
+        }
+      });
   }
+
+ 
 
   Future<void> subscribeToBalance(String balanceCode) async {
     if (balanceCode.isNotEmpty) {
@@ -41,6 +46,10 @@ class MaintenanceViewModel extends ChangeNotifier {
       if (kDebugMode) {
         print('Suscrito al tópico: $topic');
       }
+
+      final publishTopic = 'drops/calibra/$balanceCode';
+      const message = 'true';
+      mqttService.publish(publishTopic, message);
     } else {
       if (kDebugMode) {
         print('Error: El código de la balanza está vacío.');
@@ -53,7 +62,7 @@ class MaintenanceViewModel extends ChangeNotifier {
       final topic = 'drops/calibra/$balanceCode/ajuste';
       mqttService.publish(topic, newFactor);
       if (kDebugMode) {
-        print('Factor publicado: $newFactor');
+        print('Nuevo Factor publicado: $newFactor');
       }
     } else {
       if (kDebugMode) {
@@ -62,16 +71,21 @@ class MaintenanceViewModel extends ChangeNotifier {
     }
   }
 
-  void disconnectMqtt() {
-    mqttService.disconnect();
-    _isConnected = mqttService.isConnected;
-    notifyListeners();
+  void disconnectMqtt(String balanceCode) {
+    if(balanceCode.isNotEmpty){
+      final topicConcluirMessage = 'drops/calibra/$balanceCode';
+      const message = 'false';
+      mqttService.publish(topicConcluirMessage, message);
+      mqttService.disconnect();
+      _isConnected = mqttService.isConnected;
+      notifyListeners();
+    }
   }
 
-  Future<Maintenance?> fetchBalanceId(String balanceCode) async {
+  Future<Maintenance?> fetchBalanceId(BuildContext context,String balanceCode) async {
     Maintenance? maintenance;
     try {
-      maintenance = await apiServiceMaintenance.fetchBalanceIdByCode(balanceCode);
+      maintenance = await apiServiceMaintenance.fetchBalanceIdByCode(context,balanceCode);
       if (kDebugMode) {
         print('Balanza cargada: $maintenance');
       }
@@ -85,12 +99,12 @@ class MaintenanceViewModel extends ChangeNotifier {
     return maintenance;
   }
 
-  Future<void> createNewMaintenance(Maintenance newMaintenance) async {
+  Future<void> createNewMaintenance(BuildContext context, Maintenance newMaintenance) async {
     try {
       if (newMaintenance.idBalance != null &&
           newMaintenance.idUser != null &&
           newMaintenance.lastFactor != null) {
-        await apiServiceMaintenance.registerMaintenance(newMaintenance);
+        await apiServiceMaintenance.registerMaintenance( context,newMaintenance);
 
         if (kDebugMode) {
           print('Mantenimiento creado exitosamente.');

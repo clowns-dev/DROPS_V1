@@ -120,12 +120,15 @@ class _BalanceCalibrationState extends State<BalanceCalibration> {
         lastFactor: double.tryParse(_newFactorController.text.trim())
       );
 
-      maintenanceViewModel.createNewMaintenance(maintenance!).then((_) {
+      // ignore: use_build_context_synchronously
+      maintenanceViewModel.createNewMaintenance(context ,maintenance!).then((_) {
+        maintenanceViewModel.disconnectMqtt(_balanceCodeController.text.trim());
         _resetForm();
         if(mounted){
           _showSuccessDialog(context);
         }
       });
+
     }
   }
 
@@ -208,12 +211,11 @@ class _BalanceCalibrationState extends State<BalanceCalibration> {
                         onPressed: () async {
                           final balanceCode = _balanceCodeController.text.trim();
                           if (balanceCode.isNotEmpty) {
-                            final maintenanceViewModel = context.read<MaintenanceViewModel>();
-                            balanceData = await maintenanceViewModel.fetchBalanceId(balanceCode);
+                            balanceData = await viewModel.fetchBalanceId(context,balanceCode);
                             if(balanceData != null){
                               getBalanceId = balanceData!.idBalance;
                               getBalaceCode = balanceData!.balanceCode;
-                              viewModel.subscribeToBalance(getBalaceCode.toString());
+                              await viewModel.subscribeToBalance(getBalaceCode.toString());
                             } else {
                               _showErrorExistsDialog();
                               return;
@@ -305,10 +307,10 @@ class _BalanceCalibrationState extends State<BalanceCalibration> {
                               horizontal: 12, vertical: 8),
                         ),
                         onPressed: () {
-                          final balanceCode =
-                              _balanceCodeController.text.trim();
-                          if (balanceCode.isNotEmpty) {
-                            viewModel.publishNewFactor(balanceCode, 'probar');
+                          final balanceCode = _balanceCodeController.text.trim();
+                          final newFactor = _newFactorController.text.trim();
+                          if (balanceCode.isNotEmpty && newFactor.isNotEmpty) {
+                            viewModel.publishNewFactor(balanceCode, newFactor);
                           } else {
                             setState(() {
                               _fieldErrors['balanceCode'] = true;

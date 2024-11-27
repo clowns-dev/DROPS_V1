@@ -108,7 +108,6 @@ class Nurse{
     );
   }
 }
-
 class InfoTherapy{
   final int? idTherapy;
   final String? ciNurse;
@@ -158,6 +157,32 @@ class InfoTherapy{
       numberBubbles: json['numberBubbles'] != null ? int.tryParse(json['numberBubbles'].toString()) : null,
       numberBlocks: json['numberBlocks'] != null ? int.tryParse(json['numberBlocks'].toString()) : null,
       numberBoth: json['numberBoth'] != null ? int.tryParse(json['numberBoth'].toString()) : null,
+    );
+  }
+}
+
+class InfoTherapiesNurse{
+  final int? idTherapy;
+  final String? patient;
+  final String? alert;
+  final int? samplePercentage;
+  final String? stretcherNumber;
+
+  InfoTherapiesNurse({
+    this.idTherapy,
+    this.patient,
+    this.alert,
+    this.samplePercentage,
+    this.stretcherNumber
+  });
+
+  factory InfoTherapiesNurse.fromJson(Map<String, dynamic> json){
+    return InfoTherapiesNurse(
+      idTherapy: json['idTherapy'],
+      patient: json['patient'],
+      alert: json['alert'],
+      samplePercentage: int.tryParse(json['samplePercentage']),
+      stretcherNumber: json['stretcherNumber']
     );
   }
 }

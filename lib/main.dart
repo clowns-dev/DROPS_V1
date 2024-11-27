@@ -35,14 +35,14 @@ class MyApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       localizationsDelegates:  [
         GlobalMaterialLocalizations.delegate,
-        GlobalCupertinoLocalizations.delegate, // Delegado para compatibilidad con Cupertino widgets
+        GlobalCupertinoLocalizations.delegate, 
         GlobalWidgetsLocalizations.delegate,
       ],
       supportedLocales:  [
-        Locale('es', 'ES'), // Español
-        Locale('en', 'US'), // Inglés
+        Locale('es', 'ES'), 
+        Locale('en', 'US'), 
       ],
-      locale:  Locale('es', 'ES'), // Idioma por defecto: Español
+      locale:  Locale('es', 'ES'), 
       home:  LoginView(),
     );
   }

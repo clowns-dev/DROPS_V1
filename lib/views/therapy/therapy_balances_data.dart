@@ -84,7 +84,7 @@ class _TherapyBalancesDataTableState extends State<TherapyBalancesDataTable> {
         SfDataPager(
           delegate: _therapyBalancesDataSource,
           availableRowsPerPage: const <int>[5, 10],
-          pageCount: (widget.therapyBalances.length / _therapyBalancesDataSource.rowsPerPage).ceil().toDouble(),
+          pageCount: (widget.therapyBalances.length / _therapyBalancesDataSource.rowsPerPage).ceil().toDouble() ,
           onRowsPerPageChanged: (int? rowsPerPage) {
             setState(() {
               _therapyBalancesDataSource.updateRowsPerPage(rowsPerPage!);

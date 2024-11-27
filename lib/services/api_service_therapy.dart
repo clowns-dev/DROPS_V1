@@ -109,7 +109,7 @@ class ApiServiceTherapy {
     }
   }
 
-  Future<InfoTherapy> fetchInfoTherapy(BuildContext context, therapyId) async {
+  Future<InfoTherapy> fetchInfoTherapy(BuildContext context, int therapyId) async {
     try {
       final response = await _apiMiddleware.makeRequest(
         context,
@@ -121,17 +121,57 @@ class ApiServiceTherapy {
 
       if (response.statusCode == 200) {
         dynamic jsonResponse = json.decode(response.body);
-        if (kDebugMode) {
-          print('Contenido JSON: $jsonResponse');
-        }
+        
         return InfoTherapy.fromJson(jsonResponse);
       } else {
         throw Exception('Error: Fallo al cargar los datos. Código de Estado: ${response.statusCode}');
       }
     } catch (e) {
-      if (kDebugMode) {
-        print("Error: Fallo al recuperar la información.");
+      throw Exception("Error: Fallo al recuperar la Información de la Terapia: $e");
+    }
+  }
+
+  Future<List<InfoTherapiesNurse>> fetchInfoNurseTherapies(BuildContext context, int idNurse) async {
+    try{
+      final response = await _apiMiddleware.makeRequest(
+        context, 
+        () => http.get(
+          Uri.parse('${BaseUrlService.baseUrl}/therapies/nurses/$idNurse'),
+          headers: ApiHeaders.instance.buildHeaders(),
+        ),
+      );
+
+      if(response.statusCode == 200){
+        List<dynamic> jsonResponse = jsonDecode(response.body);
+        return jsonResponse.map((data) => InfoTherapiesNurse.fromJson(data)).toList();
+      } else {
+        throw Exception("Error: Fallo interno del servidor");
       }
+    } catch (e) {
+      throw Exception("Error: Fallo al recuperar la Información de la Terapia: $e");
+    }
+  }
+
+  Future<List<InfoTherapiesNurse>> fetchInfoAssignmentTherapies(BuildContext context) async {
+    try{
+      final response = await _apiMiddleware.makeRequest(
+        context, 
+        () => http.get(
+          Uri.parse('${BaseUrlService.baseUrl}/therapies/asign'),
+          headers: ApiHeaders.instance.buildHeaders(),
+        ),
+      );
+
+      if(response.statusCode == 200){
+        List<dynamic> jsonResponse = jsonDecode(response.body);
+        if(kDebugMode){
+          print('datos: $jsonResponse');
+        }
+        return jsonResponse.map((data) => InfoTherapiesNurse.fromJson(data)).toList();
+      } else {
+        throw Exception("Error: Fallo interno del servidor");
+      }
+    } catch (e) {
       throw Exception("Error: Fallo al recuperar la Información de la Terapia: $e");
     }
   }
@@ -166,6 +206,37 @@ class ApiServiceTherapy {
         print("Error: Fallo al crear la Terapia. Detalles: $e");
       }
       throw Exception("Error: Fallo al crear la Terapia.");
+    }
+  }
+
+  Future<void> insertSampleDate(BuildContext context, int idTherapy,int idBalance, double percentage, int alert) async {
+    try{
+      final body = jsonEncode({
+        'therapy_id': idTherapy,
+        'balance_id': idBalance,
+        'percentage': percentage,
+        'alert': alert,
+      });
+
+      final response = await _apiMiddleware.makeRequest(
+        context, 
+        () => http.post(
+          Uri.parse('${BaseUrlService.baseUrl}/therapy/sample'),
+          headers: ApiHeaders.instance.buildHeaders(),
+          body: body
+        )
+      );
+
+      if(response.statusCode == 201){
+        final jsonResponse = jsonDecode(response.body);
+        return jsonResponse;
+      }
+
+    } catch (e){
+       if (kDebugMode) {
+        print("Error: Fallo al registrar los datos. Detalles: $e");
+      }
+      throw Exception("Error al registrar los datos");
     }
   }
 }

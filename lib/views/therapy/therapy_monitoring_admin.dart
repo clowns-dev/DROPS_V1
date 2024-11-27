@@ -1,17 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:ps3_drops_v1/models/therapy.dart';
-import 'package:ps3_drops_v1/tools/session_manager.dart';
 import 'package:ps3_drops_v1/view_models/therapy_view_model.dart';
 
-class TherapyMonitoring extends StatefulWidget {
-  const TherapyMonitoring({super.key});
+class TherapyMonitoringAdmin extends StatefulWidget {
+  const TherapyMonitoringAdmin({super.key});
 
   @override
-  TherapyMonitoringState createState() => TherapyMonitoringState();
+  TherapyMonitoringAdminState createState() => TherapyMonitoringAdminState();
 }
 
-class TherapyMonitoringState extends State<TherapyMonitoring> {
+class TherapyMonitoringAdminState extends State<TherapyMonitoringAdmin> {
   @override
   void initState() {
     super.initState();
@@ -20,7 +19,7 @@ class TherapyMonitoringState extends State<TherapyMonitoring> {
 
   void _loadTherapies() {
     final monitoringViewModel = context.read<TherapyViewModel>();
-    monitoringViewModel.fetchAllInfoNurseTherapies(context, sessionManager.idUser!);
+    monitoringViewModel.fetchAllInfoAsignTherapies(context);
   }
 
 
@@ -44,11 +43,11 @@ class TherapyMonitoringState extends State<TherapyMonitoring> {
         builder: (context, viewModel, child) {
           if (viewModel.isLoading) {
             return const Center(child: CircularProgressIndicator());
-          } else if (viewModel.listNurseTherapies.isEmpty) {
+          } else if (viewModel.listAsignTherapies.isEmpty) {
             return const Center(child: Text('No hay datos disponibles'));
           }
 
-          final sortedTherapies = [...viewModel.listNurseTherapies];
+          final sortedTherapies = [...viewModel.listAsignTherapies];
           sortedTherapies.sort((a, b) {
             int getAlertPriority(String? alert) {
               if (alert == null) return 999;

@@ -17,7 +17,7 @@ class SearchField extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SizedBox(
-      width: fullWidth ? double.infinity : 400.0,
+      width: fullWidth ? double.infinity : 200.0,
       child: TextField(
         controller: controller,
         onChanged: onChanged,

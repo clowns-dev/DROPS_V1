@@ -17,7 +17,7 @@ class LoginViewState extends State<LoginView> {
   final TextEditingController _passwordController = TextEditingController();
   int? _selectedUserType;
   bool _isLoading = false;
-  bool _isPasswordVisible = false; // Variable para controlar la visibilidad de la contraseña
+  bool _isPasswordVisible = false; 
 
   Future<void> loginUser() async {
     setState(() {
@@ -163,6 +163,7 @@ class LoginViewState extends State<LoginView> {
                       DropdownMenuItem(value: 1, child: Text("Administrador")),
                       DropdownMenuItem(value: 2, child: Text("Enfermero")),
                       DropdownMenuItem(value: 3, child: Text("Biomedico")),
+                      DropdownMenuItem(value: 4, child: Text("SuperAdmin")),
                     ],
                     onChanged: (value) {
                       setState(() {

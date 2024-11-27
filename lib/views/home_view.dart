@@ -6,6 +6,8 @@ import 'package:ps3_drops_v1/views/patient/patient_index.dart';
 import 'package:ps3_drops_v1/views/smart/smart_index.dart';
 import 'package:ps3_drops_v1/views/therapy/therapy_index.dart';
 import 'package:ps3_drops_v1/views/therapy/therapy_monitoring.dart';
+import 'package:ps3_drops_v1/views/therapy/therapy_monitoring_admin.dart';
+import 'package:ps3_drops_v1/views/therapy/therapy_nurse_index.dart';
 import 'package:ps3_drops_v1/views/users/login_view.dart';
 import 'package:ps3_drops_v1/views/users/user_index.dart';
 import 'package:ps3_drops_v1/widgets/title_nabvar_menu.dart';
@@ -36,11 +38,24 @@ class _HomePageState extends State<HomePage> {
     } else if(widget.role == 2){
       return const [
         AdaptiveScaffoldDestination(title: 'Terapias Asignadas', icon: Icons.healing),
+        AdaptiveScaffoldDestination(title: 'Crear Terapia', icon: Icons.healing),
         AdaptiveScaffoldDestination(title: 'Salir', icon: Icons.exit_to_app),
       ];
     } else if(widget.role == 3){
       return const [
         AdaptiveScaffoldDestination(title: 'Calibracion Balanza', icon: Icons.medical_services),
+        AdaptiveScaffoldDestination(title: 'Salir', icon: Icons.exit_to_app),
+      ];
+    } else if(widget.role == 4){
+      return const [
+        AdaptiveScaffoldDestination(title: 'Inicio', icon: Icons.home),
+        AdaptiveScaffoldDestination(title: 'Balanzas', icon: Icons.medical_services),
+        AdaptiveScaffoldDestination(title: 'Calibracion Balanza', icon: Icons.medical_services),
+        AdaptiveScaffoldDestination(title: 'Manillas', icon: Icons.watch),
+        AdaptiveScaffoldDestination(title: 'Usuarios', icon: Icons.people),
+        AdaptiveScaffoldDestination(title: 'Pacientes', icon: Icons.elderly),
+        AdaptiveScaffoldDestination(title: 'Terapias', icon: Icons.healing),
+        AdaptiveScaffoldDestination(title: 'Monitoreo Terapias', icon: Icons.healing),
         AdaptiveScaffoldDestination(title: 'Salir', icon: Icons.exit_to_app),
       ];
     } else {
@@ -110,8 +125,12 @@ class _HomePageState extends State<HomePage> {
         return const PatientIndex();
       case 'Terapias':
         return const TherapyIndex();
+      case 'Crear Terapia':
+        return const TherapyNurseIndex();
       case 'Terapias Asignadas':
-        return TherapyMonitoring();
+        return const TherapyMonitoring();
+      case 'Monitoreo Terapias':
+        return const TherapyMonitoringAdmin();
       case 'Calibracion Balanza':
         return const BalanceCalibration();
       case 'Salir':

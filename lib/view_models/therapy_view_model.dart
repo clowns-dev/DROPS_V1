@@ -3,15 +3,18 @@ import 'package:flutter/material.dart';
 import 'package:ps3_drops_v1/models/therapy.dart';
 import 'package:ps3_drops_v1/services/api_middleware.dart';
 import 'package:ps3_drops_v1/services/api_service_therapy.dart';
-
+import 'package:ps3_drops_v1/services/mqtt_service.dart';
 class TherapyViewModel extends ChangeNotifier {
   final ApiMiddleware _apiMiddleware = ApiMiddleware();
   late final ApiServiceTherapy apiServiceTherapy = ApiServiceTherapy(_apiMiddleware);
+  final MqttService mqttService = MqttService();
   List<Therapy> listTherapies = [];
   List<Therapy> filteredTherapies = [];
   List<Nurse> filteredNurses = [];
   List<Patient> filteredPatients = [];
   List<Balance> filteredBalances = [];
+  List<InfoTherapiesNurse> listNurseTherapies = [];
+  List<InfoTherapiesNurse> listAsignTherapies = [];
   InfoTherapy? infoTherapy;
   int? selectedTherapyId;
 
@@ -29,9 +32,36 @@ class TherapyViewModel extends ChangeNotifier {
   bool hasMatchesPatients = true;
   bool hasMatchesNurses = true;
   bool hasMatchesBalances = true;
+  bool _isConnected = false;
+  bool get isConnected => _isConnected;
 
   TherapyViewModel();
     
+  Future<void> initializeMqtt(BuildContext context, List<InfoTherapiesNurse> listInfo) async {
+    await mqttService.connect();
+    _isConnected = mqttService.isConnected;
+    notifyListeners();
+
+    if (_isConnected) {
+      subscribeToBalance(listInfo);
+    }
+  }
+
+  Future<void> subscribeToBalance(List<InfoTherapiesNurse> listTherapies) async {
+    if (listTherapies.isNotEmpty) {
+      for (var therapy in listTherapies) {
+        final topic = 'drops/terapia/${therapy.idTherapy}';
+        mqttService.subscribe(topic);
+        if (kDebugMode) {
+          print('Suscrito al tópico: $topic');
+        }
+      }
+    } else {
+      if (kDebugMode) {
+        print('Error: Lista vacía, no se suscribieron tópicos.');
+      }
+    }
+  }
 
   Future<void> fetchTherapies(BuildContext context) async {
     isLoading = true;
@@ -48,6 +78,37 @@ class TherapyViewModel extends ChangeNotifier {
       notifyListeners();
     }
   }
+
+  Future<void> fetchAllInfoNurseTherapies(BuildContext context, int idNurse) async {
+    isLoading = true;
+    notifyListeners();
+    try {
+      listNurseTherapies = await apiServiceTherapy.fetchInfoNurseTherapies(context, idNurse);
+      // ignore: use_build_context_synchronously
+      await initializeMqtt(context, listNurseTherapies);
+    } catch (e) {
+      throw Exception('Fallo en la solicitud al servidor: $e');
+    } finally {
+      isLoading = false;
+      notifyListeners();
+    }
+  }
+
+  Future<void> fetchAllInfoAsignTherapies(BuildContext context) async {
+    isLoading = true;
+    notifyListeners();
+    try {
+      listAsignTherapies = await apiServiceTherapy.fetchInfoAssignmentTherapies(context);
+      // ignore: use_build_context_synchronously
+      await initializeMqtt(context, listAsignTherapies);
+    } catch (e) {
+      throw Exception('Fallo en la solicitud al servidor: $e');
+    } finally {
+      isLoading = false;
+      notifyListeners();
+    }
+  }
+
 
   void filterTherapies(String query, String field) {
     if (query.isEmpty || field == 'Buscar por:') {

@@ -4,6 +4,7 @@ import 'package:ps3_drops_v1/models/therapy.dart';
 import 'package:ps3_drops_v1/services/api_middleware.dart';
 import 'package:ps3_drops_v1/services/api_service_therapy.dart';
 import 'package:ps3_drops_v1/services/mqtt_service.dart';
+import 'package:ps3_drops_v1/tools/session_manager.dart';
 class TherapyViewModel extends ChangeNotifier {
   final ApiMiddleware _apiMiddleware = ApiMiddleware();
   late final ApiServiceTherapy apiServiceTherapy = ApiServiceTherapy(_apiMiddleware);
@@ -45,6 +46,18 @@ class TherapyViewModel extends ChangeNotifier {
     if (_isConnected) {
       subscribeToBalance(listInfo);
     }
+
+    mqttService.listenToMessages((topic, payload) async {
+        if(topic.contains('terapia')){
+          if(sessionManager.idRole == 2){
+            await fetchAllInfoNurseTherapies(context, sessionManager.idUser!);
+            notifyListeners();
+          } else if(sessionManager.idRole == 4){
+            await fetchAllInfoAsignTherapies(context);
+            notifyListeners();
+          }
+        }
+      });
   }
 
   Future<void> subscribeToBalance(List<InfoTherapiesNurse> listTherapies) async {

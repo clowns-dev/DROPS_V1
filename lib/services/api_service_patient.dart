@@ -1,73 +1,81 @@
 import 'dart:convert';
-import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart';
+import 'package:ps3_drops_v1/services/api_headers.dart';
+import 'package:ps3_drops_v1/tools/base_url_service.dart';
+import 'package:ps3_drops_v1/services/api_middleware.dart';
 import '../models/patient.dart';
 
 class ApiServicePatient {
-  final String baseUrl = 'http://127.0.0.1:5000/api';
+  final ApiMiddleware _apiMiddleware;
+  ApiServicePatient(this._apiMiddleware);
 
-  Future<List<Patient>> fetchPatients() async {
+  Future<List<Patient>> fetchPatients(BuildContext context) async {
     try {
-      final response = await http.get(Uri.parse('$baseUrl/patients'));
-      
-      if(response.statusCode == 200){
+      final response = await _apiMiddleware.makeRequest(
+        context,
+        () => http.get(
+          Uri.parse('${BaseUrlService.baseUrl}/patients'),
+          headers: ApiHeaders.instance.buildHeaders(),
+        ),
+      );
+
+      if (response.statusCode == 200) {
         List<dynamic> jsonResponse = json.decode(response.body);
-  
-        if (kDebugMode) {
-          print('Contenido JSON: $jsonResponse');
-        }
         return jsonResponse.map((data) => Patient.fromJson(data)).toList();
       } else {
         throw Exception('Error al obtener los registros de Pacientes: ${response.statusCode}');
       }
     } catch (e) {
-      if (kDebugMode) {
-        print('Error al cargar los datos: $e');
-      }
       throw Exception('Error al cargar los datos: $e');
     }
   }
 
-  Future<Patient> fetchPatientById(int id) async { 
+  Future<Patient> fetchPatientById(BuildContext context, int id) async {
     try {
-      final response = await http.get(Uri.parse('$baseUrl/patient/byId/$id'));
+      final response = await _apiMiddleware.makeRequest(
+        context,
+        () => http.get(
+          Uri.parse('${BaseUrlService.baseUrl}/patient/byId/$id'),
+          headers: ApiHeaders.instance.buildHeaders(),
+        ),
+      );
 
       if (response.statusCode == 200) {
         dynamic jsonResponse = json.decode(response.body);
-        if (kDebugMode) {
-          print('Contenido JSON: $jsonResponse');
-        }
         return Patient.fromJson(jsonResponse);
       } else {
         throw Exception('Error al obtener el registro del Patient: ${response.statusCode}');
       }
     } catch (e) {
-      if (kDebugMode) {
-        print('Error al cargar los datos: $e');
-      }
       throw Exception('Error al cargar los datos: $e');
     }
   }
 
-  Future<Patient> updatePatient(int idPatient, String name, String lastName, String secondLastName,DateTime birthDate, String ci, int userId) async {
+  Future<Patient> updatePatient(BuildContext context, Patient modifyPatient) async {
     try {
-      String formattedBirthDate = DateFormat('yyyy-MM-dd').format(birthDate);
+      String formattedBirthDate =
+          DateFormat('yyyy-MM-dd').format(modifyPatient.birthDate!);
 
       final body = jsonEncode({
-        'patient_id': idPatient,
-        'name': name,
-        'last_name': lastName,
-        'second_last_name': secondLastName.isEmpty ? null : secondLastName,
+        'patient_id': modifyPatient.idPatient,
+        'name': modifyPatient.name,
+        'last_name': modifyPatient.lastName,
+        'second_last_name': modifyPatient.secondLastName!.isEmpty ? "" : modifyPatient.secondLastName,
         'birth_date': formattedBirthDate,
-        'ci': ci,
-        'user_id': userId,
+        'ci': modifyPatient.ci,
+        'genre': modifyPatient.genre,
+        'user_id': modifyPatient.userID,
       });
 
-      final response = await http.put(
-        Uri.parse('$baseUrl/patient/update'),
-        headers: {'Content-Type': 'application/json'},
-        body: body,
+      final response = await _apiMiddleware.makeRequest(
+        context,
+        () => http.put(
+          Uri.parse('${BaseUrlService.baseUrl}/patient/update'),
+          headers: ApiHeaders.instance.buildHeaders(),
+          body: body,
+        ),
       );
 
       if (response.statusCode == 200) {
@@ -77,24 +85,47 @@ class ApiServicePatient {
         throw Exception("Error al actualizar al Paciente: ${response.body}");
       }
     } catch (e) {
-      if (kDebugMode) {
-        print("Error: Fallo al actualizar el Paciente. Detalles: $e");
-      }
-      throw Exception("Error: Fallo al actualizar al Paciente.");
+      throw Exception("Error: Fallo al actualizar al Paciente. Detalles: $e");
     }
   }
 
-  Future<Patient> deletePatient(int idPatient, int userId) async {
+  Future<bool> verifyExistPatient(BuildContext context, String ci) async {
     try {
-      final body = jsonEncode({
-        'patient_id': idPatient,
-        'user_id': userId,
-      });
+      final response = await _apiMiddleware.makeRequest(
+        context,
+        () => http.get(
+          Uri.parse('${BaseUrlService.baseUrl}/patient/checkExist/$ci'),
+          headers: ApiHeaders.instance.buildHeaders(),
+        ),
+      );
 
-      final response = await http.put(
-        Uri.parse('$baseUrl/patient/delete'),
-        headers: {'Content-Type': 'application/json'},
-        body: body,
+      if (response.statusCode == 200) {
+        final jsonResponse = json.decode(response.body);
+        return jsonResponse['ci'] != null && jsonResponse['ci'].isNotEmpty;
+      }
+      return false;
+    } catch (e) {
+      throw Exception('Error al verificar existencia: $e');
+    }
+  }
+
+  Future<Patient> deletePatient(BuildContext context, int? idPatient, int? userId) async {
+    try {
+
+      Map<String, dynamic> toJsonUpdate() {
+        return {
+          'patient_id': idPatient?.toString(),
+          'user_id': userId?.toString(),
+        };
+      }
+
+      final response = await _apiMiddleware.makeRequest(
+        context,
+        () => http.delete(
+          Uri.parse('${BaseUrlService.baseUrl}/patient/delete'),
+          headers: ApiHeaders.instance.buildHeaders(),
+          body: jsonEncode(toJsonUpdate()),
+        ),
       );
 
       if (response.statusCode == 200) {
@@ -104,29 +135,32 @@ class ApiServicePatient {
         throw Exception("Error al eliminar al Paciente: ${response.body}");
       }
     } catch (e) {
-      if (kDebugMode) {
-        print("Error: Fallo al eliminar al Paciente. Detalles: $e");
-      }
-      throw Exception("Error: Fallo al eliminar al Paciente.");
+      throw Exception("Error: Fallo al eliminar al Paciente. Detalles: $e");
     }
   }
 
-  Future<Patient> createPatient(String name, String lastName, String secondLastName,DateTime birthDate, String ci, int userId) async {
+  Future<Patient> createPatient(BuildContext context, Patient insertPatient) async {
     try {
-      String formattedBirthDate = DateFormat('yyyy-MM-dd').format(birthDate);
+      String formattedBirthDate =
+          DateFormat('yyyy-MM-dd').format(insertPatient.birthDate!);
+
       final body = jsonEncode({
-        'name': name,
-        'last_name': lastName,
-        'second_last_name': secondLastName.isEmpty ? null : secondLastName,
+        'name': insertPatient.name,
+        'last_name': insertPatient.lastName,
+        'second_last_name': insertPatient.secondLastName!.isEmpty ? "" : insertPatient.secondLastName,
         'birth_date': formattedBirthDate,
-        'ci': ci,
-        'user_id': userId,
+        'ci': insertPatient.ci,
+        'genre': insertPatient.genre,
+        'user_id': insertPatient.userID,
       });
 
-      final response = await http.post(
-        Uri.parse('$baseUrl/patient/create'),
-        headers: {'Content-Type': 'application/json'},
-        body: body,
+      final response = await _apiMiddleware.makeRequest(
+        context,
+        () => http.post(
+          Uri.parse('${BaseUrlService.baseUrl}/patient/create'),
+          headers: ApiHeaders.instance.buildHeaders(),
+          body: body,
+        ),
       );
 
       if (response.statusCode == 201) {
@@ -136,10 +170,7 @@ class ApiServicePatient {
         throw Exception("Error al crear al Paciente: ${response.body}");
       }
     } catch (e) {
-      if (kDebugMode) {
-        print("Error: Fallo al crear al Paciente. Detalles: $e");
-      }
-      throw Exception("Error: Fallo al crear al Paciente.");
+      throw Exception("Error: Fallo al crear al Paciente. Detalles: $e");
     }
   }
 }

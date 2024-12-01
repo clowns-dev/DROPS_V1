@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 
-class SuccessDialog extends StatelessWidget {
+class ErrorDialog extends StatelessWidget {
   final String title;
   final String message;
   final VoidCallback onBackPressed;
 
-  const SuccessDialog({
+  const ErrorDialog({
     required this.title,
     required this.message,
     required this.onBackPressed,
@@ -21,11 +21,11 @@ class SuccessDialog extends StatelessWidget {
       child: Container(
         constraints: const BoxConstraints(
           maxWidth: 354,
-          maxHeight: 350,
+          maxHeight: 315,
         ),
         padding: const EdgeInsets.symmetric(horizontal: 71, vertical: 20),
         decoration: BoxDecoration(
-          color: const Color(0xFFE2F2E1),
+          color: const Color(0xFFFDEDED), // Fondo rojo claro para el error
           borderRadius: BorderRadius.circular(15),
         ),
         child: Column(
@@ -39,7 +39,7 @@ class SuccessDialog extends StatelessWidget {
               ),
               child: ClipOval(
                 child: Image.asset(
-                  '../assets/img/aceptar.png', // Asegúrate de tener esta imagen
+                  '../assets/img/error_form.png', 
                   fit: BoxFit.cover,
                 ),
               ),
@@ -51,6 +51,7 @@ class SuccessDialog extends StatelessWidget {
                 fontSize: 26,
                 fontWeight: FontWeight.bold,
                 fontFamily: 'Roboto',
+                color: Colors.red, // Color de texto para enfatizar el error
               ),
             ),
             const SizedBox(height: 17),
@@ -60,6 +61,7 @@ class SuccessDialog extends StatelessWidget {
               style: const TextStyle(
                 fontSize: 15,
                 fontFamily: 'Carrois Gothic SC',
+                color: Colors.black54,
               ),
             ),
             const SizedBox(height: 21),
@@ -68,14 +70,14 @@ class SuccessDialog extends StatelessWidget {
               child: ElevatedButton(
                 onPressed: onBackPressed,
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF48E86B),
+                  backgroundColor: Colors.red, // Color rojo para botón de error
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(7),
                   ),
                   minimumSize: const Size(70, 24),
                 ),
                 child: const Text(
-                  'Volver',
+                  'Entendido',
                   style: TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.w600,

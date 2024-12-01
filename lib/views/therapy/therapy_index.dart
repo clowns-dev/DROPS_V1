@@ -1,12 +1,14 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:ps3_drops_v1/models/therapy.dart';
+import 'package:ps3_drops_v1/tools/session_manager.dart';
 import 'package:ps3_drops_v1/view_models/therapy_view_model.dart';
 import 'package:ps3_drops_v1/views/therapy/therapy_balances_data.dart';
 import 'package:ps3_drops_v1/views/therapy/therapy_data.dart';
 import 'package:ps3_drops_v1/views/therapy/therapy_nurses_data.dart';
 import 'package:ps3_drops_v1/views/therapy/therapy_patients_data.dart';
+import 'package:ps3_drops_v1/widgets/error_form_dialog.dart';
+import 'package:ps3_drops_v1/widgets/text_label.dart';
 import 'package:ps3_drops_v1/widgets/title_container.dart';
 import 'package:ps3_drops_v1/widgets/history_title_container.dart';
 import 'package:ps3_drops_v1/widgets/search_field.dart';
@@ -22,73 +24,203 @@ class TherapyIndex extends StatefulWidget {
 }
 
 class _TherapyIndexState extends State<TherapyIndex> {
-  final String _selectedFilter = 'Buscar por:';
-  final List<String> _filterOptions = ['Buscar por:', 'Codigo'];
+  String _selectedFilter = 'Buscar por:';
+  final List<String> _filterOptions = ['Buscar por:', 'CI Paciente', 'CI Enfermero', 'Camilla'];
   final TextEditingController _searchController = TextEditingController();
+  final TextEditingController _searchNurseController = TextEditingController();
+  final TextEditingController _searchPatientController = TextEditingController();
+  final TextEditingController _searchBalanceController = TextEditingController();
   final TextEditingController _stretcherNumberController = TextEditingController();
+  int? idNurse, idBalance, idPatient; 
+
   bool _showForm = false;
   InfoTherapy? _selectedInfoTherapy;
+  Therapy? therapy;
   bool _isViewingTherapy = false;
+
+  Map<String, bool> _fieldErrors = {
+    'stretcherNumber': false,
+    'stretcherNumberInvalid': false,
+    'idNurse': false,
+    'idBalance': false,
+    'idPatient': false,
+  };
+
+  void _resetFieldErrors(){
+    setState(() {
+      _fieldErrors = {
+        'stretcherNumber': false,
+        'stretcherNumberInvalid': false,
+        'idNurse': false,
+        'idBalance': false,
+        'idPatient': false,
+      };
+    });
+  }
 
   @override
   void initState() {
     super.initState();
-    _searchController.addListener(_onSearchChanged);
+    final therapyViewModel = context.read<TherapyViewModel>();
+    therapyViewModel.fetchTherapies(context);
+    therapyViewModel.fetchTherapyBalances(context);
+    therapyViewModel.fetchTherapyNurses(context);
+    therapyViewModel.fetchTherapyPatients(context);
+  }
+
+  @override
+  void didChangeDependencies(){
+    super.didChangeDependencies();
+    
   }
 
   @override
   void dispose() {
-    _searchController.removeListener(_onSearchChanged);
     _searchController.dispose();
+    _searchNurseController.dispose();
     super.dispose();
   }
 
-  void _onSearchChanged() {
+  void _filteredTherapyList(String query) {
     final therapyViewModel = context.read<TherapyViewModel>();
-    // therapyViewModel.filterBalances(_searchController.text);
+    therapyViewModel.filterTherapies(query, _selectedFilter);
   }
 
-  void _toggleView({bool isViewing = false}) {
+  void _filterPatientList(String query) {
     final therapyViewModel = context.read<TherapyViewModel>();
+    therapyViewModel.filterPatients(query);
+  }
 
-    if (!_showForm) {
-      therapyViewModel.updateSelectedPatientId(0);
-      therapyViewModel.updateSelectedNurseId(0);
-      therapyViewModel.updateSelectedBalanceId(0);
-      _stretcherNumberController.clear();
-    }
+  void _filterNurseList(String query) {
+    final therapyViewModel = context.read<TherapyViewModel>();
+    therapyViewModel.filterNurses(query);
+  }
 
+  void _filterBalanceList(String query) {
+    final therapyViewModel = context.read<TherapyViewModel>();
+    therapyViewModel.filterBalances(query);
+  }
+
+  void _toggleView([Therapy? therapy]) {
     setState(() {
       _showForm = !_showForm;
-      _isViewingTherapy = isViewing;
+      
+      if (!_showForm) {
+        _resetForm();
+        _isViewingTherapy = false; 
+        _selectedInfoTherapy = null; 
+      } else {
+        _resetFieldErrors();
+      }
     });
   }
 
-
-
-
-
-  void _onViewTherapy(int id) async {
+  void _onViewTherapy(BuildContext context, int id) async {
     final therapyViewModel = context.read<TherapyViewModel>();
-
-    if (kDebugMode) {
-      print("Cargando información de la terapia con ID: $id");
-    }
-
-    // Realiza la carga de datos
-    await therapyViewModel.fetchInfoTherapy(id);
-
-    // Luego actualiza el estado con una sola llamada
+    await therapyViewModel.fetchInfoTherapy(context, id);
     if (mounted) {
       setState(() {
         _selectedInfoTherapy = therapyViewModel.infoTherapy;
         _showForm = true;
-        _isViewingTherapy = true;  // Activa la visualización de la terapia
+        _isViewingTherapy = true; 
       });
     }
   }
 
+  void _clearSearch() {
+    _searchController.clear();
+    _filteredTherapyList('');
+  }
 
+  void _resetForm(){
+    final therapyViewModel = context.read<TherapyViewModel>();
+
+    _stretcherNumberController.clear();
+    _searchBalanceController.clear();
+    _searchNurseController.clear();
+    _searchPatientController.clear();
+    therapyViewModel.updateSelectedPatientId(0);
+    therapyViewModel.updateSelectedNurseId(0);
+    therapyViewModel.updateSelectedBalanceId(0);
+    _filterBalanceList('');
+    _filterNurseList('');
+    _filterPatientList('');
+  }
+
+  void _showSuccessDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return SuccessDialog(
+          title: 'Registro Exitoso',
+          message: '¡Se creó la Terapia correctamente!',
+          onBackPressed: () {
+            Navigator.of(context).pop(); 
+            setState(() {
+              _showForm = false;
+            });
+          },
+        );
+      },
+    );
+  }
+
+  void _showErrorFormDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return ErrorDialog(
+          title:'Faltan datos',
+          message: '¡Faltan datos necesarios para la creacion!',
+          onBackPressed: () {
+            Navigator.of(context).pop(); 
+          },
+        );
+      },
+    );
+  }
+
+  void _validateAndSubmit(){
+    setState(() {
+      _fieldErrors['stretcherNumber'] = _stretcherNumberController.text.trim().isEmpty;
+      _fieldErrors['stretcherNumberInvalid'] = !RegExp(r'^[a-zA-Z0-9\s\-_/\\]+$').hasMatch(_stretcherNumberController.text.trim());
+      _fieldErrors['idNurse'] = idNurse == null || idNurse == 0;
+      _fieldErrors['idBalance'] = idBalance == null || idBalance == 0;
+      _fieldErrors['idPatient'] = idPatient == null || idPatient == 0;
+    });
+
+    if(_fieldErrors.containsValue(true)){
+      _showErrorFormDialog(context);
+      return;
+    }
+
+    final therapyViewModel = context.read<TherapyViewModel>();
+
+    try{
+      therapy = Therapy(
+        stretcherNumber: _stretcherNumberController.text,
+        idNurse: idNurse,
+        idBalance: idBalance,
+        idPerson: idPatient,
+        userID: sessionManager.idUser 
+      );
+
+      therapyViewModel.createNewTherapy(context, therapy!).then((_) {
+        // ignore: use_build_context_synchronously
+        therapyViewModel.fetchTherapies(context);
+        _clearSearch();
+        _resetForm();
+        if(mounted){
+          _showSuccessDialog(context);
+        }
+      });
+
+
+    }catch (e){
+      throw Exception("Error Index: $e");
+    }
+
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -154,32 +286,42 @@ class _TherapyIndexState extends State<TherapyIndex> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                const HistoryTitleContainer(
-                  titleTable: 'Historial de Terapias',
-                ),
-                Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    DropdownFilter(
-                      fullWidth: false,
-                      value: _selectedFilter,
-                      items: _filterOptions,
-                      onChanged: (newValue) {},
-                    ),
-                    const SizedBox(width: 16.0),
-                    SearchField(
-                      controller: _searchController,
-                      fullWidth: false,
-                      onChanged: (value) => _onSearchChanged(),
-                    ),
-                  ],
-                ),
-              ],
-            ),
+            if(!_showForm)
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  const HistoryTitleContainer(
+                    titleTable: 'Historial de Terapias',
+                  ),
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      DropdownFilter(
+                        fullWidth: false,
+                        value: _selectedFilter,
+                        items: _filterOptions,
+                        onChanged: (newValue) {
+                          setState(() {
+                            _selectedFilter = newValue as String;
+                          });
+                          if(_selectedFilter == 'Buscar por:'){
+                            _filteredTherapyList('');
+                          }
+                        },
+                      ),
+                      const SizedBox(width: 16.0),
+                      SearchField(
+                        controller: _searchController,
+                        fullWidth: false,
+                        onChanged: (query) {
+                          _filteredTherapyList(query);
+                        },
+                      ),
+                    ],
+                  ),
+                ],
+              ),
             const SizedBox(height: 16.0),
             Expanded(
               child: Container(
@@ -204,8 +346,6 @@ class _TherapyIndexState extends State<TherapyIndex> {
                                 : const Center(child: CircularProgressIndicator()))
                             : _buildForm(context))
                         : _buildTable(),
-
-
               ),
             ),
           ],
@@ -219,7 +359,7 @@ class _TherapyIndexState extends State<TherapyIndex> {
       builder: (context, therapyViewModel, child) {
         if (therapyViewModel.isLoading) {
           return const Center(child: CircularProgressIndicator());
-        } else if (therapyViewModel.filteredTherapies.isEmpty) {
+        } else if (!therapyViewModel.hasMatches) {
           return Center(
             child: Text(
               'Sin coincidencias',
@@ -234,7 +374,7 @@ class _TherapyIndexState extends State<TherapyIndex> {
           return TherapyDataTable(
             therapies: therapyViewModel.filteredTherapies,
             onView: (id) {
-              _onViewTherapy(id);
+              _onViewTherapy(context, id);
             },
           );
         }
@@ -346,7 +486,6 @@ class _TherapyIndexState extends State<TherapyIndex> {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Etiqueta
           Expanded(
             flex: 2,
             child: Text(
@@ -401,27 +540,7 @@ class _TherapyIndexState extends State<TherapyIndex> {
                       ),
                       const SizedBox(width: 24.0),
                       ElevatedButton(
-                        onPressed: () {
-                          final therapyViewModel = context.read<TherapyViewModel>();
-
-                          final stretcherNumber = _stretcherNumberController.text;
-                          final patientId = therapyViewModel.selectedPatientId;
-                          final nurseId = therapyViewModel.selectedNurseId;
-                          final balanceId = therapyViewModel.selectedBalanceId;
-
-                          if (patientId != null && nurseId != null && balanceId != null && stretcherNumber.isNotEmpty) {
-                            // Llamar al método de creación de terapia
-                            therapyViewModel.createNewTherapy(stretcherNumber, 1).then((_) {
-                              therapyViewModel.fetchTherapies();
-                            });
-                            _showSuccessDialog(context);
-                          } else {
-                            // Manejar el error, por ejemplo, mostrar un mensaje de validación
-                            if (kDebugMode) {
-                              print("Por favor, complete todos los campos.");
-                            }
-                          }
-                        },
+                        onPressed: _validateAndSubmit,
                         style: ElevatedButton.styleFrom(
                           backgroundColor: Colors.purple.shade300,
                           padding: const EdgeInsets.symmetric(
@@ -448,21 +567,93 @@ class _TherapyIndexState extends State<TherapyIndex> {
             const SizedBox(height: 32.0),
             Expanded(
               child: Row(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
+                crossAxisAlignment: CrossAxisAlignment.start, 
                 children: [
-                  Flexible(
-                    flex: 1, 
-                    child: _buildPatientsTable(),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            const Text(
+                              'Pacientes',
+                              style: TextStyle(fontSize: 20.0, fontWeight: FontWeight.bold),
+                            ),
+                            const SizedBox(width: 10.0),
+                            SearchField(
+                              controller: _searchPatientController,
+                              fullWidth: false,
+                              onChanged: (query) {
+                                _filterPatientList(query);
+                              },
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 8.0),
+                        Expanded( // Cambiado a Expanded para ocupar espacio restante
+                          child: _buildPatientsTable(),
+                        ),
+                      ],
+                    ),
                   ),
                   const SizedBox(width: 16.0),
-                  Flexible(
-                    flex: 1,
-                    child: _buildNursesTable(),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            const Text(
+                              'Enfermeros',
+                              style: TextStyle(fontSize: 20.0, fontWeight: FontWeight.bold),
+                            ),
+                            const SizedBox(width: 10.0),
+                            SearchField(
+                              controller: _searchNurseController,
+                              fullWidth: false,
+                              onChanged: (query) {
+                                _filterNurseList(query);
+                              },
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 8.0),
+                        Expanded( // Cambiado a Expanded para ocupar espacio restante
+                          child: _buildNursesTable(),
+                        ),
+                      ],
+                    ),
                   ),
                   const SizedBox(width: 16.0),
-                  Flexible(
-                    flex: 1,
-                    child: _buildBalancesTable(),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            const Text(
+                              'Balanzas',
+                              style: TextStyle(fontSize: 20.0, fontWeight: FontWeight.bold),
+                            ),
+                            const SizedBox(width: 10.0),
+                            SearchField(
+                              controller: _searchBalanceController,
+                              fullWidth: false,
+                              onChanged: (query) {
+                                _filterBalanceList(query);
+                              },
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 8.0),
+                        Expanded( // Cambiado a Expanded para ocupar espacio restante
+                          child: _buildBalancesTable(),
+                        ),
+                      ],
+                    ),
                   ),
                 ],
               ),
@@ -477,18 +668,23 @@ class _TherapyIndexState extends State<TherapyIndex> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
-          'Número de Camilla:',
-          style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-        ),
+        const TextLabel(content: 'CI:'),
         const SizedBox(height: 8.0),
         TextField(
-          controller: _stretcherNumberController, 
+          controller: _stretcherNumberController,
+          onChanged: (_) {
+            setState(() {
+              _fieldErrors['stretcherNumber'] = _stretcherNumberController.text.trim().isEmpty;
+              _fieldErrors['stretcherNumberInvalid'] = !RegExp(r'^[a-zA-Z0-9\s\-_/\\]+$').hasMatch(_stretcherNumberController.text.trim());
+            });
+          }, 
           decoration: InputDecoration(
             hintText: 'Ingrese el número de la Camilla',
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12.0),
+              borderSide: BorderSide(color: _fieldErrors['stretcherNumber']! ? Colors.red : Colors.grey),
             ),
+            errorText: _fieldErrors['stretcherNumber']! ? 'Campo obligatorio' : _fieldErrors['stretcherNumberInvalid']! ? 'Camilla Invalida' : null,
           ),
         ),
       ],
@@ -500,7 +696,7 @@ class _TherapyIndexState extends State<TherapyIndex> {
       builder: (context, therapyViewModel, child) {
         if (therapyViewModel.isLoading) {
           return const Center(child: CircularProgressIndicator());
-        } else if (therapyViewModel.listPatients.isEmpty) {
+        } else if (!therapyViewModel.hasMatchesPatients) {
           return Center(
             child: Text(
               'Sin coincidencias',
@@ -513,10 +709,10 @@ class _TherapyIndexState extends State<TherapyIndex> {
           );
         } else {
           return TherapyPatientsDataTable(
-            therapyPatients: therapyViewModel.listPatients,
+            therapyPatients: therapyViewModel.filteredPatients,
             selectedId: therapyViewModel.selectedPatientId,
             onAssign: (int id) {
-              therapyViewModel.updateSelectedPatientId(id);
+               idPatient = therapyViewModel.updateSelectedPatientId(id);
             },
           );
         }
@@ -529,7 +725,7 @@ class _TherapyIndexState extends State<TherapyIndex> {
       builder: (context, therapyViewModel, child) {
         if (therapyViewModel.isLoading) {
           return const Center(child: CircularProgressIndicator());
-        } else if (therapyViewModel.listNurses.isEmpty) {
+        } else if (!therapyViewModel.hasMatchesNurses) {
           return Center(
             child: Text(
               'Sin coincidencias',
@@ -542,23 +738,23 @@ class _TherapyIndexState extends State<TherapyIndex> {
           );
         } else {
           return TherapyNursesDataTable(
-            therapyNurses: therapyViewModel.listNurses,
+            therapyNurses: therapyViewModel.filteredNurses,
             selectedId: therapyViewModel.selectedNurseId, 
             onAssign: (int id) {
-              therapyViewModel.updateSelectedNurseId(id); 
+              idNurse = therapyViewModel.updateSelectedNurseId(id); 
             },
           );
         }
       },
     );
   }
-
+  
   Widget _buildBalancesTable() {
     return Consumer<TherapyViewModel>(
       builder: (context, therapyViewModel, child) {
         if (therapyViewModel.isLoading) {
           return const Center(child: CircularProgressIndicator());
-        } else if (therapyViewModel.listBalances.isEmpty) {
+        } else if (!therapyViewModel.hasMatchesBalances) {
           return Center(
             child: Text(
               'Sin coincidencias',
@@ -571,29 +767,13 @@ class _TherapyIndexState extends State<TherapyIndex> {
           );
         } else {
           return TherapyBalancesDataTable(
-            therapyBalances: therapyViewModel.listBalances,
+            therapyBalances: therapyViewModel.filteredBalances,
             selectedId: therapyViewModel.selectedBalanceId, 
             onAssign: (int id) {
-              therapyViewModel.updateSelectedBalanceId(id); 
+              idBalance = therapyViewModel.updateSelectedBalanceId(id); 
             },
           );
         }
-      },
-    );
-  }
-
-  void _showSuccessDialog(BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (context) {
-        return SuccessDialog(
-          title: 'Registro Exitoso',
-          message: '¡Se creó el registro correctamente!',
-          onBackPressed: () {
-            Navigator.of(context).pop(); // Cerrar el modal
-            _toggleView(); // Volver a la vista de la tabla
-          },
-        );
       },
     );
   }

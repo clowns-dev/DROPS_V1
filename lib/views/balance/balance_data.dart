@@ -37,6 +37,14 @@ class _BalanceDataTableState extends State<BalanceDataTable> {
   }
 
   @override
+  void didUpdateWidget(covariant BalanceDataTable oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.balances != widget.balances) {
+      _balanceDataSource.updateDataSource(widget.balances);
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Column(
       children: [
@@ -91,8 +99,8 @@ class _BalanceDataTableState extends State<BalanceDataTable> {
 class BalanceDataSource extends DataGridSource {
   int rowsPerPage = 5;
   int currentPageIndex = 0;
-
   List<DataGridRow> _balances = [];
+
   final void Function(int id) onEdit;
   final void Function(int id) onDelete;
 
@@ -101,18 +109,22 @@ class BalanceDataSource extends DataGridSource {
     required this.onEdit,
     required this.onDelete,
   }) {
+    _buildDataGridRows(balances);
+  }
+
+  void _buildDataGridRows(List<Balance> balances){
     _balances = balances.map<DataGridRow>((balance) {
       final formattedRegisterDate = balance.registerDate != null
-          ? DateFormat('yyyy-MM-dd').format(balance.registerDate!)
+          ? DateFormat('yyyy-MM-dd HH:mm:ss').format(balance.registerDate!)
           : 'Sin Registro';
-      final formattedLastUpdate = balance.lastUpdate != null
-          ? DateFormat('yyyy-MM-dd').format(balance.lastUpdate!)
+      final formattedLastUpdate = balance.updateRegister != null
+          ? DateFormat('yyyy-MM-dd HH:mm:ss').format(balance.updateRegister!)
           : 'Sin Cambios';
 
       return DataGridRow(cells: [
         DataGridCell<int>(columnName: 'ID', value: balance.idBalance),
         DataGridCell<String>(columnName: 'Codigo', value: balance.balanceCode),
-        DataGridCell<String>(columnName: 'Factor de\nCalibracion', value: balance.actuallyFactor.toString()),
+        DataGridCell<String>(columnName: 'Factor de\nCalibracion', value: balance.factor.toString()),
         DataGridCell<String>(columnName: 'Fecha de\nRegistro', value: formattedRegisterDate),
         DataGridCell<String>(columnName: 'Fecha de\nActualizacion', value: formattedLastUpdate),
         DataGridCell<bool>(columnName: 'Estado', value: balance.available == 1),
@@ -131,17 +143,22 @@ class BalanceDataSource extends DataGridSource {
     }).toList();
   }
 
-  void updatePage(int pageIndex, int rowsPerPage) {
-    currentPageIndex = pageIndex;
-    this.rowsPerPage = rowsPerPage;  
-    notifyListeners();  
+  void updateDataSource(List<Balance> balances) {
+    _buildDataGridRows(balances);  
+    notifyListeners();        
   }
 
 
+  void updatePage(int pageIndex, int rowsPerPage) {
+    currentPageIndex = pageIndex;
+    this.rowsPerPage = rowsPerPage;
+    notifyListeners();
+  }
+
   void updateRowsPerPage(int rowsPerPage) {
     this.rowsPerPage = rowsPerPage;
-    currentPageIndex = 0; 
-    notifyListeners(); 
+    currentPageIndex = 0;
+    notifyListeners();
   }
 
   @override

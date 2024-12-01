@@ -1,6 +1,10 @@
+import 'dart:async';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:ps3_drops_v1/models/balance.dart';
+import 'package:ps3_drops_v1/tools/session_manager.dart';
 import 'package:ps3_drops_v1/view_models/balance_view_model.dart';
 import 'package:ps3_drops_v1/views/balance/balance_data.dart';
 import 'package:ps3_drops_v1/widgets/text_label.dart';
@@ -20,179 +24,51 @@ class BalanceIndex extends StatefulWidget {
 }
 
 class _BalanceIndexState extends State<BalanceIndex> {
-  final String _selectedFilter = 'Buscar por:';
-  final List<String> _filterOptions = ['Buscar por:', 'Codigo', 'Disponible', 'Ocupadas'];
-  Balance? _editingBalance;
+  Timer? _debounce;
+  String _selectedFilter = 'Buscar por:';
+  final List<String> _filterOptions = ['Buscar por:', 'Codigo'];
+  Balance? _editingBalance, balance;
   final TextEditingController _searchController = TextEditingController();
   final TextEditingController _balaceCodeController = TextEditingController();
-  int? _idBalance;
-  @override
-  void initState() {
-    super.initState();
-  }
+  int?  idUser = 29;
 
-  @override
-  void dispose() {
-    
-    _searchController.dispose();
-    super.dispose();
-  }
+  Map<String, bool> _fieldErrors = {
+    'balanceCode': false,
+    'balanceCodeInvalid': false,
+    'userID': false,
+    'codeRegistered': false,
+  };
 
- 
-
-  void _showFormModal(BuildContext context, [Balance? balance]) {
+  void _resetFieldErrors(){
     setState(() {
-      _editingBalance = balance;
-      if (_editingBalance != null) {
-        _balaceCodeController.text = _editingBalance!.balanceCode ?? '';
-        _idBalance = _editingBalance!.idBalance ?? 0;
-      } else {
-        _balaceCodeController.clear();
-      }
+      _fieldErrors = {
+        'balanceCode': false,
+        'balanceCodeInvalid': false,
+        'userID': false,
+        'codeRegistered': false,
+      };
     });
-    showDialog(
-      context: context,
-      builder: (BuildContext dialogContext) {
-        return Dialog(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16.0),
-          ),
-          child: Container(
-            width: 800,
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(16.0),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.1),
-                  spreadRadius: 4,
-                  blurRadius: 10,
-                  offset: const Offset(0, 3),
-                ),
-              ],
-            ),
-            child: Row(
-              children: [
-                Expanded(
-                  child: ClipRRect(
-                    borderRadius: const BorderRadius.only(
-                      topLeft: Radius.circular(16.0),
-                      bottomLeft: Radius.circular(16.0),
-                    ),
-                    child: Image.asset(
-                      '../assets/img/nurse.png',
-                      fit: BoxFit.cover,
-                      height: 400,
-                    ),
-                  ),
-                ),
-                Expanded(
-                  child: Padding(
-                    padding: const EdgeInsets.all(24.0),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Center(
-                          child: HistoryTitleContainer(
-                            titleTable: _editingBalance == null ? 'Añadir Balanza' : 'Editar Balanza',
-                          ),
-                        ),
-                        const SizedBox(height: 24.0),
-                        const TextLabel(content: 'Código:'),
-                        const SizedBox(height: 8.0),
-                        TextField(
-                          controller: _balaceCodeController,
-                          decoration: InputDecoration(
-                            hintText: 'Ingrese el código',
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12.0),
-                            ),
-                          ),
-                        ),
-                        const SizedBox(height: 32.0),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Expanded(
-                              child: Row(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  ElevatedButton(
-                                    onPressed: () {
-                                      final balanceViewModel = context.read<BalanceViewModel>();
-                                      final balanceCode = _balaceCodeController.text;
-                                      final idBalance = _idBalance;
-                                      if (_editingBalance != null) {
-                                        balanceViewModel.editBalance(idBalance, balanceCode, 1).then((_) {
-                                          balanceViewModel.fetchBalances();
-                                        });
-                                      } else {
-                                        balanceViewModel.createNewBalance(balanceCode, 1).then((_) {
-                                          balanceViewModel.fetchBalances();
-                                        });
-                                      }
-                                      _showSuccessDialog(context, _editingBalance != null, dialogContext);
-                                    },
-                                    style: ElevatedButton.styleFrom(
-                                      backgroundColor: Colors.purple.shade300,
-                                      padding: const EdgeInsets.symmetric(
-                                        vertical: 16.0,
-                                        horizontal: 32.0,
-                                      ),
-                                      shape: RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.circular(12.0),
-                                      ),
-                                    ),
-                                    child: Text(
-                                      _editingBalance == null ? 'INSERTAR' : 'GUARDAR',
-                                      style: const TextStyle(
-                                        color: Colors.white,
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                    ),
-                                  ),
-                                  const SizedBox(width: 30.0),
-                                  ElevatedButton(
-                                    onPressed: () {
-                                      Navigator.of(dialogContext).pop(); 
-                                    },
-                                    style: ElevatedButton.styleFrom(
-                                      backgroundColor: Colors.grey.shade400,
-                                      padding: const EdgeInsets.symmetric(
-                                        vertical: 16.0,
-                                        horizontal: 32.0,
-                                      ),
-                                      shape: RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.circular(12.0),
-                                      ),
-                                    ),
-                                    child: const Text(
-                                      'CANCELAR',
-                                      style: TextStyle(
-                                        color: Colors.white,
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            )
-                          ],
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        );
-      },
-    );
   }
 
-  void _showSuccessDialog(BuildContext context, bool isEditing, BuildContext formDialogContext) {
+  void _resetForm(){
+    _balaceCodeController.clear();
+    _resetFieldErrors();
+  }
+
+  void _onCodeChanged(String code){
+    if(_debounce?.isActive ?? false) _debounce!.cancel();
+    _debounce = Timer(const Duration(milliseconds: 500), () async {
+      final balanceViewModel = context.read<BalanceViewModel>();
+      bool isCodeRegistered = await balanceViewModel.isCodeRegistered(context, code.trim());
+      setState(() {
+        _fieldErrors['balanceCode'] = code.trim().isEmpty;
+        _fieldErrors['balanceCodeInvalid'] = !RegExp(r'^[a-zA-Z0-9\s\-_/\\]+$').hasMatch(code.trim());
+        _fieldErrors['codeRegistered'] = isCodeRegistered && _editingBalance == null;
+      });
+    });
+  }
+
+  void _showSuccessDialog(BuildContext context, bool isEditing) {
     showDialog(
       context: context,
       builder: (context) {
@@ -203,13 +79,278 @@ class _BalanceIndexState extends State<BalanceIndex> {
               : '¡Se creó el registro correctamente!',
           onBackPressed: () {
             Navigator.of(context).pop(); 
-            Navigator.of(formDialogContext).pop(); 
           },
         );
       },
     );
   }
 
+  void _clearSearch(){
+    _searchController.clear();
+    _filterBalanceList('');
+  }
+
+  void _showDeleteConfirmationDialog(BuildContext context, int? balanceId) {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return DeleteConfirmationDialog(
+          onConfirmDelete: () {
+            final balanceViewModel = context.read<BalanceViewModel>();
+
+            if(balanceId != null){
+              balanceViewModel.removeBalance(context, balanceId, sessionManager.idUser).then((_){
+                // ignore: use_build_context_synchronously
+                balanceViewModel.fetchBalances(context);
+                _clearSearch();
+              });
+            }
+
+          },
+        );
+      },
+    );
+  }
+
+  Future<void> _validateAndSubmit(BuildContext formDialogContext) async {
+    final balanceViewModel = context.read<BalanceViewModel>();
+    bool isCodeRegistered = await balanceViewModel.isCodeRegistered(context, _balaceCodeController.text.trim());
+
+    setState(() {
+      _fieldErrors['balanceCode'] = _balaceCodeController.text.trim().isEmpty;
+      _fieldErrors['balanceCodeInvalid'] = !RegExp(r'^[a-zA-Z0-9\s\-_/\\]+$').hasMatch(_balaceCodeController.text.trim());
+      _fieldErrors['userID'] = idUser == null || idUser == 0;
+      _fieldErrors['codeRegistered'] = isCodeRegistered && _editingBalance == null;
+    });
+
+    if(_fieldErrors.containsValue(true)){
+      if(kDebugMode){
+        print("Estado fieldErrors: $_fieldErrors");
+      }
+      return;
+    }
+
+    // ignore: use_build_context_synchronously
+    Navigator.of(formDialogContext).pop();
+
+    if(_editingBalance != null){
+      balance = Balance(
+        idBalance: _editingBalance!.idBalance,
+        balanceCode: _balaceCodeController.text.trim(),
+        userID: sessionManager.idUser
+      );
+
+      // ignore: use_build_context_synchronously
+      await balanceViewModel.editBalance(context, balance!);
+      // ignore: use_build_context_synchronously
+      balanceViewModel.fetchBalances(context);
+      _clearSearch();
+      _resetForm();
+      // ignore: use_build_context_synchronously
+      _showSuccessDialog(context, true);
+    } else {
+      balance = Balance(
+        balanceCode: _balaceCodeController.text.trim(),
+        userID: sessionManager.idUser
+      );
+
+      // ignore: use_build_context_synchronously
+      await balanceViewModel.createNewBalance(context, balance!);
+      // ignore: use_build_context_synchronously
+      balanceViewModel.fetchBalances(context);
+      _clearSearch();
+      _resetForm();
+      // ignore: use_build_context_synchronously
+      _showSuccessDialog(context, false);
+    }
+
+  }
+
+  @override
+  void initState() {
+    super.initState();
+  }
+
+  @override
+  void didChangeDependencies(){
+    super.didChangeDependencies();
+    final balanceViewModel = context.read<BalanceViewModel>();
+    balanceViewModel.fetchBalances(context);
+  }
+
+  @override
+  void dispose() {
+    _debounce?.cancel();
+    _searchController.dispose();
+    super.dispose();
+  }
+
+   void _filterBalanceList(String query) {
+    final balanceViewModel = context.read<BalanceViewModel>();
+    balanceViewModel.filterBalances(query, _selectedFilter);
+  }
+
+
+  void _showFormModal(BuildContext context, [Balance? balance]) {
+      _editingBalance = balance;
+      if (_editingBalance != null) {
+        _balaceCodeController.text = _editingBalance!.balanceCode ?? '';
+      } else {
+        _resetForm();
+      }
+    showDialog(
+      context: context,
+      builder: (BuildContext dialogContext) {
+        return Dialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16.0),
+          ),
+          child: StatefulBuilder(
+            builder: (BuildContext context, StateSetter setModalState) {
+               return Container(
+                width: 800,
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(16.0),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.1),
+                      spreadRadius: 4,
+                      blurRadius: 10,
+                      offset: const Offset(0, 3),
+                    ),
+                  ],
+                ),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: ClipRRect(
+                        borderRadius: const BorderRadius.only(
+                          topLeft: Radius.circular(16.0),
+                          bottomLeft: Radius.circular(16.0),
+                        ),
+                        child: Image.asset(
+                          '../assets/img/nurse.png',
+                          fit: BoxFit.cover,
+                          height: 400,
+                        ),
+                      ),
+                    ),
+                    Expanded(
+                      child: Padding(
+                        padding: const EdgeInsets.all(24.0),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Center(
+                              child: HistoryTitleContainer(
+                                titleTable: _editingBalance == null ? 'Añadir Balanza' : 'Editar Balanza',
+                              ),
+                            ),
+                            const SizedBox(height: 24.0),
+                            const TextLabel(content: 'Código:'),
+                            const SizedBox(height: 8.0),
+                            TextField(
+                              controller: _balaceCodeController,
+                              onChanged: _onCodeChanged,
+                              inputFormatters: [
+                                LengthLimitingTextInputFormatter(50),
+                              ],
+                              decoration: InputDecoration(
+                                hintText: 'Ingrese el código',
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(12.0),
+                                  borderSide: BorderSide(
+                                    color: _fieldErrors['balanceCode']! 
+                                        ? Colors.red 
+                                        : _fieldErrors['codeRegistered']! 
+                                            ? Colors.orange 
+                                            : Colors.grey,
+                                  ),
+                                ),
+                                errorText: _fieldErrors['balanceCode']!
+                                    ? 'El campo no puede estar vacío.'
+                                    : _fieldErrors['balanceCodeInvalid']!
+                                        ? 'El código contiene caracteres no válidos.'
+                                        : _fieldErrors['codeRegistered']!
+                                            ? 'Este código ya está registrado.'
+                                            : null,
+                              ),
+                            ),
+                            const SizedBox(height: 32.0),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Expanded(
+                                  child: Row(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      ElevatedButton(
+                                        onPressed: () {
+                                          setModalState(() {
+                                            _validateAndSubmit(dialogContext);
+                                          });
+                                        },
+                                        style: ElevatedButton.styleFrom(
+                                          backgroundColor: Colors.purple.shade300,
+                                          padding: const EdgeInsets.symmetric(
+                                            vertical: 16.0,
+                                            horizontal: 32.0,
+                                          ),
+                                          shape: RoundedRectangleBorder(
+                                            borderRadius: BorderRadius.circular(12.0),
+                                          ),
+                                        ),
+                                        child: Text(
+                                          _editingBalance == null ? 'INSERTAR' : 'GUARDAR',
+                                          style: const TextStyle(
+                                            color: Colors.white,
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                        ),
+                                      ),
+                                      const SizedBox(width: 30.0),
+                                      ElevatedButton(
+                                        onPressed: () {
+                                          Navigator.of(dialogContext).pop(); 
+                                        },
+                                        style: ElevatedButton.styleFrom(
+                                          backgroundColor: Colors.grey.shade400,
+                                          padding: const EdgeInsets.symmetric(
+                                            vertical: 16.0,
+                                            horizontal: 32.0,
+                                          ),
+                                          shape: RoundedRectangleBorder(
+                                            borderRadius: BorderRadius.circular(12.0),
+                                          ),
+                                        ),
+                                        child: const Text(
+                                          'CANCELAR',
+                                          style: TextStyle(
+                                            color: Colors.white,
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                )
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            },
+          ),
+        );
+      },
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -274,13 +415,22 @@ class _BalanceIndexState extends State<BalanceIndex> {
                       fullWidth: false,
                       value: _selectedFilter,
                       items: _filterOptions,
-                      onChanged: (newValue) {},
+                      onChanged: (newValue) {
+                        setState(() {
+                          _selectedFilter = newValue as String;
+                        });
+                        if(_selectedFilter == 'Buscar por:'){
+                          _filterBalanceList('');
+                        }
+                      },
                     ),
                     const SizedBox(width: 16.0),
                     SearchField(
                       controller: _searchController,
                       fullWidth: false,
-                      
+                      onChanged: (query){
+                        _filterBalanceList(query);
+                      },
                     ),
                   ],
                 ),
@@ -317,7 +467,7 @@ class _BalanceIndexState extends State<BalanceIndex> {
       builder: (context, balanceViewModel, child) {
         if (balanceViewModel.isLoading) {
           return const Center(child: CircularProgressIndicator());
-        } else if (balanceViewModel.filteredBalances.isEmpty) {
+        } else if (!balanceViewModel.hasMatches) {
           return Center(
             child: Text(
               'Sin coincidencias',
@@ -332,7 +482,7 @@ class _BalanceIndexState extends State<BalanceIndex> {
           return BalanceDataTable(
             balances: balanceViewModel.filteredBalances,
             onEdit: (id) async {
-              Balance? balance = await balanceViewModel.fetchBalanceById(id);
+              Balance? balance = await balanceViewModel.fetchBalanceById(context, id);
               if (balance != null) {
                 setState(() {
                   _editingBalance = balance;
@@ -346,26 +496,6 @@ class _BalanceIndexState extends State<BalanceIndex> {
             },
           );
         }
-      },
-    );
-  }
-
-  void _showDeleteConfirmationDialog(BuildContext context, int? balanceId) {
-    showDialog(
-      context: context,
-      builder: (context) {
-        return DeleteConfirmationDialog(
-          onConfirmDelete: () {
-            final balanceViewModel = context.read<BalanceViewModel>();
-
-            if(balanceId != null){
-              balanceViewModel.removeBalance(balanceId, 1).then((_){
-                balanceViewModel.fetchBalances();
-              });
-            }
-
-          },
-        );
       },
     );
   }

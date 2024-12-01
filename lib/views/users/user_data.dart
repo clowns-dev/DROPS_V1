@@ -1,38 +1,46 @@
 import 'package:flutter/material.dart';
-import 'package:ps3_drops_v1/models/employee.dart';
+import 'package:ps3_drops_v1/models/user.dart';
 import 'package:syncfusion_flutter_datagrid/datagrid.dart';
 import 'package:ps3_drops_v1/widgets/edit_button.dart';
 import 'package:ps3_drops_v1/widgets/delete_button.dart';
 import 'package:ps3_drops_v1/widgets/grid_column_builder.dart';
 import 'package:intl/intl.dart';
 
-class EmployeeDataTable extends StatefulWidget {
-  final List<Employee> employees;
+class UserDataTable extends StatefulWidget {
+  final List<User> users;
   final void Function(int id) onEdit;
   final void Function(int id) onDelete;
 
-  const EmployeeDataTable({
-    required this.employees,
+  const UserDataTable({
+    required this.users,
     required this.onEdit,
     required this.onDelete,
     super.key,
   });
 
   @override
-  State<EmployeeDataTable> createState() => _EmployeeDataTableState();
+  State<UserDataTable> createState() => _UserDataTableState();
 }
 
-class _EmployeeDataTableState extends State<EmployeeDataTable> {
-  late EmployeeDataSource _employeeDataSource;
-
+class _UserDataTableState extends State<UserDataTable> {
+  late UserDataSource _userDataSource;
+  int rowsPerPage = 5;
   @override
   void initState() {
     super.initState();
-    _employeeDataSource = EmployeeDataSource(
-      employees: widget.employees,
+    _userDataSource = UserDataSource(
+      users: widget.users,
       onEdit: widget.onEdit,
       onDelete: widget.onDelete,
     );
+  }
+
+  @override
+  void didUpdateWidget(covariant UserDataTable oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.users != widget.users) {
+      _userDataSource.updateDataSource(widget.users);
+    }
   }
 
   @override
@@ -41,16 +49,31 @@ class _EmployeeDataTableState extends State<EmployeeDataTable> {
       children: [
         Expanded(
           child: SfDataGrid(
-            source: _employeeDataSource,
+            source: _userDataSource,
             columnWidthMode: ColumnWidthMode.fill,
             gridLinesVisibility: GridLinesVisibility.none,
             headerGridLinesVisibility: GridLinesVisibility.none,
+            rowsPerPage: _userDataSource.rowsPerPage,
+            rowHeight: 50,
             columns: <GridColumn>[
               buildGridColumn('CI', 'CI'),
               buildGridColumn('Nombre', 'Nombre'),
-              buildGridColumn('Apellido Paterno', 'Apellido Paterno'),
-              buildGridColumn('Apellido Materno', 'Apellido Materno'),
-              buildGridColumn('Fecha de Registro', 'Fecha de Registro'),
+              buildGridColumn('Apellido\nPaterno', 'Apellido\nPaterno'),
+              buildGridColumn('Apellido\nMaterno', 'Apellido\nMaterno'),
+              buildGridColumn('Telefono', 'Telefono'),
+              GridColumn(
+                columnName: 'Correo',
+                label: Container(
+                  padding: const EdgeInsets.all(8.0),
+                  alignment: Alignment.center,
+                  child: const Text(
+                    'Correo',
+                    style: TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                ),
+                width: 380, // Ajusta el ancho de la columna de Correo, puedes probar con otros valores
+              ),
+              buildGridColumn('Fecha de\nRegistro', 'Fecha de\nRegistro'),
               buildGridColumn('Rol Usuario', 'Rol Usuario'),
               GridColumn(
                 columnName: 'Acciones',
@@ -67,12 +90,17 @@ class _EmployeeDataTableState extends State<EmployeeDataTable> {
           ),
         ),
         SfDataPager(
-          delegate: _employeeDataSource,
-          availableRowsPerPage: const <int>[5, 10, 15],
-          pageCount: (widget.employees.length / 10),
+          delegate: _userDataSource,
+          availableRowsPerPage: const <int>[5, 10],
+          pageCount: (widget.users.length / _userDataSource.rowsPerPage).ceil().toDouble(),
           onRowsPerPageChanged: (int? rowsPerPage) {
             setState(() {
-              _employeeDataSource.updateRowsPerPage(rowsPerPage!);
+              _userDataSource.updateRowsPerPage(rowsPerPage!);
+            });
+          },
+          onPageNavigationEnd: (int pageIndex) {
+            setState(() {
+              _userDataSource.updatePage(pageIndex, _userDataSource.rowsPerPage);
             });
           },
         ),
@@ -81,34 +109,46 @@ class _EmployeeDataTableState extends State<EmployeeDataTable> {
   }
 }
 
-class EmployeeDataSource extends DataGridSource {
-  EmployeeDataSource({
-    required List<Employee> employees,
+class UserDataSource extends DataGridSource {
+  int rowsPerPage = 5;
+  int currentPageIndex = 0;
+  List<DataGridRow> _users = [];
+
+  final void Function(int id) onEdit;
+  final void Function(int id) onDelete;
+
+  UserDataSource({
+    required List<User> users,
     required this.onEdit,
     required this.onDelete,
   }) {
-    
-    _employees = employees.map<DataGridRow>((employee) {
-      final formattedDate = employee.registerDate != null
-          ? DateFormat('yyyy-MM-dd').format(employee.registerDate!)
-          : 'No registrado';
+    _buildDataGridRows(users);
+  }
 
+  void _buildDataGridRows(List<User> users){
+    _users = users.map<DataGridRow>((user) {
+      final formattedDate = user.registerDate != null
+          ? DateFormat('yyyy-MM-dd HH:mm:ss').format(user.registerDate!)
+          
+          : 'No registrado';
       return DataGridRow(cells: [
-        DataGridCell<int>(columnName: 'ID', value: employee.idEmployee),
-        DataGridCell<String>(columnName: 'CI', value: employee.ci),
-        DataGridCell<String>(columnName: 'Nombre', value: employee.name),
-        DataGridCell<String>(columnName: 'Apellido Paterno', value: employee.lastName),
-        DataGridCell<String>(columnName: 'Apellido Materno', value: employee.secondLastName),
+        DataGridCell<int>(columnName: 'ID', value: user.idUser),
+        DataGridCell<String>(columnName: 'CI', value: user.ci),
+        DataGridCell<String>(columnName: 'Nombre', value: user.name),
+        DataGridCell<String>(columnName: 'Apellido\nPaterno', value: user.lastName),
+        DataGridCell<String>(columnName: 'Apellido\nMaterno', value: user.secondLastName),
+        DataGridCell<String>(columnName: 'Telefono', value: user.phone),
+        DataGridCell<String>(columnName: 'Correo', value: user.email),
         DataGridCell<String>(columnName: 'Fecha de Registro', value: formattedDate),
-        DataGridCell<String>(columnName: 'Rol Usuario', value: employee.rolName ?? 'No asignado'),
+        DataGridCell<String>(columnName: 'Rol Usuario', value: user.nameRole ?? 'No asignado'),
         DataGridCell<Widget>(
           columnName: 'Acciones',
           value: Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              EditButton(onPressed: () => onEdit(employee.idEmployee!)),
+              EditButton(onPressed: () => onEdit(user.idUser!)),
               const SizedBox(width: 8),
-              DeleteButton(onPressed: () => onDelete(employee.idEmployee!)),
+              DeleteButton(onPressed: () => onDelete(user.idUser!)),
             ],
           ),
         ),
@@ -116,12 +156,30 @@ class EmployeeDataSource extends DataGridSource {
     }).toList();
   }
 
-  List<DataGridRow> _employees = [];
-  final void Function(int id) onEdit;
-  final void Function(int id) onDelete;
+  void updateDataSource(List<User> users){
+    _buildDataGridRows(users);
+    notifyListeners();
+  }
+
+  void updatePage(int pageIndex, int rowsPerPage){
+    currentPageIndex = pageIndex;
+    this.rowsPerPage = rowsPerPage;
+    notifyListeners();
+  }
+
+  void updateRowsPerPage(int rowsPerPage){
+    this.rowsPerPage = rowsPerPage;
+    currentPageIndex = 0;
+    notifyListeners();
+  }
 
   @override
-  List<DataGridRow> get rows => _employees;
+  List<DataGridRow> get rows {
+    int startIndex = currentPageIndex * rowsPerPage;
+    int endIndex = startIndex + rowsPerPage;
+    endIndex = endIndex > _users.length ? _users.length : endIndex;
+    return _users.sublist(startIndex, endIndex);
+  }
 
   @override
   DataGridRowAdapter buildRow(DataGridRow row) {
@@ -147,14 +205,12 @@ class EmployeeDataSource extends DataGridSource {
                       fontWeight: FontWeight.w400,
                       color: Colors.black,
                     ),
+                    maxLines: 1,  
+                    overflow: TextOverflow.ellipsis,
                   ),
                 ),
         );
       }).toList(),
     );
-  }
-
-  void updateRowsPerPage(int rowsPerPage) {
-    notifyListeners();
   }
 }

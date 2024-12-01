@@ -32,6 +32,14 @@ class _TherapyDataTableState extends State<TherapyDataTable> {
   }
 
   @override
+  void didUpdateWidget(covariant TherapyDataTable oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.therapies != widget.therapies) {
+      _therapyDataSource.updateDataSource(widget.therapies);
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Column(
       children: [
@@ -96,13 +104,16 @@ class TherapyDataSource extends DataGridSource {
     required List<Therapy> therapies,
     required this.onView,
   }) {
-    
+    _buildDataGridRows(therapies);
+  }
+
+  void _buildDataGridRows(List<Therapy> therapies){
     _therapies = therapies.map<DataGridRow>((therapy) {
       final formattedStartDate = therapy.startDate != null
-          ? DateFormat('yyyy-MM-dd').format(therapy.startDate!)
+          ? DateFormat('yyyy-MM-dd HH:mm:ss').format(therapy.startDate!)
           : 'No Iniciado';
       final formattedFinishDate = therapy.finishDate != null
-          ? DateFormat('yyyy-MM-dd').format(therapy.finishDate!)
+          ? DateFormat('yyyy-MM-dd HH:mm:ss').format(therapy.finishDate!)
           : 'Sin fecha de Fin';
 
       return DataGridRow(cells: [
@@ -125,6 +136,10 @@ class TherapyDataSource extends DataGridSource {
     }).toList();
   }
 
+  void updateDataSource(List<Therapy> therapies) {
+    _buildDataGridRows(therapies);  
+    notifyListeners();        
+  }
 
   void updatePage(int pageIndex, int rowsPerPage) {
     currentPageIndex = pageIndex;
@@ -148,13 +163,11 @@ class TherapyDataSource extends DataGridSource {
     return _therapies.sublist(startIndex, endIndex);
   }
 
-
   @override
   DataGridRowAdapter buildRow(DataGridRow row) {
     return DataGridRowAdapter(
       cells: row.getCells().map<Widget>((dataGridCell) {
         bool isActionColumn = dataGridCell.columnName == 'Acciones';
-
         return Container(
           alignment: Alignment.center,
           padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 4.0),
@@ -172,6 +185,8 @@ class TherapyDataSource extends DataGridSource {
                       fontWeight: FontWeight.w400,
                       color: Colors.black,
                     ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                   ),
                 ),
         );

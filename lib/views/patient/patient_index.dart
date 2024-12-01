@@ -1,3 +1,7 @@
+import 'package:flutter/services.dart';
+import 'package:ps3_drops_v1/tools/session_manager.dart';
+import 'package:ps3_drops_v1/widgets/error_exist_dialog.dart';
+import 'package:ps3_drops_v1/widgets/error_form_dialog.dart';
 import 'package:syncfusion_flutter_datepicker/datepicker.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
@@ -20,21 +24,46 @@ class PatientIndex extends StatefulWidget {
   @override
   State<PatientIndex> createState() => _PatientIndexState();
 }
-
 class _PatientIndexState extends State<PatientIndex> {
-  final String _selectedFilter = 'Nombre';
-  final List<String> _filterOptions = ['Nombre', 'CI', 'Apellido'];
+  String _selectedFilter = 'Buscar por:';
+  final List<String> _filterOptions = ['Buscar por:','Nombre', 'CI', 'Apellido'];
   bool _showForm = false; 
-  Patient? _editingPatient; 
-  //String _searchQuery = '';
+  Patient? _editingPatient,patient;
+  DateTime? _selectedDate; 
   final TextEditingController _searchController = TextEditingController();
-
   // Inputs del Formulario
   final TextEditingController _patientName = TextEditingController();
   final TextEditingController _patientLastName = TextEditingController();
   final TextEditingController _patientSecondLastName = TextEditingController();
   final TextEditingController _patientBirthDate = TextEditingController();
   final TextEditingController _patientCI = TextEditingController();
+  int? _valueRadioButtonGenre;
+
+  Map<String, bool> _fieldErrors = {
+    'ci': false,
+    'name': false,
+    'nameInvalid': false,
+    'lastName': false,
+    'lastNameInvalid': false,
+    'secondLastName': false,
+    'birthDate': false,
+    'genre': false,
+  };
+
+  void _resetFieldErrors() {
+    setState(() {
+      _fieldErrors = {
+        'ci': false,
+        'name': false,
+        'nameInvalid': false,
+        'lastName': false,
+        'lastNameInvalid': false,
+        'secondLastName': false,
+        'birthDate': false,
+        'genre': false,
+      };
+    });
+  }
 
   @override
   void initState() {
@@ -42,19 +71,301 @@ class _PatientIndexState extends State<PatientIndex> {
   }
 
   @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final patientViewModel = context.read<PatientViewModel>();
+    patientViewModel.fetchPatients(context);
+  }
+
+
+  @override
   void dispose() {
     _searchController.dispose();
     super.dispose();
   }
 
-  
-
+  void _filteredPatientList(String query){
+    final patientViewModel = context.read<PatientViewModel>();
+    patientViewModel.filterPatients(query, _selectedFilter);
+  }
 
   void _toggleView([Patient? patient]) {
     setState(() {
       _showForm = !_showForm;
-      _editingPatient = patient; 
+      
+      if (!_showForm) {
+        _resetForm();
+      } else {
+        _resetFieldErrors();
+      }
+
+      _editingPatient = patient;
     });
+  }
+
+  void _clearSearch() {
+    _searchController.clear();
+    _filteredPatientList('');
+  }
+
+  void _resetForm() {
+    _patientCI.clear();
+    _patientName.clear();
+    _patientLastName.clear();
+    _patientSecondLastName.clear();
+    _editingPatient = null;
+    _valueRadioButtonGenre = null;
+    _patientBirthDate.clear();
+    _editingPatient = null; 
+  }
+
+  void _showSyncfusionDatePicker(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20), 
+          ),
+          backgroundColor: const Color(0xFFF5F0FF), 
+          content: SizedBox(
+            height: 350,
+            width: 350,
+            child: Container(
+              padding: const EdgeInsets.all(10), 
+              decoration: BoxDecoration(
+                color: const Color(0xFFF5F0FF), 
+                borderRadius: BorderRadius.circular(20), 
+                border: Border.all(
+                  color: const Color.fromARGB(255, 168, 126, 207), 
+                  width: 2, // Grosor del borde
+                ),
+              ),
+              child: SfDateRangePicker(
+                backgroundColor: const Color(0xFFF5F0FF), 
+                onSelectionChanged: (DateRangePickerSelectionChangedArgs args) {
+                  setState(() {
+                    _selectedDate = args.value;
+                    _patientBirthDate.text = DateFormat('dd/MM/yyyy').format(_selectedDate!);
+                  });
+                  Navigator.pop(context); 
+                },
+                selectionMode: DateRangePickerSelectionMode.single,
+                initialSelectedDate: _selectedDate ?? DateTime.now(),
+                minDate: DateTime(1900),
+                maxDate: DateTime.now().subtract(const Duration(days: 1)),
+                headerStyle: const DateRangePickerHeaderStyle(
+                  backgroundColor: Color(0xFFF0E4FF),
+                  textAlign: TextAlign.center,
+                  textStyle: TextStyle(
+                    fontSize: 18,
+                    color: Color(0xFF4B0082),
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                monthCellStyle: const DateRangePickerMonthCellStyle(
+                  todayTextStyle: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    color: Color(0xFF000000),
+                  ),
+                  todayCellDecoration: BoxDecoration(
+                    color: Color(0xFFFFD700),
+                    shape: BoxShape.circle,
+                  ),
+                  weekendTextStyle: TextStyle(
+                    color: Colors.red,
+                  ),
+                  disabledDatesTextStyle: TextStyle(
+                    color: Colors.grey,
+                  ),
+                ),
+                selectionColor: const Color(0xFF6A0DAD), 
+                rangeSelectionColor: const Color(0xFFE1BEE7), 
+              ),
+            ),
+          ),
+          actions: <Widget>[
+            Center(
+              child: ElevatedButton(
+                onPressed: () {
+                  Navigator.of(context).pop();
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFFFF9494),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  minimumSize: const Size(70, 31),
+                ),
+                child: const Text(
+                  'Cancelar',
+                  style: TextStyle(
+                    color: Colors.black,
+                    fontSize: 16,
+                    fontFamily: 'Poppins',
+                    fontWeight: FontWeight.w500,
+                    height: 1,
+                  ),
+                ),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void _showSuccessDialog(BuildContext context, bool isEditing) {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return SuccessDialog(
+          title: isEditing ? 'Edición exitosa' : 'Registro Exitoso',
+          message: isEditing
+              ? '¡Se modificó el registro correctamente!'
+              : '¡Se creó el registro correctamente!',
+          onBackPressed: () { 
+            Navigator.of(context).pop();
+            setState(() {
+              _showForm = false;
+            });
+          },
+        );
+      },
+    );
+  }
+
+  void _showErrorFormDialog(BuildContext context, bool isEditing) {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return ErrorDialog(
+          title: isEditing ? "Faltan datos" : 'Faltan datos',
+          message: isEditing
+              ? '¡Falta datos necesarios para la edicion!'
+              : '¡Faltan datos necesarios para la creacion!',
+          onBackPressed: () {
+            Navigator.of(context).pop(); 
+          },
+        );
+      },
+    );
+  }
+
+  void _showErrorExistsDialog() {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return UserExistsDialog(
+          title: "Paciente Registrado",
+          message:  'Paciente ya registrado!',
+          onBackPressed: () {
+            Navigator.of(context).pop(); 
+          },
+        );
+      },
+    );
+  }
+
+  void _showDeleteConfirmationDialog(BuildContext context, int? patientId) {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return DeleteConfirmationDialog(
+          onConfirmDelete: () {
+            final patientViewModel = context.read<PatientViewModel>();
+            if(patientId != null){
+              patientViewModel.removePatient(context, patientId, sessionManager.idUser).then((_){
+                // ignore: use_build_context_synchronously
+                patientViewModel.fetchPatients(context);
+              });
+            }
+          },
+        );
+      },
+    );
+  }
+
+  void _validateAndSubmit() async {
+    setState(() {
+      _fieldErrors['ci'] = _patientCI.text.trim().isEmpty;
+      _fieldErrors['name'] = _patientName.text.trim().isEmpty;
+      _fieldErrors['nameInvalid'] = !RegExp(r'^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$').hasMatch(_patientName.text.trim());
+      _fieldErrors['lastName'] = _patientLastName.text.trim().isEmpty;
+      _fieldErrors['lastNameInvalid'] = !RegExp(r'^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$').hasMatch(_patientLastName.text.trim());
+      _fieldErrors['secondLastName'] =  _patientSecondLastName.text.isNotEmpty && !RegExp(r'^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$').hasMatch(_patientSecondLastName.text.trim());
+      if (_patientBirthDate.text.isEmpty) {
+        _fieldErrors['birthDate'] = true;
+      } else {
+        final selectedDate = DateFormat('dd/MM/yyyy').parse(_patientBirthDate.text);
+        final now = DateTime.now();
+        if (selectedDate.isAfter(now) || selectedDate.isAtSameMomentAs(now)) {
+          _fieldErrors['birthDate'] = true;
+        } else {
+          _fieldErrors['birthDate'] = false;
+        }
+      }
+      _fieldErrors['genre'] = (_valueRadioButtonGenre == null);
+    });
+
+    if (_fieldErrors.containsValue(true)) {
+      _showErrorFormDialog(context, _editingPatient != null);
+      return;
+    }
+
+    final patientViewModel = context.read<PatientViewModel>();
+    bool isCiRegistered = await patientViewModel.isCiRegistered(context,_patientCI.text.trim());
+
+    if(isCiRegistered && _editingPatient == null){
+      _showErrorExistsDialog();
+      return;
+    }
+
+    if(_editingPatient != null){
+      patient = Patient(
+        idPatient: _editingPatient!.idPatient!,
+        name: _patientName.text, 
+        lastName: _patientLastName.text,
+        secondLastName: _patientSecondLastName.text, 
+        birthDate: DateFormat('dd/MM/yyyy').parse(_patientBirthDate.text), 
+        ci: _patientCI.text,
+        genre: (_valueRadioButtonGenre == 0) ? "M" : "F",
+        userID: sessionManager.idUser 
+      );
+
+      // ignore: use_build_context_synchronously
+      patientViewModel.editPatient(context,patient!).then((_) {
+        // ignore: use_build_context_synchronously
+        patientViewModel.fetchPatients(context);
+        _clearSearch();
+        _resetForm();
+        if(mounted){
+          _showSuccessDialog(context, true);
+        }
+      });
+    } else {
+      patient = Patient(
+        name: _patientName.text, 
+        lastName: _patientLastName.text,
+        secondLastName: _patientSecondLastName.text, 
+        birthDate: DateFormat('dd/MM/yyyy').parse(_patientBirthDate.text), 
+        ci: _patientCI.text,
+        genre: (_valueRadioButtonGenre == 0) ? "M" : "F",
+        userID: sessionManager.idUser 
+      );
+
+      // ignore: use_build_context_synchronously
+      patientViewModel.createNewPatient(context, patient!).then((_) {
+        // ignore: use_build_context_synchronously
+        patientViewModel.fetchPatients(context);
+        _clearSearch();
+        _resetForm();
+        if(mounted){
+          _showSuccessDialog(context, false);
+        }
+      });
+    }
+
   }
 
   @override
@@ -137,14 +448,21 @@ class _PatientIndexState extends State<PatientIndex> {
                         value: _selectedFilter,
                         items: _filterOptions,
                         onChanged: (newValue) {
-                          
+                          setState(() {
+                            _selectedFilter = newValue as String;
+                          });
+                          if (_selectedFilter == 'Buscar por:') {
+                            _filteredPatientList('');
+                          }
                         },
                       ),
                       const SizedBox(width: 16.0),
                       SearchField(
                         controller: _searchController,
                         fullWidth: false,
-                        
+                        onChanged: (query) {
+                          _filteredPatientList(query);
+                        },
                       ),
                     ],
                   ),
@@ -166,7 +484,7 @@ class _PatientIndexState extends State<PatientIndex> {
                     ),
                   ],
                 ),
-                padding: const EdgeInsets.all(18.0), // Añadir padding al contenedor
+                padding: const EdgeInsets.all(18.0),
                 child: _showForm ? _buildForm() : _buildTable(),
               ),
             ),
@@ -174,15 +492,6 @@ class _PatientIndexState extends State<PatientIndex> {
         ),
       ),
     );
-  }
-
-  void _resetForm() {
-    _patientCI.clear();
-    _patientName.clear();
-    _patientLastName.clear();
-    _patientSecondLastName.clear();
-    _patientBirthDate.clear();
-    _editingPatient = null; 
   }
 
   Widget _buildForm() {
@@ -195,73 +504,139 @@ class _PatientIndexState extends State<PatientIndex> {
           children: [
             Center(
               child: HistoryTitleContainer(
-                titleTable: _editingPatient == null ? 'Añadir Usuario' : 'Editar Usuario',
+                titleTable: _editingPatient == null ? 'Añadir Paciente' : 'Editar Paciente',
               ),
             ),
-            const SizedBox(height: 24.0),
+            const SizedBox(height: 7.0),
 
             // Campo para CI
             const TextLabel(content: 'CI:'),
             const SizedBox(height: 8.0),
             TextField(
               controller: _patientCI,
+              onChanged: (_) => setState(() => _fieldErrors['ci'] = _patientCI.text.trim().isEmpty),
+              inputFormatters: [
+                LengthLimitingTextInputFormatter(15),
+              ],
               decoration: InputDecoration(
-                hintText: 'Ingrese el CI',
+                hintText: 'Ingrese el C.I.',
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12.0),
+                  borderSide: BorderSide(color: _fieldErrors['ci']! ? Colors.red : Colors.grey),
                 ),
+                errorText: _fieldErrors['ci']! ? 'Campo obligatorio' : null,
               ),
             ),
-            const SizedBox(height: 24.0),
-
+            const SizedBox(height: 7.0),
             // Campo para Nombre
             const TextLabel(content: 'Nombre:'),
             const SizedBox(height: 8.0),
             TextField(
               controller: _patientName,
+              onChanged: (_) { 
+                setState(() { 
+                  _fieldErrors['name'] = _patientName.text.trim().isEmpty;
+                  _fieldErrors['nameInvalid'] = !RegExp(r'^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$').hasMatch(_patientName.text.trim());
+                });
+              },
+              inputFormatters: [
+                LengthLimitingTextInputFormatter(15),
+              ],
               decoration: InputDecoration(
                 hintText: 'Ingrese el nombre',
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12.0),
+                  borderSide: BorderSide(color: _fieldErrors['name']! ? Colors.red : Colors.grey),
                 ),
+                errorText: _fieldErrors['name']! ? 'Campo obligatorio' : _fieldErrors['nameInvalid']! ? 'Nombre invalido' : null,
               ),
             ),
-            const SizedBox(height: 24.0),
-
+            const SizedBox(height: 7.0),
             // Campo para Apellido Paterno
             const TextLabel(content: 'Apellido Paterno:'),
             const SizedBox(height: 8.0),
-            TextField(
-              controller: _patientLastName,
-              decoration: InputDecoration(
-                hintText: 'Ingrese el apellido paterno',
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12.0),
-                ),
+             TextField(
+                controller: _patientLastName,
+                inputFormatters: [
+                  LengthLimitingTextInputFormatter(45),
+                ],
+                onChanged: (_) { 
+                  setState(() { 
+                    _fieldErrors['lastName'] = _patientLastName.text.trim().isEmpty;
+                    _fieldErrors['lastNameInvalid'] = !RegExp(r'^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$').hasMatch(_patientLastName.text.trim());
+                  });
+                },
+                decoration: InputDecoration(
+                  hintText: 'Ingrese el apellido paterno',
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12.0),
+                    borderSide: BorderSide(color: _fieldErrors['lastName']! ? Colors.red : Colors.grey),
+                  ),
+                errorText: _fieldErrors['lastName']! ? 'Campo obligatorio' : _fieldErrors['lastNameInvalid']! ? 'Apellido invalido' : null,
               ),
             ),
-            const SizedBox(height: 24.0),
-
-            // Campo para Apellido Materno
+            const SizedBox(height: 7.0),
             const TextLabel(content: 'Apellido Materno:'),
             const SizedBox(height: 8.0),
             TextField(
               controller: _patientSecondLastName,
+              inputFormatters: [
+                LengthLimitingTextInputFormatter(45),
+              ],
+              onChanged: (_) {
+                setState(() {
+                  _fieldErrors['secondLastName'] =  _patientSecondLastName.text.isNotEmpty && !RegExp(r'^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$').hasMatch(_patientSecondLastName.text.trim());
+                });
+              },
               decoration: InputDecoration(
-                hintText: 'Ingrese el apellido materno',
+                hintText: 'Ingrese el apellido materno (opcional)',
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12.0),
                 ),
+                errorText: _fieldErrors['secondLastName']! ? 'Apellido Invalido' : null,
               ),
             ),
-            const SizedBox(height: 24.0),
-
-            // Campo para Fecha de Nacimiento
+            const SizedBox(height: 7.0),
+            const TextLabel(content: 'Genero'),
+            const SizedBox(height: 4.0),
+            Row(
+              children: [
+                Expanded(
+                  child: RadioListTile<int>(
+                    title: const Text('Masculino'),
+                    value: 0,
+                    groupValue: _valueRadioButtonGenre,
+                    onChanged: (value) {
+                      setState(() {
+                        _valueRadioButtonGenre = value!;
+                        _fieldErrors['genre'] = false;
+                      });
+                    },
+                    activeColor: _fieldErrors['genre']! ? Colors.red : null,
+                  ),
+                ),
+                Expanded(
+                  child: RadioListTile<int>(
+                  title: const Text('Femenino'),
+                  value: 1,
+                  groupValue: _valueRadioButtonGenre,
+                  onChanged: (value) {
+                       setState(() {
+                        _valueRadioButtonGenre = value!;
+                        _fieldErrors['genre'] = false;
+                      });
+                    },
+                    activeColor: _fieldErrors['genre']! ? Colors.red : null,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 7.0),
             const TextLabel(content: 'Fecha de Nacimiento:'),
-            const SizedBox(height: 8.0),
+            const SizedBox(height: 4.0),
             InkWell(
               onTap: () {
-                _showSyncfusionDatePicker(context); // Llamada para abrir el Syncfusion DatePicker
+                _showSyncfusionDatePicker(context);
               },
               child: InputDecorator(
                 decoration: InputDecoration(
@@ -269,55 +644,26 @@ class _PatientIndexState extends State<PatientIndex> {
                   suffixIcon: const Icon(Icons.calendar_today),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12.0),
+                    borderSide: BorderSide(
+                      color: _fieldErrors['birthDate']! ? Colors.red : Colors.grey,
+                    ),
                   ),
+                  errorText: _fieldErrors['birthDate']! ? 'Fecha inválida o campo obligatorio' : null, 
                 ),
                 child: Text(
                   _patientBirthDate.text.isEmpty
-                      ? 'Seleccione una fecha'
-                      : _patientBirthDate.text, // Mostrar la fecha seleccionada
+                  ? 'Seleccione una fecha'
+                  : _patientBirthDate.text,
+                  style: TextStyle(
+                    color: _fieldErrors['birthDate']! ? Colors.red : Colors.black,
+                  ),
                 ),
               ),
             ),
-
-
-
-            const SizedBox(height: 32.0),
-
-            // Botón para guardar
+            const SizedBox(height: 22.0),
             Center(
               child: ElevatedButton(
-                onPressed: () {
-                  String name = _patientName.text;
-                  String lastName = _patientLastName.text;
-                  String secondLastName = _patientSecondLastName.text;
-                  String ci = _patientCI.text;
-                  DateTime? birthDate;
-                  if (_patientBirthDate.text.isNotEmpty) {
-                    birthDate = DateFormat('dd/MM/yyyy').parse(_patientBirthDate.text);
-                  }
-                  final patientViewModel = context.read<PatientViewModel>();
-                  if (_editingPatient != null) {
-                    if (name.isNotEmpty && lastName.isNotEmpty && birthDate != null && ci.isNotEmpty) {
-                      patientViewModel.editPatient(
-                        _editingPatient!.idPatient!, name, lastName, secondLastName, birthDate, ci, 1
-                      ).then((_) {
-                        patientViewModel.fetchPatients();
-                      });
-                      _resetForm();
-                      _showSuccessDialog(context, true);
-                    }
-                  } else {
-                    if (name.isNotEmpty && lastName.isNotEmpty  && birthDate != null && ci.isNotEmpty) {
-                      final patientViewModel = context.read<PatientViewModel>();
-                    
-                      patientViewModel.createNewPatient(name, lastName, secondLastName, birthDate, ci, 1).then((_) {
-                        patientViewModel.fetchPatients();
-                      });
-                      _resetForm();
-                      _showSuccessDialog(context, false);
-                    }
-                  }
-                },
+                onPressed: _validateAndSubmit,
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.purple.shade300,
                   padding: const EdgeInsets.symmetric(
@@ -343,144 +689,12 @@ class _PatientIndexState extends State<PatientIndex> {
     );
   }
 
-  DateTime? _selectedDate;
-
-  void _showSyncfusionDatePicker(BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(20), 
-          ),
-          backgroundColor: const Color(0xFFF5F0FF), 
-          content: SizedBox(
-            height: 350,
-            width: 350,
-            child: Container(
-              padding: const EdgeInsets.all(10), 
-              decoration: BoxDecoration(
-                color: const Color(0xFFF5F0FF), 
-                borderRadius: BorderRadius.circular(20), 
-                border: Border.all(
-                  color: const Color.fromARGB(255, 168, 126, 207), 
-                  width: 2, // Grosor del borde
-                ),
-              ),
-              child: SfDateRangePicker(
-                backgroundColor: const Color(0xFFF5F0FF), 
-                onSelectionChanged: (DateRangePickerSelectionChangedArgs args) {
-                  setState(() {
-                    _selectedDate = args.value;
-                    _patientBirthDate.text = DateFormat('dd/MM/yyyy').format(_selectedDate!);
-                  });
-                  Navigator.pop(context); 
-                },
-                selectionMode: DateRangePickerSelectionMode.single,
-                initialSelectedDate: _selectedDate ?? DateTime.now(),
-                headerStyle: const DateRangePickerHeaderStyle(
-                  backgroundColor: Color(0xFFF0E4FF),
-                  textAlign: TextAlign.center,
-                  textStyle: TextStyle(
-                    fontSize: 18,
-                    color: Color(0xFF4B0082),
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                monthCellStyle: const DateRangePickerMonthCellStyle(
-                  todayTextStyle: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    color: Color(0xFF000000),
-                  ),
-                  todayCellDecoration: BoxDecoration(
-                    color: Color(0xFFFFD700),
-                    shape: BoxShape.circle,
-                  ),
-                  weekendTextStyle: TextStyle(
-                    color: Colors.red,
-                  ),
-                  disabledDatesTextStyle: TextStyle(
-                    color: Colors.grey,
-                  ),
-                ),
-                selectionColor: const Color(0xFF6A0DAD), 
-                rangeSelectionColor: const Color(0xFFE1BEE7), 
-              ),
-            ),
-          ),
-          actions: <Widget>[
-            Center(
-              child: ElevatedButton(
-                onPressed: () {
-                  Navigator.of(context).pop();
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFFFF9494),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  minimumSize: const Size(70, 31),
-                ),
-                child: const Text(
-                  'Cancelar',
-                  style: TextStyle(
-                    color: Colors.black,
-                    fontSize: 16,
-                    fontFamily: 'Poppins',
-                    fontWeight: FontWeight.w500,
-                    height: 1,
-                  ),
-                ),
-              ),
-            ),
-          ],
-        );
-      },
-    );
-  }
-
-  void _showSuccessDialog(BuildContext context, bool isEditing) {
-    showDialog(
-      context: context,
-      builder: (context) {
-        return SuccessDialog(
-          title: isEditing ? 'Edición exitosa' : 'Registro Exitoso',
-          message: isEditing
-              ? '¡Se modificó el registro correctamente!'
-              : '¡Se creó el registro correctamente!',
-          onBackPressed: () { 
-            Navigator.of(context).pop();
-            _toggleView(); 
-          },
-        );
-      },
-    );
-  }
-
-  void _showDeleteConfirmationDialog(BuildContext context, int? patientId) {
-    showDialog(
-      context: context,
-      builder: (context) {
-        return DeleteConfirmationDialog(
-          onConfirmDelete: () {
-            final patientViewModel = context.read<PatientViewModel>();
-            if(patientId != null){
-              patientViewModel.removePatient(patientId, 1).then((_){
-                patientViewModel.fetchPatients();
-              });
-            }
-          },
-        );
-      },
-    );
-  }
-
   Widget _buildTable() {
     return Consumer<PatientViewModel>(
       builder: (context, patientViewModel, child) {
         if (patientViewModel.isLoading) {
           return const Center(child: CircularProgressIndicator());
-        } else if (patientViewModel.filteredPatients.isEmpty) {
+        } else if (!patientViewModel.hasMatches) {
           return Center(
             child: Text(
               'Sin coincidencias',
@@ -496,20 +710,20 @@ class _PatientIndexState extends State<PatientIndex> {
             patients: patientViewModel.filteredPatients,
             onEdit: (id) async {
               
-              Patient? patient = await patientViewModel.fetchPatientById(id);
+              Patient? patient = await patientViewModel.fetchPatientById(context,id);
 
               if (patient != null) {
-                // Asigna los valores recuperados a los controladores del formulario
                 setState(() {
+                  _resetFieldErrors();
                   _patientCI.text = patient.ci;
                   _patientName.text = patient.name;
                   _patientLastName.text = patient.lastName;
                   _patientSecondLastName.text = patient.secondLastName ?? '';
+                  _valueRadioButtonGenre = (patient.genre == 'M') ?  0 : 1;
                   _patientBirthDate.text = DateFormat('dd/MM/yyyy').format(DateTime.parse(patient.birthDate.toString()));
-                  _editingPatient = patient; // Para saber que estamos en modo edición
+                  _editingPatient = patient; 
                 });
-
-                _toggleView(patient); // Abre el formulario con los datos recuperados
+                _toggleView(patient); 
               }
             },
             onDelete: (id) {

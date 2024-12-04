@@ -20,25 +20,14 @@ El sistema utiliza sensores integrados que envían datos a través del protocolo
 - **Mosquitto Broker:** Servidor MQTT para gestionar la comunicación. 
 ## Instalación y Configuración 
 ### Requisitos Previos 
--  Tener Flutter instalado en tu sistema. Consulta la [documentación oficial](https://docs.flutter.dev/get-started/install?_gl=1*82ulup*_gcl_aw*R0NMLjE3MzI0NjM2ODAuQ2owS0NRaUF1b3U2QmhEaEFSSXNBSWZncm40S2JqUmZta1FKSy1na2IzbnRNWVFIMVpUZm1hU1VYNC1BU3cybkpsb0VOZWdrTy05UzFqY2FBcGxDRUFMd193Y0I.*_gcl_dc*R0NMLjE3MzI0NjM2ODAuQ2owS0NRaUF1b3U2QmhEaEFSSXNBSWZncm40S2JqUmZta1FKSy1na2IzbnRNWVFIMVpUZm1hU1VYNC1BU3cybkpsb0VOZWdrTy05UzFqY2FBcGxDRUFMd193Y0I.*_up*MQ..*_gs*MQ..*_ga*MTM0NjYxNTQ3NS4xNzIzMzExNzY0*_ga_04YGWK0175*MTczMjQ2MzY2Ny42LjEuMTczMjQ2MzY4MC4wLjAuMA..&gclid=Cj0KCQiAuou6BhDhARIsAIfgrn4KbjRfmkQJK-gkb3ntMYQH1ZTfmaSUX4-ASw2nJloENegkO-9S1jcaAplCEALw_wcB&gclsrc=aw.ds) para instrucciones. 
-- Un dispositivo físico o emulador para probar la aplicación. 
+- Un navegador para probar la aplicación. 
 - Sensores compatibles con MQTT configurados para monitorear sueros intravenosos. 
 - Un broker MQTT (por ejemplo, Mosquitto) configurado y en funcionamiento. 
 ## Pasos para Instalar
 
-- Clona este repositorio: 
+- Seguir los pasos indicados del siguiente enlace para tener el proyecto funcional: 
 ```bash
-  git clone https://github.com/tu-usuario/drops_v1.git
-```
-
-
-- Accede al directorio del proyecto: 
-```bash
-cd drops_v1
-```
-- Instala las dependencias del proyecto: 
-```bash
-flutter pub get 
+  https://univalleedu.sharepoint.com/:v:/s/PSIIIPROYECTOIBIV12_2024/EcBg_5Yf-u5Gp-QUASOjjvoBF-NS8Z4NEMecMMud06Qxuw?e=yTfqVa
 ```
 ## Uso de la Aplicación 
 - Asegúrate de que los sensores MQTT estén conectados y enviando datos al broker. 

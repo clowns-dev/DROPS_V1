@@ -12,7 +12,7 @@ El sistema utiliza sensores integrados que envían datos a través del protocolo
 - **Alertas Inteligentes:** Notificaciones automáticas cuando el nivel del suero es crítico o el flujo se detiene. 
 - **Interfaz Intuitiva:** Diseño centrado en la experiencia del usuario para facilitar la toma de decisiones médicas. 
 - **Conexión Segura y Eficiente:** Uso de MQTT para garantizar una comunicación ligera y rápida entre los sensores y la aplicación. 
-- **Compatibilidad Multi-Plataforma:** Implementada en Flutter para dispositivos Android e iOS. 
+- **Compatibilidad Multi-Plataforma:** Implementada en Flutter para dispositivos Android, Linux y Windows. 
 ## Tecnologías Utilizadas 
 - **Flutter:** Framework para el desarrollo de aplicaciones móviles. 
 - **Dart:** Lenguaje de programación principal. 
